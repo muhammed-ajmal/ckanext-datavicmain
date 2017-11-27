@@ -253,10 +253,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # Note Add dynamic field (not registered under modify schema) "foo.x1" to the fields
             # we take into account. If we omitted this step, the ('__extras',) item would have 
             # been lost (along with the POSTed value). 
-            if context.get('package'):
-                # DataVic: Add extra fields..
-                for field in self.DATASET_EXTRA_FIELDS:
-                    data[(field[0],)] = data[('__extras',)].get(field[0])
+            # DataVic: Add extra fields..
+            for field in self.DATASET_EXTRA_FIELDS:
+                data[(field[0],)] = data[('__extras',)].get(field[0])
             pass
 
         # Add our custom_resource_text metadata field to the schema
