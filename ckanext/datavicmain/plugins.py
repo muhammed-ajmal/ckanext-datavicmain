@@ -21,10 +21,12 @@ _t = toolkit._
 
 log1 = logging.getLogger(__name__)
 
+workflow_enabled = False
 
 # Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
 if "workflow" in config.get('ckan.plugins', False):
     from ckanext.workflow import helpers as workflow_helpers
+    workflow_enabled = True
 
 
 def parse_date(date_str):
@@ -58,7 +60,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     YES_NO_OPTIONS = ['yes', 'no',]
 
-    WORKFLOW_STATUS_OPTIONS = ['draft', 'needs_review', 'published', 'archived',]
+    WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived',]
 
     # NOTE: the of the Z in organization for consistency with usage throughout CKAN
     ORGANIZATION_VISIBILITY_OPTIONS = ['current', 'parent', 'child', 'family', 'all',]
@@ -86,8 +88,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     # Format (tuple): ( 'field_id', { 'field_attribute': 'value' } )
     DATASET_EXTRA_FIELDS = [
+        # ('last_modified_user_id',  {'label': 'Last Modified By'}),
         ('licensing_other',  {'label': 'Licensing - other'}),
         ('workflow_status', {'label': 'Workflow Status'}),
+        ('workflow_status_notes',  {'label': 'Workflow Status Notes', 'field_type': 'textarea'}),
         # NOTE: the use of the Z in organization for consistency with usage throughout CKAN
         ('organization_visibility', {'label': 'Organisation Visibility'}),
         ('extract', {'label': 'Extract'}),
@@ -186,6 +190,20 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             results[org['name']] = org
         return results
 
+    @classmethod
+    def is_admin(cls, owner_org):
+        if workflow_enabled:
+            user = toolkit.c.userobj
+            if authz.is_sysadmin(user.name):
+                return True
+            else:
+                role = workflow_helpers.role_in_org(owner_org, user.name)
+                if role == 'admin':
+                    return True
+
+    def workflow_status_pretty(self, workflow_status):
+        return workflow_status.replace('_', ' ').capitalize()
+
     def historical_resources_list(self, resource_list):
         sorted_resource_list = {}
         i = 0
@@ -250,9 +268,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'yes_no_options': self.yes_no_options,
             'workflow_status_options': self.workflow_status_options,
             'organization_visibility_options': self.organization_visibility_options,
+            'is_admin': self.is_admin,
+            'workflow_status_pretty': self.workflow_status_pretty,
             'historical_resources_list': self.historical_resources_list,
             'historical_resources_range': self.historical_resources_range,
-            'is_historical': self.is_historical,
+            'is_historical': self.is_historical
         }
 
     ## IConfigurer interface ##
@@ -319,6 +339,28 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # DataVic: Append extra fields as dynamic (not registered under modify schema) field
             for field in self.DATASET_EXTRA_FIELDS:
                 append_field(extras_list, data, field[0])
+
+            # DATAVIC-56
+            if workflow_enabled:
+                # Get the current workflow_status value for comparison..
+                pkg = model.Package.get(data.get(('id',)))
+
+                if pkg and 'workflow_status' in pkg.extras:
+                    user = toolkit.c.userobj
+
+                    adjusted_workflow_status = workflow_helpers.get_workflow_status_for_role(
+                        pkg.extras['workflow_status'],
+                        data.get(('workflow_status',), None),
+                        user.name,
+                        data.get(('owner_org',), None)
+                    )
+
+                    items = filter(lambda t: t['key'] == 'workflow_status', extras_list)
+                    if items:
+                        items[0]['value'] = adjusted_workflow_status
+                    else:
+                        extras_list.append({'key': 'workflow_status', 'value': adjusted_workflow_status})
+
 
         def before_validation_processor(key, data, errors, context):
             assert key[0] == '__before', 'This validator can only be invoked in the __before stage'
