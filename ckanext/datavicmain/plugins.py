@@ -13,6 +13,8 @@ import ckan.plugins         as p
 import ckan.plugins.toolkit as toolkit
 import ckan.logic           as logic
 
+from ckanext.datavicmain import actions
+
 import weberror
 
 from ckan.common import config, request
@@ -20,6 +22,8 @@ from ckan.common import config, request
 _t = toolkit._
 
 log1 = logging.getLogger(__name__)
+
+from ckan import lib
 
 workflow_enabled = False
 
@@ -36,6 +40,31 @@ def parse_date(date_str):
         return None
 
 
+def validator_email_not_in_use(user_email, context):
+    user = context['user_obj']
+
+    # If there is no change to email, no need to check it further..
+    if not user.email == user_email:
+        result = actions.email_in_use(user_email, context)
+        if result:
+            raise lib.navl.dictization_functions.Invalid(user_email + ' is already in use.')
+
+    return user_email
+
+
+#   Need this decorator to force auth function to be checked for sysadmins aswell
+#   (ref.: ckan/default/src/ckan/ckan/logic/__init__.py)
+@toolkit.auth_sysadmins_check
+def datavic_user_update(context, data_dict=None):
+    if 'save' in context and context['save']:
+        if 'email' in request.params:
+            schema = context.get('schema')
+            if not validator_email_not_in_use in schema['email']:
+                schema['email'].append(validator_email_not_in_use)
+
+    return {'success': True}
+
+
 class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     ''' A plugin that provides some metadata fields and
     overrides the default dataset form
@@ -47,6 +76,24 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IPackageController, inherit=True)
     # p.implements(p.IResourceController, inherit=True)
     p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IActions)
+    p.implements(p.IAuthFunctions)
+
+
+    # IAuthFunctions
+    def get_auth_functions(self):
+        return {
+            'user_update': datavic_user_update,
+        }
+
+
+    # IActions
+    def get_actions(self):
+        return {
+            # DATAVICIAR-42: Override CKAN's core `user_create` method
+            'user_create': actions.datavic_user_create,
+        }
+
 
     # IRoutes
     def before_map(self, map):
@@ -278,6 +325,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         else:
             return dict_of_formats
 
+    def repopulate_user_role(self):
+        if 'submit' in request.params:
+            return request.params['role']
+        else:
+            return 'member'
+
     ## ITemplateHelpers interface ##
 
     def get_helpers(self):
@@ -299,6 +352,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_historical': self.is_historical,
             'get_formats': self.get_formats,
             'is_sysadmin': self.is_sysadmin,
+            'repopulate_user_role': self.repopulate_user_role,
         }
 
     ## IConfigurer interface ##
