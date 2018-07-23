@@ -133,10 +133,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     # IFacets
     def reorder_facets(self, facets_dict):
+        if not 'organization' in facets_dict and not 'license_id' in facets_dict:
+            return facets_dict
+
         organization = facets_dict.pop('organization')
         license_id = facets_dict.pop('license_id')
         facets_dict['organization'] = organization
         facets_dict['license_id'] = license_id
+
         return facets_dict
 
     def dataset_facets(self, facets_dict, package_type):
