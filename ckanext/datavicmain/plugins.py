@@ -14,6 +14,8 @@ import ckan.plugins.toolkit as toolkit
 import ckan.logic           as logic
 
 from ckanext.datavicmain import actions
+from ckanext.datavicmain import schema as custom_schema
+from ckanext.datavicmain import helpers
 
 import weberror
 
@@ -130,6 +132,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IAuthFunctions)
     p.implements(p.IMiddleware, inherit=True)
 
+
     def make_middleware(self, app, config):
         return AuthMiddleware(app, config)
 
@@ -157,92 +160,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     ## helper methods ## 
 
-    YES_NO_OPTIONS = ['yes', 'no',]
+    YES_NO_OPTIONS = ['yes', 'no']
 
-    WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived',]
+    WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
     # NOTE: the of the Z in organization for consistency with usage throughout CKAN
-    ORGANIZATION_VISIBILITY_OPTIONS = ['current', 'parent', 'child', 'family', 'all',]
+    ORGANIZATION_VISIBILITY_OPTIONS = ['current', 'parent', 'child', 'family', 'all']
 
-    RESOURCE_EXTRA_FIELDS = [
-        ('location', { 'label': 'Location'}),
-        ('date_creation_acquisition', {'label': 'Date of Creation or Acquisition'}),
-        # Last updated is a core field..
-        # ('last_updated', {'label': 'Last Updated'}),
-        ('update_frequency', {'label': 'Update Frequency'}),
-        ('other_frequency_description', {'label': 'Other frequency description'}),
-        ('public_release_date', {'label': 'Public Release Date'}),
-        ('geographic_coverage', {'label': 'Geographic - Coverage'}),
-        ('geodata_granularity', { 'label': 'Geodata - Granularity', }),
-        ('geodata_granularity_other', { 'label': 'Geodata - Granularity - other', }),
-        ('asgs', {'label': 'ASGS (Australian Statistical Geography Standard)'}),
-        ('bounding_box', {'label': 'Bounding Box'}),
-        ('vertical_coverage', {'label': 'Vertical Coverage'}),
-        ('data_quality_trust_statement', {'label': 'Data Quality / Trust Statement'}),
-        ('period_start', {'label': 'Temporal Coverage Start'}),
-        ('period_end', {'label': 'Temporal Coverage End'}),
-    ]
-
-    # Format (tuple): ( 'field_id', { 'field_attribute': 'value' } )
-    DATASET_EXTRA_FIELDS = [
-        # ('last_modified_user_id',  {'label': 'Last Modified By'}),
-        ('licensing_other',  {'label': 'Licensing - other'}),
-        ('workflow_status', {'label': 'Workflow Status'}),
-        ('workflow_status_notes',  {'label': 'Workflow Status Notes', 'field_type': 'textarea'}),
-        # NOTE: the use of the Z in organization for consistency with usage throughout CKAN
-        ('organization_visibility', {'label': 'Organisation Visibility'}),
-        ('extract', {'label': 'Extract'}),
-        ('reason_inactivity', {'label': 'Reason for Inactivity', 'hidden': True}),
-        ('date_inactive', {'label': 'Date Inactive', 'hidden': True}),
-        ('personal_information', {'label': 'Personal Information', 'description': 'Does the asset contain personal or sensitive personal information?', 'field_type': 'yes_no'}),
-        ('personal_information_if_yes', {'label': "If 'yes'"}),
-        ('business_classification', {'label': 'Business Classification', 'hidden': True}),
-        ('type_category', {'label': 'Type / Category'}),
-        ('record_disposal_category', {'label': 'Record Disposal Category', 'hidden': True}),
-        ('disposal_category', {'label': 'Disposal Category', 'hidden': True}),
-        ('disposal_category_other', {'label': 'Disposal Category - other', 'hidden': True}),
-        ('disposal_class', {'label': 'Disposal Class', 'hidden': True}),
-        ('disposal_class_other', {'label': 'Disposal Class - other', 'hidden': True}),
-        ('retention_timeframe', {'label': 'Retention Timeframe', 'hidden': True}),
-        ('retention_timeframe_other', {'label': 'Retension Timeframe - other', 'hidden': True}),
-        ('owning_agency', {'label': 'Owning Agency'}),
-        ('originator', {'label': 'Originator', 'hidden': True}),
-        ('custodian_contact_details', {'label': 'Custodian - contact details'}),
-        ('nsi', {'label': 'National Interest or National Security Information (NSI)?', 'field_type': 'yes_no', 'hidden': True}),
-        ('nsi_yes', {'label': "If 'yes'", 'hidden': True}),
-        ('protective_marking', {'label': 'Protective Marking', 'hidden': True}),
-        ('protective_marking_other', {'label': 'Protective Marking - other', 'hidden': True}),
-        ('bil_confidentiality', {'label': 'Business Impact Level (BIL) - Confidentiality'}),
-        ('bil_other', {'label': 'BIL - other'}),
-        ('authorised_unlimited_public_release', {'label': 'Is the Information Asset authorised for unlimited public release?', 'field_type': 'yes_no'}),
-        ('authorised_unlimited_public_release_no', {'label': 'If No'}),
-        ('approver_authorisor', {'label': 'Approver / Authorisor (for unlimited public release of the information)'}),
-        ('bil_integrity', {'label': 'Business Impact Level (BIL) - Integrity'}),
-        ('bil_availability', {'label': 'Business Impact Level (BIL) - Availability'}),
-        ('copyright_statement', {'label': 'Copyright Statement'}),
-        ('disclaimer', {'label': 'Disclaimer'}),
-        ('attribution_statement', {'label': 'Attribution Statement'}),
-        ('program_url', {'label': 'Program URL'}),
-        ('iar_entry_review_date', {'label': 'IAR entry review date', 'hidden': True}),
-        ('primary_purpose_of_collection', {'label': 'Purpose (primary purpose of collection)'}),
-        ('related_information_asset', {'label': 'Related Information Asset', 'field_type': 'yes_no'}),
-        ('type_of_relationship', {'label': 'Type of relationship', 'hidden': True}),
-        ('value', {'label': 'Value', 'hidden': True}),
-        ('use_constraints', {'label': 'Use constraints', 'hidden': True}),
-        ('disposal_requirements', {'label': 'Disposal requirements', 'hidden': True}),
-        ('user_administrator', {'label': 'User/ Administrator'}),
-        ('access', {'label': 'Access'}),
-        ('meet_mandatory_legal_obligations', {'label': 'Collected to meet mandatory legal or regulatory obligations?', 'field_type': 'yes_no', 'hidden': True}),
-        ('collection_method', {'label': 'Collection method', 'hidden': True}),
-        ('collection_validation', {'label': 'Collection validation', 'hidden': True}),
-        ('internal_scope_of_use', {'label': 'Internal scope of use', 'hidden': True}),
-        ('external_scope_of_use', {'label': 'External scope of use', 'hidden': True}),
-        ('offline_access', {'label': 'Off-line Access', 'hidden': True}),
-        ('supports_business_process', {'label': 'Supports Business Process', 'hidden': True}),
-        ('source_ict_system', {'label': 'Source ICT System'}),
-        ('anzlic_id', {'label': 'ANZLIC ID'}),
-        ('package_scope', {'label': 'Package Scope', 'field_type': 'select', 'options': [{'value': '', 'text': 'Select an option'}, {'value': 'Product', 'text': 'Product'}, {'value': 'Dataset', 'text': 'Dataset'}, {'value': 'Feature', 'text': 'Feature'}]}),
-    ]
 
     @classmethod
     def yes_no_options(cls):
@@ -385,6 +309,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         else:
             return 'member'
 
+
+    def group_list(self):
+        group_list = [{'value': '', 'text': 'Please select'}]
+        for group in model.Group.all('group'):
+            group_list.append({'value': group.id, 'text': group.title})
+        return group_list
+
     ## ITemplateHelpers interface ##
 
     def get_helpers(self):
@@ -394,8 +325,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             'organization_list_objects': self.organization_list_objects,
             'organization_dict_objects': self.organization_dict_objects,
-            'dataset_extra_fields': self.DATASET_EXTRA_FIELDS,
-            'resource_extra_fields': self.RESOURCE_EXTRA_FIELDS,
+            'dataset_extra_fields': custom_schema.DATASET_EXTRA_FIELDS,
+            'resource_extra_fields': custom_schema.RESOURCE_EXTRA_FIELDS,
             'yes_no_options': self.yes_no_options,
             'workflow_status_options': self.workflow_status_options,
             'organization_visibility_options': self.organization_visibility_options,
@@ -407,6 +338,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'get_formats': self.get_formats,
             'is_sysadmin': self.is_sysadmin,
             'repopulate_user_role': self.repopulate_user_role,
+            'group_list': self.group_list,
         }
 
     ## IConfigurer interface ##
@@ -481,7 +413,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
 
             # DataVic: Append extra fields as dynamic (not registered under modify schema) field
-            for field in self.DATASET_EXTRA_FIELDS:
+            for field in custom_schema.DATASET_EXTRA_FIELDS:
                 append_field(extras_list, data, field[0])
 
             # DATAVIC-56
@@ -505,6 +437,22 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                     else:
                         extras_list.append({'key': 'workflow_status', 'value': adjusted_workflow_status})
 
+            # Validate our custom schema fields based on the rules set in schema.py
+            for custom_field in custom_schema.DATASET_EXTRA_FIELDS:
+                field_id = custom_field[0]
+                field_attributes = custom_field[1]
+                # Check required fields
+                if field_attributes.get('required', None) is True:
+                    value = data.get((field_id,))
+                    if not value:
+                        errors[(field_id,)] = [u'Missing value']
+                # Ensure submitted value for select / drop-down is valid
+                if field_attributes.get('field_type', None) == 'select':
+                    value = data.get((field_id,), None)
+                    options = custom_schema.get_options(field_attributes.get('options', None))
+                    if value not in options:
+                        errors[(field_id,)] = [u'Invalid option']
+
 
         def before_validation_processor(key, data, errors, context):
             assert key[0] == '__before', 'This validator can only be invoked in the __before stage'
@@ -513,8 +461,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # we take into account. If we omitted this step, the ('__extras',) item would have 
             # been lost (along with the POSTed value). 
             # DataVic: Add extra fields..
-            for field in self.DATASET_EXTRA_FIELDS:
+            for field in custom_schema.DATASET_EXTRA_FIELDS:
                 data[(field[0],)] = data[('__extras',)].get(field[0])
+
+            if toolkit.c.controller == 'package' and toolkit.c.action == 'new':
+                # Set the "Data Owner" to Top parent org as default
+                data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
         # Add our custom_resource_text metadata field to the schema
@@ -523,7 +475,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         # })
         # DataVic implementation of adding extra metadata fields to resources
         resources_extra_metadata_fields = {}
-        for field in self.RESOURCE_EXTRA_FIELDS:
+        for field in custom_schema.RESOURCE_EXTRA_FIELDS:
             # DataVic: no custom validators for extra metadata fields at the moment
             resources_extra_metadata_fields[field[0]] = [ toolkit.get_validator('ignore_missing') ]
 
@@ -539,6 +491,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             schema['__before'] = []
         # any additional validator must be inserted before the default 'ignore' one. 
         schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
+
+        # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
+        schema['title'] = [toolkit.get_validator('not_empty'), unicode]
+        schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+        schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+
+        # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
+        schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
 
         return schema
 
@@ -569,7 +529,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         # Loop through our extra fields, adding them to the schema..
         # Applying the same validator to them for now..
-        for field in self.DATASET_EXTRA_FIELDS:
+        for field in custom_schema.DATASET_EXTRA_FIELDS:
             dict_extra_fields[field[0]] = [
                 toolkit.get_converter('convert_from_extras'),
                 toolkit.get_validator('ignore_missing')
@@ -583,7 +543,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         # Update Resource schema
         schema['resources'].update({
-            'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ],
+            'custom_resource_text': [ toolkit.get_validator('ignore_missing') ],
             'period_start': [toolkit.get_converter('convert_from_extras'),
                              toolkit.get_validator('ignore_missing')],
             'period_end': [toolkit.get_converter('convert_from_extras'),
@@ -640,10 +600,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     
     def after_create(self, context, pkg_dict):
         log1.debug('after_create: Package %s is created', pkg_dict.get('name'))
+        # Add the package to the group ("category")
+        group = model.Group.get(pkg_dict.get('category'))
+        group.add_package_by_name(pkg_dict.get('name'))
         pass
 
     def after_update(self, context, pkg_dict):
         log1.debug('after_update: Package %s is updated', pkg_dict.get('name'))
+        helpers.add_package_to_group(pkg_dict, context)
         pass
 
     def after_show(self, context, pkg_dict):
