@@ -165,3 +165,22 @@ def get_options(option_list):
         for option in option_list:
             options.append(option.get('value'))
     return options
+
+
+def get_option_label(type, field, value):
+    if type == 'dataset':
+        schema = DATASET_EXTRA_FIELDS
+    else:
+        schema = RESOURCE_EXTRA_FIELDS
+
+    for element in schema:
+        if element[0] == field:
+            schema_field = element
+            break
+
+    if schema_field and 'options' in schema_field[1]:
+        for option in schema_field[1]['options']:
+            if option['value'] == value:
+                value = option['text']
+                break
+    return value

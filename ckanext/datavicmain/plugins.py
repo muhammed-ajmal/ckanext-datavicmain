@@ -339,6 +339,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_sysadmin': self.is_sysadmin,
             'repopulate_user_role': self.repopulate_user_role,
             'group_list': self.group_list,
+            'get_option_label': custom_schema.get_option_label
         }
 
     ## IConfigurer interface ##
