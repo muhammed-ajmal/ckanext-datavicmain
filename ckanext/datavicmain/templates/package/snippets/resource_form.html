@@ -44,6 +44,15 @@
             error=errors.get(field_id),
             classes=['control-medium calendar'])
       }}
+    {% elif field_attributes['field_type'] and field_attributes['field_type'] == 'textarea' %}
+      {{ form.textarea(field_id,
+        label = _(field_attributes['label']),
+        id='field-' + field_id,
+        value=data.get(field_id),
+        error=errors.get(field_id),
+        classes=['control-full'],
+        is_required=field_attributes['required']|default(false))
+      }}
     {% else %}
       {{ form.input(field_id, 
             label=_(field_attributes['label']), id='field-' + field_id, 

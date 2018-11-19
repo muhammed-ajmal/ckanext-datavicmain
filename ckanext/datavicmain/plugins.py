@@ -496,7 +496,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
         schema['title'] = [toolkit.get_validator('not_empty'), unicode]
         schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
-        schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+
+        if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource']:
+            schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
 
         # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
         schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
