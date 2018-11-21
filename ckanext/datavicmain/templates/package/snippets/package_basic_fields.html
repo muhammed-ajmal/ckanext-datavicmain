@@ -6,17 +6,61 @@ Add widgets for our basic custom (extension-specific) fields
 
 #}
 
+{% block package_basic_fields_title %}
+  {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}, is_required=true) }}
+{% endblock %}
+
+{% block package_basic_fields_url %}
+  {{ super() }}
+{% endblock %}
+
+{% block package_basic_fields_description %}
+  {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes, is_required=true) }}
+{% endblock %}
+
+{% block package_basic_fields_tags %}
+  {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+  {{ form.input('tag_string', id='field-tags', label=_('Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs, is_required=true) }}
+{% endblock %}
+
 {% block package_basic_fields_license %}
 
-  {{ super() }}
+<div class="control-group">
+  {% set error = errors.license_id %}
+  <label class="control-label" for="field-license"><span title="This field is required" class="control-required">*</span> {{ _("License") }}</label>
+  <div class="controls">
+    <select id="field-license" name="license_id" data-module="autocomplete">
+      {% set existing_license_id = data.get('license_id') %}
+      {% for license_id, license_desc in h.license_options(existing_license_id) %}
+        <option value="{{ license_id }}" {% if existing_license_id == license_id %}selected="selected"{% endif %}>{{ license_desc }}</option>
+      {% endfor %}
+    </select>
+    {% if error %}<span class="error-block">{{ error }}</span>{% endif %}
+    <span class="info-block info-inline">
+      <i class="icon-info-sign"></i>
+      {% trans %}
+        License definitions and additional information can be found
+        at <a href="http://opendefinition.org/licenses/">opendefinition.org</a>
+      {% endtrans %}
+    </span>
+  </div>
+</div>
 
-  {{ form.input('licensing_other', 
-        label=_('Licensing - other'), id='field-licensing_other', 
-        placeholder=_('Licensing - other'), 
-        value=data.get('licensing_other'), 
-        error=errors.get('licensing_other'), 
-        classes=['control-medium']) 
-  }}
+  {% for field_id, field_attributes in h.dataset_extra_fields %}
+    {% if field_attributes['field_group'] == 'licence' %}
+      {{ form.input(field_id,
+        label=_(field_attributes['label']), id='field-' + field_id,
+        placeholder=_(field_attributes['label']),
+        value=data.get(field_id),
+        error=errors.get(field_id),
+        classes=['control-medium'],
+        is_required=field_attributes['required']|default(false))
+      }}
+        {% if field_attributes['description'] %}
+            <small>{{ field_attributes['description'] }}</small>
+        {% endif %}
+    {% endif %}
+  {% endfor %}
 
 {% endblock %}
 
@@ -31,7 +75,6 @@ Add widgets for our basic custom (extension-specific) fields
       </select>
     </div>
   </div>
-  {% resource 'ckanext-datavicmain/workflow-internal-public.js' %}
 {% endblock %}
 
 {% block package_basic_fields_custom %}

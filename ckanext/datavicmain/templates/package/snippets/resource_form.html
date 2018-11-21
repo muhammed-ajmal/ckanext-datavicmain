@@ -1,16 +1,30 @@
 {% ckan_extends %}
 
+    {% block basic_fields_url %}
+      {% set is_upload = (data.url_type == 'upload') %}
+      {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
+         is_upload_enabled=h.uploads_enabled(), is_url=data.url and not is_upload, is_upload=is_upload,
+         upload_label=_('Data Source'), url_label=_('URL'), placeholder=_('http://example.com/external-data.csv')) }}
+    {% endblock %}
+
+    {% block basic_fields_name %}
+      {{ form.input('name', id='field-name', label=_('Data Source - Label'), placeholder=_('eg. January 2011 Gold Prices'), value=data.name, error=errors.name, classes=['control-full']) }}
+    {% endblock %}
+
+  {% block basic_fields_description %}
+  {% endblock %}
+
   {% block basic_fields_format %}
     {% if h.is_sysadmin() %}
       {% set format_attrs = {'data-module': 'autocomplete', 'data-module-source': '/api/2/util/resource/format_autocomplete?incomplete=?'} %}
-      {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs) %}
+      {% call form.input('format', id='field-format', label=_('Format'), placeholder=_('eg. CSV, XML or JSON'), value=data.format, error=errors.format, classes=['control-medium'], attrs=format_attrs, is_required=true) %}
         <span class="info-block info-block-small">
           <i class="icon-info-sign"></i>
           {{ _('This will be guessed automatically. Leave blank if you wish') }}
         </span>
       {% endcall %}
     {% else %}
-      {% call form.select('format', id='field-format', label=_('Format'), options=h.get_formats(100), selected=data.format|lower, error=errors.format, classes=['inp-holder']) %}
+      {% call form.select('format', id='field-format', label=_('Format'), options=h.get_formats(100), selected=data.format|lower, error=errors.format, classes=['inp-holder'], is_required=true) %}
         <span class="info-block info-block-small">
           <i class="icon-info-sign"></i>
           {{ _("Please enter 'api/tool' as the format for APIs or data tools.") }}
@@ -22,13 +36,22 @@
 {% block metadata_fields %}
 
   {% for field_id, field_attributes in h.resource_extra_fields %}
-    {% if field_id == 'period_start' or field_id == 'period_end' %}
+    {% if field_attributes['field_type'] and field_attributes['field_type'] == 'date' %}
       {{ form.input(field_id,
             label=_(field_attributes['label']), id='field-' + field_id,
             placeholder=_('YYYY-MM-DD'),
             value=data.get(field_id),
             error=errors.get(field_id),
-            classes=['control-medium'])
+            classes=['control-medium calendar'])
+      }}
+    {% elif field_attributes['field_type'] and field_attributes['field_type'] == 'textarea' %}
+      {{ form.textarea(field_id,
+        label = _(field_attributes['label']),
+        id='field-' + field_id,
+        value=data.get(field_id),
+        error=errors.get(field_id),
+        classes=['control-full'],
+        is_required=field_attributes['required']|default(false))
       }}
     {% else %}
       {{ form.input(field_id, 
@@ -42,5 +65,10 @@
   {% endfor %}
 
 {{ super() }}
+
+  {% resource 'ckanext-datavicmain/jquery-ui.js' %}
+  {% resource 'ckanext-datavicmain/datavicmain.js' %}
+  {% resource 'ckanext-datavicmain/jquery-ui.css' %}
+  {% resource 'ckanext-datavicmain/jquery-ui.structure.css' %}
 
 {% endblock %}
