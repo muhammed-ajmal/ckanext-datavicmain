@@ -17,69 +17,45 @@
             </thead>
             <tbody>
               <tr>
-                <th scope="row">{{ _('Last updated') }}</th>
-                <td>{{ h.render_datetime(res.last_modified) or h.render_datetime(res.revision_timestamp) or h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
-                <th scope="row">{{ _('Created') }}</th>
-                <td>{{ h.render_datetime(res.created) or _('unknown') }}</td>
-              </tr>
-              <tr>
                 <th scope="row">{{ _('Format') }}</th>
                 <td>{{ res.mimetype_inner or res.mimetype or res.format or _('unknown') }}</td>
               </tr>
-              <tr>
-                <th scope="row">{{ _('License') }}</th>
-                <td>{% snippet "snippets/license.html", pkg_dict=pkg, text_only=True %}</td>
-              </tr>
-              {% for key, value in h.format_resource_items(res.items()) %}
-                {% if key not in ['release date', 'period end', 'period start', 'attribution', 'data quality', 'format', 'filesize'] %}
-                <tr class="toggle-more"><th scope="row">{{ key }}</th><td>{{ value }}</td></tr>
-                {% endif %}
-              {% endfor %}
-
               {% if res.filesize %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Filesize') }}</th>
                 <td>{{res.filesize}}</td>
               </tr>
               {% endif %}
-
               {% if res.release_date %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Release Date') }}</th>
                 <td>{{ h.render_datetime(res.release_date) }}</td>
               </tr>
               {% endif %}
-
               {% if res.period_start %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Temporal Coverage Start') }}</th>
                 <td>{{ h.render_datetime(res.period_start) }}</td>
               </tr>
               {% endif %}
-
               {% if res.period_end %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Temporal Coverage End') }}</th>
                 <td>{{ h.render_datetime(res.period_end) }}</td>
               </tr>
               {% endif %}
-
               {% if res.data_quality %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Data Quality Statement') }}</th>
                 <td>{{ res.data_quality }}</td>
               </tr>
               {% endif %}
-
               {% if res.attribution %}
-              <tr class="toggle-more">
+              <tr>
                 <th scope="row">{{ _('Attribution Statement') }}</th>
                 <td>{{ res.attribution }}</td>
               </tr>
               {% endif %}
-
             </tbody>
           </table>
         </div>
