@@ -439,20 +439,21 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                         extras_list.append({'key': 'workflow_status', 'value': adjusted_workflow_status})
 
             # Validate our custom schema fields based on the rules set in schema.py
-            for custom_field in custom_schema.DATASET_EXTRA_FIELDS:
-                field_id = custom_field[0]
-                field_attributes = custom_field[1]
-                # Check required fields
-                if field_attributes.get('required', None) is True:
-                    value = data.get((field_id,))
-                    if not value:
-                        errors[(field_id,)] = [u'Missing value']
-                # Ensure submitted value for select / drop-down is valid
-                if field_attributes.get('field_type', None) == 'select':
-                    value = data.get((field_id,), None)
-                    options = custom_schema.get_options(field_attributes.get('options', None))
-                    if value not in options:
-                        errors[(field_id,)] = [u'Invalid option']
+            if toolkit.c.controller == 'package':
+                for custom_field in custom_schema.DATASET_EXTRA_FIELDS:
+                    field_id = custom_field[0]
+                    field_attributes = custom_field[1]
+                    # Check required fields
+                    if field_attributes.get('required', None) is True:
+                        value = data.get((field_id,))
+                        if not value:
+                            errors[(field_id,)] = [u'Missing value']
+                    # Ensure submitted value for select / drop-down is valid
+                    if field_attributes.get('field_type', None) == 'select':
+                        value = data.get((field_id,), None)
+                        options = custom_schema.get_options(field_attributes.get('options', None))
+                        if value not in options:
+                            errors[(field_id,)] = [u'Invalid option']
 
 
         def before_validation_processor(key, data, errors, context):
@@ -494,14 +495,15 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
 
         # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
-        schema['title'] = [toolkit.get_validator('not_empty'), unicode]
-        schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+        if toolkit.c.controller == 'package':
+            schema['title'] = [toolkit.get_validator('not_empty'), unicode]
+            schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
 
-        if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource']:
-            schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+            if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource']:
+                schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
 
-        # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
-        schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
+            # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
+            schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
 
         return schema
 
@@ -556,13 +558,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         # Append computed fields in the __after stage
 
-        def f(k, data, errors, context):
-            data[('baz_view',)] = u'I am a computed Baz'
-            pass
-
-        if not schema.get('__after'):
-            schema['__after'] = []
-        schema['__after'].append(f)
+        # Leaving this here for reference as a later approach
+        # def f(k, data, errors, context):
+        #     data[('baz_view',)] = u'I am a computed Baz'
+        #     pass
+        #
+        # if not schema.get('__after'):
+        #     schema['__after'] = []
+        # schema['__after'].append(f)
 
         return schema
 
@@ -602,15 +605,19 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     ## IPackageController interface ##
     
     def after_create(self, context, pkg_dict):
-        log1.debug('after_create: Package %s is created', pkg_dict.get('name'))
-        # Add the package to the group ("category")
-        group = model.Group.get(pkg_dict.get('category'))
-        group.add_package_by_name(pkg_dict.get('name'))
+        # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
+        if toolkit.c.controller == 'package':
+            # Add the package to the group ("category")
+            if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
+                group = model.Group.get(pkg_dict.get('category'))
+                group.add_package_by_name(pkg_dict.get('name'))
         pass
 
     def after_update(self, context, pkg_dict):
-        log1.debug('after_update: Package %s is updated', pkg_dict.get('name'))
-        helpers.add_package_to_group(pkg_dict, context)
+        # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
+        if toolkit.c.controller == 'package':
+            if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
+                helpers.add_package_to_group(pkg_dict, context)
         pass
 
     def after_show(self, context, pkg_dict):
@@ -632,8 +639,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         is_validated = context.get('validate', True)
         for_view = context.get('for_view', False)
         
-        log1.debug('after_show: Package %s is shown: view=%s validated=%s api=%s', 
-            pkg_dict.get('name'), for_view, is_validated, context.get('api_version'))
+        #log1.debug('after_show: Package %s is shown: view=%s validated=%s api=%s',
+        #    pkg_dict.get('name'), for_view, is_validated, context.get('api_version'))
         
         if not is_validated:
             # Noop: the extras are not yet promoted to 1st-level fields
@@ -654,7 +661,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return search_results
 
     def before_index(self, pkg_dict):
-        log1.debug('before_index: Package %s is indexed', pkg_dict.get('name'))
         return pkg_dict
 
     def before_view(self, pkg_dict):
