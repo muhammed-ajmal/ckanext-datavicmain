@@ -1,0 +1,8 @@
+{% ckan_extends %}
+
+{% block search_sortby %}
+    {% if c.controller == 'organization' and c.action == 'index' %}
+    {% else %}
+      {{ super() }}
+    {% endif %}
+{% endblock %}
