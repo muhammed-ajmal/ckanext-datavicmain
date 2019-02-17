@@ -182,6 +182,14 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             yield {'value': option, 'text': option.replace('_', ' ').capitalize()}
 
     @classmethod
+    def autoselect_workflow_status_option(cls, current_workflow_status):
+        selected_option = 'draft'
+        user = toolkit.c.user
+        if authz.is_sysadmin(user):
+            selected_option = current_workflow_status
+        return selected_option
+
+    @classmethod
     def organization_visibility_options(cls):
         for option in cls.ORGANIZATION_VISIBILITY_OPTIONS:
             yield { 'value': option, 'text': option.capitalize() }
@@ -339,7 +347,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_sysadmin': self.is_sysadmin,
             'repopulate_user_role': self.repopulate_user_role,
             'group_list': self.group_list,
-            'get_option_label': custom_schema.get_option_label
+            'get_option_label': custom_schema.get_option_label,
+            'autoselect_workflow_status_option': self.autoselect_workflow_status_option
         }
 
     ## IConfigurer interface ##
