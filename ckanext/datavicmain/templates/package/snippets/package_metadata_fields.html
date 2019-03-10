@@ -16,7 +16,7 @@ your custom field won't work!!
     {% if field_attributes['hidden'] != True and field_attributes['field_group'] not in ['licence', 'maintainer'] %}
         {% if field_id == 'category' %}
           {% set package_groups = data.get('groups', []) %}
-          {% set category = package_groups[0]['id'] %}
+          {% set category = package_groups[0]['id'] if package_groups[0] else None %}
           {{ form.select(field_id,
             label=_(field_attributes['label']), id='field-' + field_id,
             options = h.group_list(),
