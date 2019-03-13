@@ -154,6 +154,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def before_map(self, map):
         map.connect('dataset_historical', '/dataset/{id}/historical',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
+        map.connect('create_core_groups', '/create_core_groups',
+            controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
         return map
 
 

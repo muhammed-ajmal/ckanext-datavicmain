@@ -6,6 +6,8 @@ import ckan.lib.base as base
 import ckan.lib as lib
 import ckan.logic as logic
 import ckan.model as model
+import ckan.plugins.toolkit as toolkit
+import json
 
 render = base.render
 NotFound = logic.NotFound
@@ -48,3 +50,72 @@ class DataVicMainController(PackageController):
             abort(404, msg)
 
         assert False, "We should never get here"
+
+    def check_sysadmin(self):
+        import ckan.authz as authz
+
+        # Only sysadmin users can generate reports
+        user = toolkit.c.userobj
+
+        if not user or not authz.is_sysadmin(user.name):
+            base.abort(403, _('You are not permitted to perform this action.'))
+
+
+    def create_core_groups(self):
+        self.check_sysadmin()
+
+        context = {'user': toolkit.c.user, 'model': model, 'session': model.Session, 'ignore_auth': True, 'return_id_only': True}
+
+        output = '<pre>'
+
+        groups_to_fetch = [
+            'business',
+            'communication',
+            'community',
+            'education',
+            'employment',
+            'environment',
+            'general',
+            'finance',
+            'health',
+            'planning',
+            'recreation',
+            'science-technology',
+            'society',
+            'spatial-data',
+            'transport',
+            'utility-networks'
+        ]
+
+        from ckanapi import RemoteCKAN
+        ua = 'ckanapiexample/1.0 (+http://example.com/my/website)'
+        demo = RemoteCKAN('https://www.data.vic.gov.au/data', user_agent=ua)
+        for group in groups_to_fetch:
+            group_dict = demo.action.group_show(
+                id=group,
+                include_datasets=False,
+                include_groups=False,
+                include_dataset_count=False,
+                include_users=False,
+                include_tags=False,
+                include_extras=False,
+                include_followers=False
+            )
+
+            output += "\nRemote CKAN group:\n"
+            output += json.dumps(group_dict)
+
+            # Check for existence of a local group with the same name
+            try:
+                local_group_dict = toolkit.get_action('group_show')(context, {'id': group_dict['name']})
+                output += "\nA local group called %s DOES exist" % group_dict['name']
+            except NotFound:
+                output += "\nA local group called %s does not exist" % group_dict['name']
+                toolkit.check_access('group_create', context)
+                local_group_dict = toolkit.get_action('group_create')(context, group_dict)
+                output += "\nCreated group:\n"
+                output += json.dumps(local_group_dict)
+
+            output += "\n==============================\n"
+
+        return output
