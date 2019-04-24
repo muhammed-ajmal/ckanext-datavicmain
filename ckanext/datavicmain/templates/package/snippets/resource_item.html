@@ -2,11 +2,33 @@
 {% set url_action = 'resource_edit' if url_is_edit and can_edit else 'resource_read' %}
 {% set url = h.url_for(controller='package', action=url_action, id=pkg.name, resource_id=res.id) %}
 
-<li class="resource-item" data-id="{{ res.id }}">
+<li class="resource-item {% if res.public_order_url %}has-wms-buttons{% endif %}" data-id="{{ res.id }}">
+
+  {% if res.public_order_url %}
+   <div id='orderEmail'>
+      <div id='orderEmailForm'>
+          <p>Use Order Resources to get access to spatial data in various formats and extents. </p>
+
+          <p>You are being asked to supply a valid email address, so we can notify you via email when your data is ready to download.</p>
+          <div>
+           <input id="order-email" type="text" placeholder="Email" onkeyup='document.querySelector("#orderEmail input").setAttribute("class", "")'>
+          </div>
+          <div id='orderEmailButtons'>
+              <button class="btn btn-primary" onclick='checkOrder()'>Continue Order</button>
+              <button class="btn btn-primary" onclick='document.querySelector("#orderEmail").setAttribute("class", "")'>Cancel</button>
+          </div>
+      </div>
+   </div>
+  {% endif %}
+
   {% block resource_item_title %}
-  <a class="heading" href="{{ url }}" title="{{ res.name or res.description }}">
-    {{ h.resource_display_name(res) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
-  </a>
+  {% if res.public_order_url %}
+      {{ h.resource_display_name(res) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
+  {% else %}
+    <a class="heading" href="{{ url }}" title="{{ res.name or res.description }}">
+      {{ h.resource_display_name(res) }}<span class="format-label" property="dc:format" data-format="{{ res.format.lower() or 'data' }}">{{ h.get_translated(res, 'format') }}</span>
+    </a>
+  {% endif %}
   {% if h.is_historical() or url_is_edit %}
   <p>
     <small>
@@ -21,14 +43,44 @@
   {% endif %}
 {% endblock %}
   {% block resource_item_description %}
-    <p class="description">
-      {% if res.description %}
-        {{ h.markdown_extract(h.get_translated(res, 'description'), extract_length=80) }}
-      {% endif %}
-    </p>
   {% endblock %}
   {% block resource_item_explore %}
   {% if not url_is_edit %}
+    {% if res.public_order_url %}
+</li>
+<li class="resource-item wms-buttons {% if res.format not in ['wms', 'WMS'] %}no-wms-url{% endif %}">
+      {% if res.wms_url and res.format in ["wms", "WMS"] %}
+        <ul class="btn-holder">
+            <li>
+            <a class='btn btn-primary resource-download' href="{{ res.wms_url }}" onclick='return checkTerms(event)'>
+                 {{ _('WMS URL') }}
+                <i class="fa fa-arrow-down"></i>
+            </a>
+            <form class="drop">
+                <label class="custom-label"><input title="checkbox" type="checkbox" class="jcf-hidden" style="position: absolute; left: -9999px;"><span class="custom-check" onclick='checkboxClick(event)' ></span></label>
+                <p>Please check this box to confirm you accept and agree to comply with our <a class="terms-link" href="/terms-of-use" target="_blank">Terms of Use and Copyright and Attribution</a> requirements including any attribution specified on this page. You must comply with the relevant Licence requirements for each dataset.</p>
+            </form>
+            </li>
+        </ul>
+      {% endif %}
+        <ul class="btn-holder">
+            <li>
+                <a class='btn btn-primary resource-download sdm-resource' href='{{ res.url }}' onclick='return checkTerms(event)'>
+                    {# @Todo: Change this to res.public_order_url #}
+                    {% if res.url %}
+                    {{ _('Order Resource') }}
+                    {% else %}
+                    {{ _('Download') }}
+                    {% endif %}
+                    <i class="fa fa-arrow-down"></i>
+                </a>
+                <form class="drop">
+                    <label class="custom-label"><input title="checkbox" type="checkbox" class="jcf-hidden" style="position: absolute; left: -9999px;" ><span class="custom-check" onclick='checkboxClick(event)'></span></label>
+                    <p>Please check this box to confirm you accept and agree to comply with our <a class="terms-link" href="/terms-of-use" target="_blank">Terms of Use and Copyright and Attribution</a> requirements including any attribution specified on this page. You must comply with the relevant Licence requirements for each dataset.</p>
+                </form>
+            </li>
+        </ul>
+    {% else %}
   <div class="dropdown btn-group">
     <a href="#" class="btn btn-primary dropdown-toggle" data-toggle="dropdown">
       <i class="icon-share-alt"></i>
@@ -72,6 +124,7 @@
       {% endblock %}
     </ul>
   </div>
+    {% endif %}
   {% endif %}
   {% endblock %}
 </li>

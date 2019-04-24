@@ -83,8 +83,7 @@ class DataVicMainController(PackageController):
             'science-technology',
             'society',
             'spatial-data',
-            'transport',
-            'utility-networks'
+            'transport'
         ]
 
         from ckanapi import RemoteCKAN

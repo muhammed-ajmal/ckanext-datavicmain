@@ -16,6 +16,10 @@
   {% else %}
       {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources %}
   {% endif %}
+
+  {% resource 'ckanext-datavicmain/datavicmain-resource-list.js' %}
+  {% resource 'ckanext-datavicmain/datavicmain-resource-list.css' %}
+
 {% endblock %}
 
   {% block package_additional_info %}
