@@ -12,11 +12,14 @@ from unidecode import unidecode
 from cStringIO import StringIO
 from pprint import pprint
 
-if len(sys.argv) < 4:
-    sys.stderr.write('Usage: vicmaps-harvest.py IAR_CKAN_URL IAR_CKAN_API_KEY ODP_CKAN_URL ODP_CKAN_API_KEY')
+if len(sys.argv) < 2:
+    sys.stderr.write('Usage: vicmaps-harvest.py IAR_CKAN_URL IAR_CKAN_API_KEY')
     sys.exit(1)
+
 ckan = ckanapi.RemoteCKAN(sys.argv[1], sys.argv[2])
-odp_ckan = ckanapi.RemoteCKAN(sys.argv[3], sys.argv[4])
+
+# Not in use
+#odp_ckan = ckanapi.RemoteCKAN(sys.argv[3], sys.argv[4])
 
 delete_only = False
 
