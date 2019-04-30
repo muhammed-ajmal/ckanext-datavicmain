@@ -87,6 +87,14 @@ def convert_date(date_str):
     return dateutil.parser.parse(date_str).isoformat().split("T")[0]
 
 
+def test_vicgislite_urls(url):
+    return re.search('http://www.data.vic.gov.au/vicgislite/', url)
+
+
+def convert_vicgislite_urls(url):
+    return url.replace('http://www.data.vic.gov.au/', 'https://sdm.iar.data.vic.gov.au/')
+
+
 '''## http://services.land.vic.gov.au/catalogue/cxfservices/CatalogWebServiceV3?wsdl
 from pysimplesoap.client import SoapClient
 client = SoapClient(wsdl="CatalogWebServiceV3.wsdl.xml", http_headers={'Authorization': 'Basic Z3Vlc3Q6Z3Vlc3Q=', 'User-Agent': 'Axis2'})
@@ -128,7 +136,7 @@ for catalogue in catalogues:
     for layerTag in catalogue.find('{http://model.catalogue.dialog.com}layerList'):
 
         # @Todo: remove this limit
-        # if limit > 1:
+        # if limit > 10:
         #     print 'Limit reached - exiting loop'
         #     break
         # else:
@@ -320,6 +328,12 @@ for catalogue in catalogues:
         else:
             pkg_dict['resources'][0] = wms_dict
 
+        # Change URLs from 'http://www.data.vic.gov.au' to 'https://sdm.iar.vic.gov.au'
+        if 'public_order_url' in pkg_dict['resources'][0] and test_vicgislite_urls(pkg_dict['resources'][0]['public_order_url']):
+            pkg_dict['resources'][0]['public_order_url'] = convert_vicgislite_urls(pkg_dict['resources'][0]['public_order_url'])
+        if 'url' in pkg_dict['resources'][0] and test_vicgislite_urls(pkg_dict['resources'][0]['url']):
+            pkg_dict['resources'][0]['url'] = convert_vicgislite_urls(pkg_dict['resources'][0]['url'])
+
         if update:
             try:
                 pkg_dict['geo_coverage'] = layer['details']['boundingbox']
@@ -352,7 +366,7 @@ for catalogue in catalogues:
                 pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
                 print pkg['id'] + " updated \n"
                 datasets_updated += 1
-
+            #
             # # @Todo remove this output
             # pprint(pkg_dict)
         else:
