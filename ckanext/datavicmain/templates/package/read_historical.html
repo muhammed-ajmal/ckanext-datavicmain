@@ -18,7 +18,7 @@
 {% block primary_content_inner %}
   {% block package_resources %}
 
-        {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=pkg.resources, historical=true %}
+        {% snippet "package/snippets/resources_list.html", pkg=pkg, resources=h.historical_resources_list(pkg.resources), historical=true %}
 
   {% endblock %}
 {% endblock %}
