@@ -11,4 +11,7 @@
     jQuery('#field-license').on('change', function() {
         // Conditional changing field
     });
+
+    // Insert required asterisk for organization label 
+    jQuery('.control-label[for="field-organizations').prepend('<span title="This field is required" class="control-required">*</span> ')
   });
