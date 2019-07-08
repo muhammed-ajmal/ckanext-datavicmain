@@ -74,14 +74,16 @@ your custom field won't work!!
             label = _(field_attributes['label']),
             options = h.workflow_status_options(data.get(field_id, None), data.get('owner_org', None)),
             selected = h.autoselect_workflow_status_option(data.get(field_id, 'draft')),
-            attrs = { 'data-module': 'no-autocomplete' })
+            attrs = { 'data-module': 'no-autocomplete' },
+            is_required = true)
           }}
         {% elif field_id == 'organization_visibility'  %}
           {{ form.select(field_id,
             label = _(field_attributes['label']),
             options = h.organization_visibility_options(),
             selected = data.get(field_id, None),
-            attrs = { 'data-module': 'no-autocomplete' })
+            attrs = { 'data-module': 'no-autocomplete' },
+            is_required = true)
           }}
         {% else  %}
           {{ form.input(field_id,
