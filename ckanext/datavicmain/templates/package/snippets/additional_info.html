@@ -77,21 +77,21 @@
         {% if pkg_dict.license_id %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('License') }}</th>
-            <td class="dataset-details" property="dc:contributor">{{ pkg_dict.license_title }}</td>
+            <td class="dataset-details">{{ pkg_dict.license_title }}</td>
           </tr>
         {% endif %}
 
         {% if pkg_dict.access %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Access') }}</th>
-            <td class="dataset-details" property="dc:contributor">{{h.get_option_label('dataset', 'access', pkg_dict.access)}}</td>
+            <td class="dataset-details">{{h.get_option_label('dataset', 'access', pkg_dict.access)}}</td>
           </tr>
         {% endif %}
 
         {% if pkg_dict.protective_marking %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Protective Marking') }}</th>
-            <td class="dataset-details" property="dc:contributor">{{ pkg_dict.protective_marking }}</td>
+            <td class="dataset-details">{{ pkg_dict.protective_marking }}</td>
           </tr>
         {% endif %}
 
@@ -107,14 +107,14 @@
         {% if pkg_dict.organization_visibility %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Organisation Visibility') }}</th>
-            <td class="dataset-details" property="dc:contributor">{{ pkg_dict.organization_visibility }}</td>
+            <td class="dataset-details">{{ pkg_dict.organization_visibility[0]|upper}}{{pkg_dict.organization_visibility[1:] }}</td>
           </tr>
         {% endif %}
 
         {% if pkg_dict.workflow_status %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Workflow Status') }}</th>
-            <td class="dataset-details" property="dc:contributor">{{ pkg_dict.workflow_status }}</td>
+            <td class="dataset-details">{{ pkg_dict.workflow_status[0]|upper}}{{pkg_dict.workflow_status[1:] }}</td>
           </tr>
         {% endif %}      
 
