@@ -34,20 +34,21 @@
             <td class="dataset-details">{{ _(pkg_dict.state) }}</td>
           </tr>
         {% endif %}
-        {% if pkg_dict.metadata_modified %}
+        {% if pkg_dict.metadata_created %}
+          {% set release_date = h.release_date(pkg_dict) %}
           <tr>
-            <th scope="row" class="dataset-label">{{ _("Last Updated") }}</th>
-            <td class="dataset-details">
-                {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=pkg_dict.metadata_modified %}
+            <th scope="row" class="dataset-label">{{ _("Published (Metadata Record)") }}</th>
+            <td class="dataset-details" property="dct:issued">
+              {{ release_date[8:] + '/' + release_date[5:7] + '/' + release_date[:4] }}
             </td>
           </tr>
         {% endif %}
-        {% if pkg_dict.metadata_created %}
+        {% if pkg_dict.metadata_modified %}
+          {% set metadata_modified = pkg_dict.metadata_modified.split("T")[0] %}
           <tr>
-            <th scope="row" class="dataset-label">{{ _("Published (Metadata Record)") }}</th>
-
-            <td class="dataset-details">
-                {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=pkg_dict.metadata_created %}
+            <th scope="row" class="dataset-label">{{ _("Last Updated") }}</th>
+            <td class="dataset-details" property="dct:updated">
+              {{ metadata_modified[8:] + '/' + metadata_modified[5:7] + '/' + metadata_modified[:4] }}
             </td>
           </tr>
         {% endif %}
