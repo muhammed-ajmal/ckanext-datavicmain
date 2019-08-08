@@ -44,6 +44,21 @@ def parse_date(date_str):
         return None
 
 
+def release_date(pkg_dict):
+    """
+    Copied from https://github.com/salsadigitalauorg/datavic_ckan_2.2/blob/develop/iar/src/ckanext-datavic/ckanext/datavic/plugin.py#L296
+    :param pkg_dict:
+    :return:
+    """
+    dates = []
+    dates.append(pkg_dict['metadata_created'])
+    for resource in pkg_dict['resources']:
+        if 'release_date' in resource and resource['release_date'] != '' and resource['release_date'] != '1970-01-01':
+            dates.append(resource['release_date'])
+    dates.sort()
+    return dates[0].split("T")[0]
+
+
 def validator_email_not_in_use(user_email, context):
     user = context['user_obj']
 
@@ -350,7 +365,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'repopulate_user_role': self.repopulate_user_role,
             'group_list': self.group_list,
             'get_option_label': custom_schema.get_option_label,
-            'autoselect_workflow_status_option': self.autoselect_workflow_status_option
+            'autoselect_workflow_status_option': self.autoselect_workflow_status_option,
+            'release_date': release_date,
         }
 
     ## IConfigurer interface ##
