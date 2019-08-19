@@ -2,7 +2,14 @@
 
 {# Note: The parent template has aliased c.pkg_dict as pkg #}
 
-{% block package_description %}    
+{% block package_description %}
+    {% if g.debug %}
+        {% if pkg.private %}
+            <p style="color: red;"><strong>Debug: This dataset is marked PRIVATE</strong></p>
+        {% else %}
+            <p style="color: green;"><strong>Debug: This dataset is marked PUBLIC</strong></p>
+        {% endif %}
+    {% endif %}
     <h1>
       {% block page_heading %}
        {{ super() }}
