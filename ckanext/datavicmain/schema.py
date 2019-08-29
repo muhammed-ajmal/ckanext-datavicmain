@@ -11,150 +11,188 @@ RESOURCE_EXTRA_FIELDS = [
 
 # Format (tuple): ( 'field_id', { 'field_attribute': 'value' } )
 DATASET_EXTRA_FIELDS = [
+    #
+    # SPECIFICALLY place fields
+    #
     # ('last_modified_user_id',  {'label': 'Last Modified By'}),
     ('extract', {'label': 'Abstract', 'field_type': 'textarea', 'required': True}),
     ('primary_purpose_of_collection', {'label': 'Purpose', 'field_type': 'textarea'}),
-    ('workflow_status', {'label': 'Workflow Status'}),
-    ('workflow_status_notes', {'label': 'Workflow Status Notes', 'field_type': 'textarea'}),
-    # NOTE: the use of the Z in organization for consistency with usage throughout CKAN
-    ('organization_visibility', {'label': 'Organisation Visibility'}),
-    # Public Release is managed using the core CKAN Private field (true/false - private/public)
-    ('category', {'label': 'Category', 'required': True}),
     ('agency_program_domain', {'label': 'Agency Program/Domain'}),
+    ('category', {'label': 'Category', 'required': True}),
 
-    # Data Owner - agency_program
-    ('data_owner', {'label': 'Data Owner', 'field_group': 'maintainer'}),
-    # Data Custodian
-    # Role
-    ('role', {'label': 'Role', 'field_group': 'maintainer'}),
-    # Email
-    # Uses CKAN core field `maintainer_email`
-
+    #
+    # GENERAL field cluster
+    #
     # License
-    ('custom_licence_text', {'label': 'License - other', 'field_group': 'licence'}),
-    ('custom_licence_link', {'label': 'Custom license link', 'field_group': 'licence'}),
+    ('custom_licence_text', {'label': 'License - other', 'field_group': 'general'}),
+    ('custom_licence_link', {'label': 'Custom license link', 'field_group': 'general'}),
+    ('date_created_data_asset', {
+        'label': 'Created (Data Asset)',
+        'field_type': 'date',
+        'field_group': 'general',
+        'required': True
+    }),
+    # Published (Metadata Record) (CKAN date published to data dir)
+    ('date_modified_data_asset', {'label': 'Last Modified (Data Asset)', 'field_type': 'date', 'field_group': 'general'}),
+    ('update_frequency', {
+        'label': 'Update Frequency',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'continual', 'text': 'Continual'},
+            {'value': 'daily', 'text': 'Daily'},
+            {'value': 'weekly', 'text': 'Weekly'},
+            {'value': 'fortnightly', 'text': 'Fortnightly'},
+            {'value': 'monthly', 'text': 'Monthly'},
+            {'value': 'quarterly', 'text': 'Quarterly'},
+            {'value': 'biannually', 'text': 'Biannually'},
+            {'value': 'annually', 'text': 'Annually'},
+            {'value': 'asNeeded', 'text': 'As Needed'},
+            {'value': 'irregular', 'text': 'Irregular'},
+            {'value': 'notPlanned', 'text': 'Not Planned'},
+            {'value': 'unknown', 'text': 'Unknown'},
+        ],
+        'field_group': 'general',
+        'required': True
+    }),
+    ('full_metadata_url', {'label': 'Full Metadata URL', 'field_group': 'general'}),
 
+    #
+    # SECURITY field cluster
+    #
     # Personal Data (Privacy)
     ('personal_information', {
-                                'label': 'Personal Data (Privacy)',
-                                'description': '',
-                                'field_type': 'select',
-                                'options': [
-                                    {'value': '', 'text': 'Please select'},
-                                    {'value': 'not_yet', 'text': 'Not yet assessed'},
-                                    {'value': 'yes', 'text': 'Yes'},
-                                    {'value': 'yes_de_identified', 'text': 'Yes - with de-identified data'},
-                                    {'value': 'no', 'text': 'No'},
-                                ],
-                                'required': True
-                              }),
-
-    # Access
-    ('access', {'label': 'Access',
-                'field_type': 'select',
-                'options': [
-                    {'value': '', 'text': 'Please select'},
-                    {'value': 'yes', 'text': 'Yes'},
-                    {'value': 'no', 'text': 'No'},
-                    {'value': 'not_yet', 'text': 'Not yet assessed'},
-                ],
-                'required': True
-                }),
-    # Access - description
-    ('access_description', {'label': 'Access - description', 'field_type': 'textarea'}),
-
-    ('protective_marking', {'label': 'Protective Marking', 'field_type': 'select',
-                            'options': [
-                                {'value': '', 'text': 'Please select'},
-                                {'value': 'Protected', 'text': 'Protected'},
-                                {'value': 'Unclassified : Sensitive : Vic Cabinet',
-                                 'text': 'Unclassified : Sensitive : Vic Cabinet'},
-                                {'value': 'Unclassified : Sensitive', 'text': 'Unclassified : Sensitive'},
-                                {'value': 'Unclassified : Sensitive : Personal',
-                                 'text': 'Unclassified : Sensitive : Personal'},
-                                {'value': 'Unclassified : Sensitive : Legal',
-                                 'text': 'Unclassified : Sensitive : Legal'},
-                                {'value': 'Unclassified : For Office Use Only',
-                                 'text': 'Unclassified : For Office Use Only'},
-                                {'value': 'Unclassified', 'text': 'Unclassified'},
-                                {'value': 'Public Domain', 'text': 'Public Domain'},
-                            ],
-                            'required': True
-                            }),
-
+        'label': 'Personal Data (Privacy)',
+        'description': '',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'not_yet', 'text': 'Not yet assessed'},
+            {'value': 'yes', 'text': 'Yes'},
+            {'value': 'yes_de_identified', 'text': 'Yes - with de-identified data'},
+            {'value': 'no', 'text': 'No'},
+        ],
+        'field_group': 'security',
+        'required': True
+    }),
+    ('protective_marking', {
+        'label': 'Protective Marking', 'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'Protected', 'text': 'Protected'},
+            {'value': 'Unclassified : Sensitive : Vic Cabinet',
+             'text': 'Unclassified : Sensitive : Vic Cabinet'},
+            {'value': 'Unclassified : Sensitive', 'text': 'Unclassified : Sensitive'},
+            {'value': 'Unclassified : Sensitive : Personal',
+             'text': 'Unclassified : Sensitive : Personal'},
+            {'value': 'Unclassified : Sensitive : Legal',
+             'text': 'Unclassified : Sensitive : Legal'},
+            {'value': 'Unclassified : For Office Use Only',
+             'text': 'Unclassified : For Office Use Only'},
+            {'value': 'Unclassified', 'text': 'Unclassified'},
+            {'value': 'Public Domain', 'text': 'Public Domain'},
+        ],
+        'field_group': 'security',
+        'required': True
+    }),
+    ('access', {
+        'label': 'Access',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'yes', 'text': 'Yes'},
+            {'value': 'no', 'text': 'No'},
+            {'value': 'not_yet', 'text': 'Not yet assessed'},
+        ],
+        'field_group': 'security',
+        'required': True
+    }),
+    ('access_description', {'label': 'Access - description', 'field_type': 'textarea', 'field_group': 'security'}),
     # Business Impact Level - Confidentiality Breach
-    ('bil_confidentiality', {'label': 'Business Impact Level - Confidentiality Breach',
-                'field_type': 'select',
-                'options': [
-                    {'value': '', 'text': 'Please select'},
-                    {'value': 'not_yet', 'text': 'Not yet assessed'},
-                    {'value': 'negligible', 'text': 'Negligible'},
-                    {'value': 'low', 'text': 'Low'},
-                    {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
-                    {'value': 'major_high', 'text': 'Major/High'},
-                    {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
-                ]}),
+    ('bil_confidentiality', {
+        'label': 'Business Impact Level - Confidentiality Breach',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'not_yet', 'text': 'Not yet assessed'},
+            {'value': 'negligible', 'text': 'Negligible'},
+            {'value': 'low', 'text': 'Low'},
+            {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
+            {'value': 'major_high', 'text': 'Major/High'},
+            {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
+        ],
+        'field_group': 'security'
+    }),
     # Business Impact Level - Confidentiality Breach Description
-    ('bil_confidentiality_description', {'label': 'Business Impact Level - Confidentiality Breach description', 'field_type': 'textarea'}),
-
+    ('bil_confidentiality_description', {
+        'label': 'Business Impact Level - Confidentiality Breach description',
+        'field_type': 'textarea',
+        'field_group': 'security'
+    }),
     # Business Impact Level - Availability
-    ('bil_availability', {'label': 'Business Impact Level - Availability',
-                'field_type': 'select',
-                'options': [
-                    {'value': '', 'text': 'Please select'},
-                    {'value': 'not_yet', 'text': 'Not yet assessed'},
-                    {'value': 'negligible', 'text': 'Negligible'},
-                    {'value': 'low', 'text': 'Low'},
-                    {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
-                    {'value': 'major_high', 'text': 'Major/High'},
-                    {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
-                ]}),
+    ('bil_availability', {
+        'label': 'Business Impact Level - Availability',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'not_yet', 'text': 'Not yet assessed'},
+            {'value': 'negligible', 'text': 'Negligible'},
+            {'value': 'low', 'text': 'Low'},
+            {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
+            {'value': 'major_high', 'text': 'Major/High'},
+            {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
+        ],
+        'field_group': 'security'
+    }),
     # Business Impact Level - Availability description
-    ('bil_availability_description', {'label': 'Business Impact Level - Availability description', 'field_type': 'textarea'}),
-
+    ('bil_availability_description', {
+        'label': 'Business Impact Level - Availability description',
+        'field_type': 'textarea',
+        'field_group': 'security'
+    }),
     # Business Impact Level - Integrity
-    ('bil_integrity', {'label': 'Business Impact Level - Integrity',
-                'field_type': 'select',
-                'options': [
-                    {'value': '', 'text': 'Please select'},
-                    {'value': 'not_yet', 'text': 'Not yet assessed'},
-                    {'value': 'negligible', 'text': 'Negligible'},
-                    {'value': 'low', 'text': 'Low'},
-                    {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
-                    {'value': 'major_high', 'text': 'Major/High'},
-                    {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
-                ]}),
+    ('bil_integrity', {
+        'label': 'Business Impact Level - Integrity',
+        'field_type': 'select',
+        'options': [
+            {'value': '', 'text': 'Please select'},
+            {'value': 'not_yet', 'text': 'Not yet assessed'},
+            {'value': 'negligible', 'text': 'Negligible'},
+            {'value': 'low', 'text': 'Low'},
+            {'value': 'moderate_medium', 'text': 'Moderate/Medium'},
+            {'value': 'major_high', 'text': 'Major/High'},
+            {'value': 'extreme_very_high', 'text': 'Extreme/Very High'},
+        ],
+        'field_group': 'security'
+    }),
     # Business Impact Level - Integrity description
-    ('bil_integrity_description', {'label': 'Business Impact Level - Integrity description', 'field_type': 'textarea'}),
-
-    ('date_created_data_asset', {'label': 'Created (Data Asset)', 'field_type': 'date', 'required': True}),
-    # Published (Metadata Record) (CKAN date published to data dir)
-    ('date_modified_data_asset', {'label': 'Last Modified (Data Asset)', 'field_type': 'date'}),
-    # Update Frequency
-    ('update_frequency', {'label': 'Update Frequency',
-                       'field_type': 'select',
-                       'options': [
-                           {'value': '', 'text': 'Please select'},
-                           {'value': 'continual', 'text': 'Continual'},
-                           {'value': 'daily', 'text': 'Daily'},
-                           {'value': 'weekly', 'text': 'Weekly'},
-                           {'value': 'fortnightly', 'text': 'Fortnightly'},
-                           {'value': 'monthly', 'text': 'Monthly'},
-                           {'value': 'quarterly', 'text': 'Quarterly'},
-                           {'value': 'biannually', 'text': 'Biannually'},
-                           {'value': 'annually', 'text': 'Annually'},
-                           {'value': 'asNeeded', 'text': 'As Needed'},
-                           {'value': 'irregular', 'text': 'Irregular'},
-                           {'value': 'notPlanned', 'text': 'Not Planned'},
-                           {'value': 'unknown', 'text': 'Unknown'},
-                       ],
-                      'required': True
-                      }),
-    # Full Metadata URL
-    ('full_metadata_url', {'label': 'Full Metadata URL'}),
-
+    ('bil_integrity_description', {
+        'label': 'Business Impact Level - Integrity description',
+        'field_type': 'textarea',
+        'field_group': 'security'
+    }),
     # Source ICT System/Container
-    ('source_ict_system', {'label': 'Source ICT System'}),
+    ('source_ict_system', {'label': 'Source ICT System', 'field_group': 'security'}),
+
+    #
+    # WORKFLOW field cluster
+    #
+    # NOTE: the use of the Z in organization for consistency with usage throughout CKAN
+    ('organization_visibility', {'label': 'Organisation Visibility', 'field_group': 'workflow_1'}),
+    # Public Release is managed using the core CKAN Private field (true/false - private/public)
+    ('workflow_status', {'label': 'Workflow Status', 'field_group': 'workflow_2'}),
+    ('workflow_status_notes', {'label': 'Workflow Status Notes', 'field_type': 'textarea', 'field_group': 'workflow_2'}),
+
+    #
+    # CUSTODIAN field cluster
+    #
+    # Data Owner - agency_program
+    ('data_owner', {'label': 'Data Owner', 'field_group': 'custodian'}),
+    # Data Custodian
+    # Role
+    ('role', {'label': 'Role', 'field_group': 'custodian'}),
+    # Email
+    # Uses CKAN core field `maintainer_email`
 ]
 
 
