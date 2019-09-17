@@ -65,7 +65,8 @@
       {% endif %}
         <ul class="btn-holder">
             <li>
-                <a class='btn btn-primary resource-download sdm-resource' href='{{ res.url }}' onclick='return checkTerms(event)'>
+                {% set sdm_url = res.url | replace("https://sdm.iar.data.vic.gov.au/vicgislite/sdmAccess.jsp", h.current_url() + '/order') %}
+                <a class='btn btn-primary resource-download sdm-resource' href='{{ sdm_url }}' onclick='return checkTerms(event)'>
                     {# @Todo: Change this to res.public_order_url #}
                     {% if res.url %}
                     {{ _('Order Resource') }}
