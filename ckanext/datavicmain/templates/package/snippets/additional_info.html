@@ -34,7 +34,15 @@
             <td class="dataset-details">{{ _(pkg_dict.state) }}</td>
           </tr>
         {% endif %}
-        {% if pkg_dict.metadata_created %}
+        {% if pkg_dict.date_created_data_asset %}
+          {% set date_created_data_asset = pkg_dict.date_created_data_asset.split("T")[0] %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Created (Data Asset)") }}</th>
+            <td class="dataset-details" property="dct:issued">
+              {{ date_created_data_asset[8:] + '/' + date_created_data_asset[5:7] + '/' + date_created_data_asset[:4] }}
+            </td>
+          </tr>
+        {% elif pkg_dict.metadata_created %}
           {% set release_date = h.release_date(pkg_dict) %}
           <tr>
             <th scope="row" class="dataset-label">{{ _("Published (Metadata Record)") }}</th>
@@ -43,7 +51,15 @@
             </td>
           </tr>
         {% endif %}
-        {% if pkg_dict.metadata_modified %}
+        {% if pkg_dict.date_modified_data_asset %}
+          {% set date_modified_data_asset = pkg_dict.date_modified_data_asset.split("T")[0] %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Last Modified (Data Asset)") }}</th>
+            <td class="dataset-details" property="dct:updated">
+              {{ date_modified_data_asset[8:] + '/' + date_modified_data_asset[5:7] + '/' + date_modified_data_asset[:4] }}
+            </td>
+          </tr>
+        {% elif pkg_dict.metadata_modified %}
           {% set metadata_modified = pkg_dict.metadata_modified.split("T")[0] %}
           <tr>
             <th scope="row" class="dataset-label">{{ _("Last Updated") }}</th>
@@ -82,14 +98,14 @@
           </tr>
         {% endif %}
 
-        {% if pkg_dict.date_created_data_asset %}
+        {#% if pkg_dict.date_created_data_asset %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Created (Data Asset)') }}</th>
             <td class="dataset-details">
                 {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=pkg_dict.date_created_data_asset %}
             </td>
           </tr>
-        {% endif %}
+        {% endif %#}
 
         {% if pkg_dict.organization_visibility %}
           <tr>
@@ -119,14 +135,27 @@
           </tr>
         {% endif %}
 
+        {% if pkg_dict.full_metadata_url %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Full Metadata URL') }}</th>
+            <td class="dataset-details">
+            {% if pkg_dict.full_metadata_url.startswith('http') %}
+              <a href="{{ pkg_dict.full_metadata_url }}" target="_blank" rel="nofollow">{{ pkg_dict.full_metadata_url }}</a>
+            {% else %}
+              {{ pkg_dict.full_metadata_url }}
+            {% endif %}
+            </td>
+          </tr>
+        {% endif %}
+
       {% block extras scoped %}
-        {% for extra in h.sorted_extras(pkg_dict.extras) %}
+        {#% for extra in h.sorted_extras(pkg_dict.extras) %}
           {% set key, value = extra %}
           <tr rel="dc:relation" resource="_:extra{{ i }}">
             <th scope="row" class="dataset-label" property="rdfs:label">{{ _(key) }}</th>
             <td class="dataset-details" property="rdf:value">{{ value }}</td>
           </tr>
-        {% endfor %}
+        {% endfor %#}
       {% endblock %}
 
       {% endblock %}
