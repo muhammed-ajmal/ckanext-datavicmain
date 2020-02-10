@@ -1,0 +1,164 @@
+<section class="additional-info">
+  <h3>{{ _('Additional Info') }}</h3>
+  <table class="table table-striped table-bordered table-condensed">
+    <thead>
+      <tr>
+        <th scope="col">{{ _('Field') }}</th>
+        <th scope="col">{{ _('Value') }}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% block package_additional_info %}
+
+        {% if pkg_dict.url %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Source') }}</th>
+            {% if h.is_url(pkg_dict.url) %}
+              <td class="dataset-details" property="foaf:homepage">{{ h.link_to(pkg_dict.url, pkg_dict.url, rel='foaf:homepage', target='_blank') }}</td>
+            {% else %}
+              <td class="dataset-details" property="foaf:homepage">{{ pkg_dict.url }}</td>
+            {% endif %}
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.version %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Version") }}</th>
+            <td class="dataset-details">{{ pkg_dict.version }}</td>
+          </tr>
+        {% endif %}
+
+        {% if h.check_access('package_update',{'id':pkg_dict.id}) %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("State") }}</th>
+            <td class="dataset-details">{{ _(pkg_dict.state) }}</td>
+          </tr>
+        {% endif %}
+        {% if pkg_dict.date_created_data_asset %}
+          {% set date_created_data_asset = pkg_dict.date_created_data_asset.split("T")[0] %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Created (Data Asset)") }}</th>
+            <td class="dataset-details" property="dct:issued">
+              {{ date_created_data_asset[8:] + '/' + date_created_data_asset[5:7] + '/' + date_created_data_asset[:4] }}
+            </td>
+          </tr>
+        {% elif pkg_dict.metadata_created %}
+          {% set release_date = h.release_date(pkg_dict) %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Published (Metadata Record)") }}</th>
+            <td class="dataset-details" property="dct:issued">
+              {{ release_date[8:] + '/' + release_date[5:7] + '/' + release_date[:4] }}
+            </td>
+          </tr>
+        {% endif %}
+        {% if pkg_dict.date_modified_data_asset %}
+          {% set date_modified_data_asset = pkg_dict.date_modified_data_asset.split("T")[0] %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Last Modified (Data Asset)") }}</th>
+            <td class="dataset-details" property="dct:updated">
+              {{ date_modified_data_asset[8:] + '/' + date_modified_data_asset[5:7] + '/' + date_modified_data_asset[:4] }}
+            </td>
+          </tr>
+        {% elif pkg_dict.metadata_modified %}
+          {% set metadata_modified = pkg_dict.metadata_modified.split("T")[0] %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _("Last Updated") }}</th>
+            <td class="dataset-details" property="dct:updated">
+              {{ metadata_modified[8:] + '/' + metadata_modified[5:7] + '/' + metadata_modified[:4] }}
+            </td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.organization %}
+          {% set org = h.get_organization(pkg_dict.organization.name) %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Organisation') }}</th>
+            <td class="dataset-details" property="dc:contributor">{{ org.title }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.license_id %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('License') }}</th>
+            <td class="dataset-details">{{ pkg_dict.license_title }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.access %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Access') }}</th>
+            <td class="dataset-details">{{h.get_option_label('dataset', 'access', pkg_dict.access)}}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.protective_marking %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Protective Marking') }}</th>
+            <td class="dataset-details">{{ pkg_dict.protective_marking }}</td>
+          </tr>
+        {% endif %}
+
+        {#% if pkg_dict.date_created_data_asset %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Created (Data Asset)') }}</th>
+            <td class="dataset-details">
+                {% snippet 'snippets/local_friendly_datetime.html', datetime_obj=pkg_dict.date_created_data_asset %}
+            </td>
+          </tr>
+        {% endif %#}
+
+        {% if pkg_dict.organization_visibility %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Organisation Visibility') }}</th>
+            <td class="dataset-details">{{ pkg_dict.organization_visibility[0]|upper}}{{pkg_dict.organization_visibility[1:] }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.workflow_status %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Workflow Status') }}</th>
+            <td class="dataset-details">{{ pkg_dict.workflow_status[0]|upper}}{{pkg_dict.workflow_status[1:] }}</td>
+          </tr>
+        {% endif %}      
+
+        {% if pkg_dict.maintainer %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Data Custodian') }}</th>
+            <td class="dataset-details" property="dc:contributor">{{ pkg_dict.maintainer }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.maintainer_email %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Email') }}</th>
+            <td class="dataset-details" property="dc:contributor">{{ h.mail_to(email_address=pkg_dict.maintainer_email, name=pkg_dict.maintainer) }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.full_metadata_url %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Full Metadata URL') }}</th>
+            <td class="dataset-details">
+            {% if pkg_dict.full_metadata_url.startswith('http') %}
+              <a href="{{ pkg_dict.full_metadata_url }}" target="_blank" rel="nofollow">{{ pkg_dict.full_metadata_url }}</a>
+            {% else %}
+              {{ pkg_dict.full_metadata_url }}
+            {% endif %}
+            </td>
+          </tr>
+        {% endif %}
+
+      {% block extras scoped %}
+        {#% for extra in h.sorted_extras(pkg_dict.extras) %}
+          {% set key, value = extra %}
+          <tr rel="dc:relation" resource="_:extra{{ i }}">
+            <th scope="row" class="dataset-label" property="rdfs:label">{{ _(key) }}</th>
+            <td class="dataset-details" property="rdf:value">{{ value }}</td>
+          </tr>
+        {% endfor %#}
+      {% endblock %}
+
+      {% endblock %}
+    </tbody>
+  </table>
+</section>

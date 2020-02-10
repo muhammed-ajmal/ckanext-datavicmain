@@ -1,0 +1,61 @@
+{% ckan_extends %}
+
+{#
+
+Add widgets for our basic custom (extension-specific) fields
+
+#}
+
+{% block package_basic_fields_title %}
+  <h2>General</h2>
+
+  {{ form.input('title', id='field-title', label=_('Title'), placeholder=_('eg. A descriptive title'), value=data.title, error=errors.title, classes=['control-full', 'control-large'], attrs={'data-module': 'slug-preview-target'}, is_required=true) }}
+{% endblock %}
+
+{% block package_basic_fields_url %}
+  {{ super() }}
+{% endblock %}
+
+{% block package_basic_fields_description %}
+  {{ form.markdown('notes', id='field-notes', label=_('Description'), placeholder=_('eg. Some useful notes about the data'), value=data.notes, error=errors.notes, is_required=true) }}
+
+  {% for field_id, field_attributes in h.dataset_extra_fields %}
+    {% if field_id == 'extract' %}
+      {{ form.textarea(field_id,
+        label = _(field_attributes['label']),
+        value=data.get(field_id),
+        error=errors.get(field_id),
+        classes=['control-full'],
+        is_required=field_attributes['required']|default(false))
+      }}
+      {% if field_attributes['description'] %}
+          <small>{{ field_attributes['description'] }}</small>
+      {% endif %}
+    {% endif %}
+  {% endfor %}
+{% endblock %}
+
+{% block package_basic_fields_tags %}
+  {% set tag_attrs = {'data-module': 'autocomplete', 'data-module-tags': '', 'data-module-source': '/api/2/util/tag/autocomplete?incomplete=?'} %}
+  {{ form.input('tag_string', id='field-tags', label=_('Keywords'), placeholder=_('eg. economy, mental health, government'), value=data.tag_string, error=errors.tags, classes=['control-full'], attrs=tag_attrs, is_required=true) }}
+
+  {{ form.input('primary_purpose_of_collection',
+    label=_('Purpose'), id='field-primary_purpose_of_collection',
+    placeholder=_('Purpose'),
+    value=data.get('primary_purpose_of_collection'),
+    error=errors.get('primary_purpose_of_collection'),
+    classes=['control-medium'])
+  }}
+{% endblock %}
+
+{% block package_basic_fields_license %}
+{% endblock %}
+
+{% block package_metadata_fields_visibility %}
+{% endblock %}
+
+{% block package_basic_fields_custom %}
+
+  {{ super() }}
+
+{% endblock %}
