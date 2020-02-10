@@ -498,6 +498,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
+        # Only apply this logic when updating through the UI, otherwise it causes DCAT JSON harvests to fail
         if toolkit.c.controller == 'package':
             # Add our custom_resource_text metadata field to the schema
             # schema['resources'].update({
