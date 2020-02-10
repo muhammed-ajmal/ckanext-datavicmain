@@ -498,39 +498,41 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
-        # Add our custom_resource_text metadata field to the schema
-        # schema['resources'].update({
-        #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
-        # })
-        # DataVic implementation of adding extra metadata fields to resources
-        resources_extra_metadata_fields = {}
-        for field in custom_schema.RESOURCE_EXTRA_FIELDS:
-            # DataVic: no custom validators for extra metadata fields at the moment
-            resources_extra_metadata_fields[field[0]] = [ toolkit.get_validator('ignore_missing') ]
-
-        schema['resources'].update(resources_extra_metadata_fields)
-
-        # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
-        if not schema.get('__after'):
-            schema['__after'] = []
-        schema['__after'].append(after_validation_processor)
-
-        # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
-        if not schema.get('__before'):
-            schema['__before'] = []
-        # any additional validator must be inserted before the default 'ignore' one. 
-        schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
-
-        # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
+        # Only apply this logic when updating through the UI, otherwise it causes DCAT JSON harvests to fail
         if toolkit.c.controller == 'package':
-            schema['title'] = [toolkit.get_validator('not_empty'), unicode]
-            schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+            # Add our custom_resource_text metadata field to the schema
+            # schema['resources'].update({
+            #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
+            # })
+            # DataVic implementation of adding extra metadata fields to resources
+            resources_extra_metadata_fields = {}
+            for field in custom_schema.RESOURCE_EXTRA_FIELDS:
+                # DataVic: no custom validators for extra metadata fields at the moment
+                resources_extra_metadata_fields[field[0]] = [ toolkit.get_validator('ignore_missing') ]
 
-            if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
-                schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+            schema['resources'].update(resources_extra_metadata_fields)
 
-            # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
-            schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
+            # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
+            if not schema.get('__after'):
+                schema['__after'] = []
+            schema['__after'].append(after_validation_processor)
+
+            # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
+            if not schema.get('__before'):
+                schema['__before'] = []
+            # any additional validator must be inserted before the default 'ignore' one.
+            schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
+
+            # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
+            if toolkit.c.controller == 'package':
+                schema['title'] = [toolkit.get_validator('not_empty'), unicode]
+                schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+
+                if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
+                    schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+
+                # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
+                schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
 
         return schema
 
