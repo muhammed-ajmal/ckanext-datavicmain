@@ -178,6 +178,15 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
         map.connect('create_core_groups', '/create_core_groups',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
+        # Re-route /dashboard to the dashboard datasets controller action - this is now the default
+        # landing page after logging in
+        map.connect('user_dashboard', '/dashboard',
+            controller='ckan.controllers.user:UserController', action='dashboard_datasets', ckan_icon='sitemap')
+        # Create a new route for dashboarsd newsfeed which was the previous default landing page on login
+        map.connect('user_dashboard_newsfeed', '/dashboard/newsfeed',
+            controller='ckan.controllers.user:UserController', action='dashboard',
+            ckan_icon='list')
+
         return map
 
 
