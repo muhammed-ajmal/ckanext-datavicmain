@@ -159,7 +159,7 @@ class DataVicUserController(UserController):
 
         if request.method == 'POST':
             try:
-                is_new_user = user_dict['state'] == 'pending'
+                # If you only want to automatically login new users, check that user_dict['state'] == 'pending'
                 context['reset_password'] = True
                 new_password = self._get_form_password()
                 user_dict['password'] = new_password
@@ -168,12 +168,13 @@ class DataVicUserController(UserController):
                 user = get_action('user_update')(context, user_dict)
                 mailer.create_reset_key(user_obj)
 
-                if is_new_user and not c.user:
+                h.flash_success(_("Your password has been reset."))
+
+                if not c.user:
                     # log the user in programatically
                     set_repoze_user(user_dict['name'])
                     h.redirect_to(controller='user', action='me')
 
-                h.flash_success(_("Your password has been reset."))
                 h.redirect_to('/')
             except NotAuthorized:
                 h.flash_error(_('Unauthorized to edit user %s') % id)
