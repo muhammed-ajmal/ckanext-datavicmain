@@ -186,6 +186,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         map.connect('user_dashboard_newsfeed', '/dashboard/newsfeed',
             controller='ckan.controllers.user:UserController', action='dashboard',
             ckan_icon='list')
+        map.connect('user_reset', '/user/reset/{id:.*}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
 
         return map
 
