@@ -189,3 +189,7 @@ class DataVicUserController(UserController):
 
         c.user_dict = user_dict
         return render('user/perform_reset.html')
+
+    def user_dashboard(self):
+        # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dashboard_organizations
+         return self.dashboard_datasets() if h.check_access('package_create') else self.dashboard_organizations()
