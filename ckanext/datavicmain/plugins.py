@@ -190,6 +190,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             controller='ckan.controllers.user:UserController', action='dashboard',
             ckan_icon='list')
 
+        # Overridding user_edit
+        map.connect('user_edit', '/user/edit/{id:.*}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='edit')
+            
         return map
 
 
