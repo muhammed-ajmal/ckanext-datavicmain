@@ -178,6 +178,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
         map.connect('create_core_groups', '/create_core_groups',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
+        map.connect('/user/reset/{id:.*}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
+
         # Re-route /dashboard to the dashboard datasets controller action - this is now the default
         # landing page after logging in
         map.connect('user_dashboard', '/dashboard',
