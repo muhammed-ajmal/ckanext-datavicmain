@@ -238,10 +238,10 @@ for catalogue in catalogues:
         #     # update = True
         #     pkg_dict['external_id'] = layer['id']
 
+        current_extract = get_extra('extract', pkg_dict)
+
         if len(layer['description']['abstractData']) > 255:
             extract = re.split(line_pat, layer['description']['abstractData'])[0]
-
-            current_extract = get_extra('extract', pkg_dict)
 
             if current_extract and current_extract != extract:
                 update = True
@@ -260,10 +260,13 @@ for catalogue in catalogues:
                 update = True
                 print "notes changed"
                 pkg_dict['notes'] = layer['description']['purpose'].strip()
-            if pkg_dict.get("extract", "") != layer['description']['abstractData']:
+
+            if current_extract and current_extract != layer['description']['abstractData']:
                 update = True
                 print "extract changed"
-                pkg_dict['extract'] = layer['description']['abstractData']
+                pkg_dict['extras'].remove(current_extract)
+
+            pkg_dict['extras'].append({'key': 'extract', 'value': layer['description']['abstractData']})
 
         # DATAVIC-184: REMOVED - Data.Vic schema does not have an `accuracy` field
         # if pkg_dict.get("accuracy", "") != layer['details']['attributeAccuracy'] + "\n" + layer['details'][
