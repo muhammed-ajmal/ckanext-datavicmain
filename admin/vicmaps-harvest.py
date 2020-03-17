@@ -187,29 +187,69 @@ for catalogue in catalogues:
         except ckanapi.CKANAPIError, e:
             print "CKAN api has failed with the following error: " + str(e) + " skipping..."
             continue
+
+        def get_extra(key, package_dict):
+            for extra in package_dict.get('extras', []):
+                if extra['key'] == key:
+                    return extra
+
+        # DATAVIC-184: Add defaults for required fields
+        if 'extras' not in pkg_dict:
+            pkg_dict['extras'] = [
+                {'key': 'update_frequency', 'value': 'unknown'},
+                {'key': 'personal_information', 'value': 'no'},
+                {'key': 'protective_marking', 'value': 'Public Domain'},
+                {'key': 'access', 'value': 'yes'}
+            ]
+
+        # DATAVIC-184: Only set `date_created_data_asset` for new datasets
+        if new:
+            pkg_dict['extras'].append({'key': 'date_created_data_asset', 'value': datetime.utcnow().isoformat()})
+
+        # DATAVIC-184: Add default tags
+        pkg_dict['tags'] = [
+            {'name': 'spatial'},
+            {'name': 'mapping'},
+            {'name': 'mapping service'},
+            {'name': 'vicmap'},
+        ]
+
         pkg_dict['geo_data'] = '1'
+
         pkg_dict['public'] = 'true'
+
         if pkg_dict.get("name", "") != pkg_name:
             print "name changed"
             update = True
             pkg_dict['name'] = pkg_name
+
         if pkg_dict.get("title", "") != layer['title'].strip():
             print "title changed"
             update = True
             pkg_dict['title'] = layer['title'].strip()
+
         if pkg_dict.get("license_id", "") != 'cc-by':
             print "license_id changed"
             update = True
             pkg_dict['license_id'] = 'cc-by'
-        if pkg_dict.get("external_id", "") != layer['id']:
-            # update = True
-            pkg_dict['external_id'] = layer['id']
+
+        # DATAVIC-184: REMOVED - Data.Vic schema does not have an `external_id` field
+        # if pkg_dict.get("external_id", "") != layer['id']:
+        #     # update = True
+        #     pkg_dict['external_id'] = layer['id']
+
         if len(layer['description']['abstractData']) > 255:
             extract = re.split(line_pat, layer['description']['abstractData'])[0]
-            if pkg_dict.get("extract", "") != extract:
+
+            current_extract = get_extra('extract', pkg_dict)
+
+            if current_extract and current_extract != extract:
                 update = True
                 print "extract changed"
-                pkg_dict['extract'] = extract
+                pkg_dict['extras'].remove(current_extract)
+
+            pkg_dict['extras'].append({'key': 'extract', 'value': extract})
+
             if pkg_dict.get("notes", "") != layer['description']['abstractData']:
                 update = True
                 print "notes changed"
@@ -224,27 +264,40 @@ for catalogue in catalogues:
                 update = True
                 print "extract changed"
                 pkg_dict['extract'] = layer['description']['abstractData']
-        if pkg_dict.get("accuracy", "") != layer['details']['attributeAccuracy'] + "\n" + layer['details'][
-            'positionalAccuracy']:
-            update = True
-            print "accuracy changed"
-            pkg_dict['accuracy'] = layer['details']['attributeAccuracy'] + "\n" + layer['details']['positionalAccuracy']
-        if pkg_dict.get("scale", None) != layer['details']['scale']:
-            update = True
-            print "scale changed"
-            pkg_dict['scale'] = layer['details']['scale']
-        if pkg_dict.get("full_metadata_url", "") != layer['details']['metadataUrl']:
+
+        # DATAVIC-184: REMOVED - Data.Vic schema does not have an `accuracy` field
+        # if pkg_dict.get("accuracy", "") != layer['details']['attributeAccuracy'] + "\n" + layer['details'][
+        #     'positionalAccuracy']:
+        #     update = True
+        #     print "accuracy changed"
+        #     pkg_dict['accuracy'] = layer['details']['attributeAccuracy'] + "\n" + layer['details']['positionalAccuracy']
+
+        # DATAVIC-184: REMOVED - Data.Vic schema does not have an `scale` field
+        # if pkg_dict.get("scale", None) != layer['details']['scale']:
+        #     update = True
+        #     print "scale changed"
+        #     pkg_dict['scale'] = layer['details']['scale']
+
+        full_metadata_url = get_extra('full_metadata_url', pkg_dict)
+
+        if full_metadata_url and full_metadata_url != layer['details']['metadataUrl']:
             update = True
             print "full_metadata_url changed"
-            pkg_dict['full_metadata_url'] = layer['details']['metadataUrl']
-        if pkg_dict.get("external_catalogue", "") != layer['siteKey']:
-            update = True
-            print "external_catalogue changed"
-            pkg_dict['external_catalogue'] = layer['siteKey']
-        if pkg_dict.get("citation", "") != layer['details']['attribution']:
-            update = True
-            print "citation changed"
-            pkg_dict['citation'] = layer['details']['attribution']
+            pkg_dict['extras'].remove(full_metadata_url)
+        pkg_dict['extras'].append({'key': 'full_metadata_url', 'value': layer['details']['metadataUrl']})
+
+        # DATAVIC-184: REMOVED - Data.Vic schema does not have an `external_catalogue` field
+        # if pkg_dict.get("external_catalogue", "") != layer['siteKey']:
+        #     update = True
+        #     print "external_catalogue changed"
+        #     pkg_dict['external_catalogue'] = layer['siteKey']
+
+        # DATAVIC-184: REMOVED - Data.Vic schema does not have an `citation` field
+        # if pkg_dict.get("citation", "") != layer['details']['attribution']:
+        #     update = True
+        #     print "citation changed"
+        #     pkg_dict['citation'] = layer['details']['attribution']
+
         if not pkg_dict.get("organization") or pkg_dict.get("organization", {}).get('title', '') != \
                 layer['description']['custodian']:
             update = True
@@ -361,17 +414,22 @@ for catalogue in catalogues:
             except:
                 pass
 
-            if new:
-                pkg = ckan.call_action('package_create', pkg_dict)  # create a new dataset?
-                print pkg['id'] + " created \n"
-                datasets_created += 1
-            else:
-                pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
-                print pkg['id'] + " updated \n"
-                datasets_updated += 1
-            #
-            # # @Todo remove this output
-            # pprint(pkg_dict)
+            try:
+                if new:
+                    pkg = ckan.call_action('package_create', pkg_dict)  # create a new dataset?
+                    print pkg['id'] + " created \n"
+                    datasets_created += 1
+                else:
+                    pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
+                    print pkg['id'] + " updated \n"
+                    datasets_updated += 1
+                #
+                # # @Todo remove this output
+                # pprint(pkg_dict)
+            except ckanapi.errors.CKANAPIError, e:
+                print str(e)
+                continue
+
         else:
             print " no changes for " + layer['title'] + " \n"
             # print pkg_dict
