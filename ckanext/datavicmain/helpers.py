@@ -1,5 +1,8 @@
 import ckan.model as model
+import ckan.plugins.toolkit as toolkit
+import logging
 
+log = logging.getLogger(__name__)
 
 def add_package_to_group(pkg_dict, context):
     group_id = pkg_dict.get('category', None)
@@ -21,3 +24,8 @@ def set_data_owner(owner_org):
             else:
                 data_owner = organization.title
     return data_owner.strip()
+
+def is_dataset_harvested(package_id):
+    if not package_id:
+        return None
+    return any(package_revision for package_revision in toolkit.get_action('package_revision_list')(data_dict={'id': package_id}) if 'REST API: Create object' in package_revision.get('message'))

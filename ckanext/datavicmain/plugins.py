@@ -27,6 +27,7 @@ log1 = logging.getLogger(__name__)
 
 from ckan import lib
 from ckan.lib import base
+from ckan.logic.auth.update import package_update as ckan_package_update
 
 
 workflow_enabled = False
@@ -86,6 +87,19 @@ def datavic_user_update(context, data_dict=None):
                 schema['email'].append(validator_email_not_in_use)
 
     return {'success': True}
+
+
+def datavic_package_update(context, data_dict):
+    # Harvested dataset are not allowed to be updated, apart from sysadmins
+    if data_dict and helpers.is_dataset_harvested(data_dict.get('id')):
+        result = {'success': False,
+                'msg': _t('User %s not authorized to edit this harvested package') %
+                        (str(context.get('user')))}
+    else:
+        # Call default CKAN package_update auth
+        result = ckan_package_update(context, data_dict)
+
+    return result
 
 
 def is_iar():
@@ -162,6 +176,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_auth_functions(self):
         return {
             'user_update': datavic_user_update,
+            'package_update': datavic_package_update
         }
 
     # IActions
@@ -390,6 +405,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'get_option_label': custom_schema.get_option_label,
             'autoselect_workflow_status_option': self.autoselect_workflow_status_option,
             'release_date': release_date,
+            'is_dataset_harvested': helpers.is_dataset_harvested,
         }
 
     ## IConfigurer interface ##
