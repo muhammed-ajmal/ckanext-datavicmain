@@ -90,16 +90,15 @@ def datavic_user_update(context, data_dict=None):
 
 
 def datavic_package_update(context, data_dict):
-    # Harvested dataset are not allowed to be updated, apart from sysadmins
-    if data_dict and helpers.is_dataset_harvested(data_dict.get('id')):
-        result = {'success': False,
-                'msg': _t('User %s not authorized to edit this harvested package') %
-                        (str(context.get('user')))}
-    else:
-        # Call default CKAN package_update auth
-        result = ckan_package_update(context, data_dict)
+    if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action in ['read', 'edit', 'resource_read', 'resource_edit']:
+        # Harvested dataset are not allowed to be updated, apart from sysadmins
+        package_id = data_dict.get('id') if data_dict else toolkit.c.pkg_dict.get('id') if toolkit.c.pkg_dict else None      
+        if package_id and helpers.is_dataset_harvested(package_id):
+            return {'success': False,
+                    'msg': _t('User %s not authorized to edit this harvested package') %
+                            (str(context.get('user')))}
 
-    return result
+    return ckan_package_update(context, data_dict)
 
 
 def is_iar():
