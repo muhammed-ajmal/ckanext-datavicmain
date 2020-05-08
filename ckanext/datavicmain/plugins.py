@@ -100,6 +100,9 @@ def datavic_package_update(context, data_dict):
 
     return ckan_package_update(context, data_dict)
 
+def datavic_ckan_package_update(context, data_dict):
+    return ckan_package_update(context, data_dict)
+
 
 def is_iar():
     return toolkit.asbool(config.get('ckan.iar', False))
@@ -175,7 +178,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_auth_functions(self):
         return {
             'user_update': datavic_user_update,
-            'package_update': datavic_package_update
+            'package_update': datavic_package_update,
+            'ckan_package_update': datavic_ckan_package_update
         }
 
     # IActions
