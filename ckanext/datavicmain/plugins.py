@@ -27,6 +27,7 @@ log1 = logging.getLogger(__name__)
 
 from ckan import lib
 from ckan.lib import base
+from ckan.logic.auth.update import package_update as ckan_package_update
 
 
 workflow_enabled = False
@@ -88,6 +89,18 @@ def datavic_user_update(context, data_dict=None):
     return {'success': True}
 
 
+def datavic_package_update(context, data_dict):
+    if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action in ['read', 'edit', 'resource_read', 'resource_edit']:
+        # Harvested dataset are not allowed to be updated, apart from sysadmins
+        package_id = data_dict.get('id') if data_dict else toolkit.c.pkg_dict.get('id') if toolkit.c.pkg_dict else None      
+        if package_id and helpers.is_dataset_harvested(package_id):
+            return {'success': False,
+                    'msg': _t('User %s not authorized to edit this harvested package') %
+                            (str(context.get('user')))}
+
+    return ckan_package_update(context, data_dict)
+
+
 def is_iar():
     return toolkit.asbool(config.get('ckan.iar', False))
 
@@ -97,6 +110,13 @@ class AuthMiddleware(object):
     def __init__(self, app, app_conf):
         self.app = app
     def __call__(self, environ, start_response):
+        # DATAVIC-160 Changes site URL from directory.iar.vic.gov.au to directory.data.vic.gov.au
+        if environ['HTTP_HOST'] and environ['HTTP_HOST'] == 'directory.iar.vic.gov.au':
+            headers = [('Location', 'https://directory.data.vic.gov.au' + environ['PATH_INFO'])]
+            status = "301 Moved Permanently"
+            start_response(status, headers)
+            return ['']
+
         # if logged in via browser cookies or API key, all pages accessible
         if 'repoze.who.identity' in environ or self._get_user_for_apikey(environ) or not is_iar():
             return self.app(environ,start_response)
@@ -155,6 +175,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_auth_functions(self):
         return {
             'user_update': datavic_user_update,
+            'package_update': datavic_package_update
         }
 
     # IActions
@@ -171,6 +192,22 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
         map.connect('create_core_groups', '/create_core_groups',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
+        map.connect('/user/reset/{id:.*}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
+
+        # Re-route /dashboard to the dashboard datasets controller action - this is now the default
+        # landing page after logging in
+        map.connect('user_dashboard', '/dashboard',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='user_dashboard', ckan_icon='sitemap')
+        # Create a new route for dashboarsd newsfeed which was the previous default landing page on login
+        map.connect('user_dashboard_newsfeed', '/dashboard/newsfeed',
+            controller='ckan.controllers.user:UserController', action='dashboard',
+            ckan_icon='list')
+
+        # Overridding user_edit
+        map.connect('user_edit', '/user/edit/{id:.*}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='edit')
+            
         return map
 
 
@@ -367,6 +404,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'get_option_label': custom_schema.get_option_label,
             'autoselect_workflow_status_option': self.autoselect_workflow_status_option,
             'release_date': release_date,
+            'is_dataset_harvested': helpers.is_dataset_harvested,
         }
 
     ## IConfigurer interface ##
@@ -498,39 +536,41 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
-        # Add our custom_resource_text metadata field to the schema
-        # schema['resources'].update({
-        #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
-        # })
-        # DataVic implementation of adding extra metadata fields to resources
-        resources_extra_metadata_fields = {}
-        for field in custom_schema.RESOURCE_EXTRA_FIELDS:
-            # DataVic: no custom validators for extra metadata fields at the moment
-            resources_extra_metadata_fields[field[0]] = [ toolkit.get_validator('ignore_missing') ]
-
-        schema['resources'].update(resources_extra_metadata_fields)
-
-        # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
-        if not schema.get('__after'):
-            schema['__after'] = []
-        schema['__after'].append(after_validation_processor)
-
-        # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
-        if not schema.get('__before'):
-            schema['__before'] = []
-        # any additional validator must be inserted before the default 'ignore' one. 
-        schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
-
-        # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
+        # Only apply this logic when updating through the UI, otherwise it causes DCAT JSON harvests to fail
         if toolkit.c.controller == 'package':
-            schema['title'] = [toolkit.get_validator('not_empty'), unicode]
-            schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+            # Add our custom_resource_text metadata field to the schema
+            # schema['resources'].update({
+            #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
+            # })
+            # DataVic implementation of adding extra metadata fields to resources
+            resources_extra_metadata_fields = {}
+            for field in custom_schema.RESOURCE_EXTRA_FIELDS:
+                # DataVic: no custom validators for extra metadata fields at the moment
+                resources_extra_metadata_fields[field[0]] = [ toolkit.get_validator('ignore_missing') ]
 
-            if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
-                schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+            schema['resources'].update(resources_extra_metadata_fields)
 
-            # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
-            schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
+            # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
+            if not schema.get('__after'):
+                schema['__after'] = []
+            schema['__after'].append(after_validation_processor)
+
+            # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
+            if not schema.get('__before'):
+                schema['__before'] = []
+            # any additional validator must be inserted before the default 'ignore' one.
+            schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
+
+            # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
+            if toolkit.c.controller == 'package':
+                schema['title'] = [toolkit.get_validator('not_empty'), unicode]
+                schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+
+                if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
+                    schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
+
+                # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
+                schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
 
         return schema
 
