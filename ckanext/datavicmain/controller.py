@@ -198,9 +198,9 @@ class DataVicUserController(UserController):
         return render('user/perform_reset.html')
 
     def user_dashboard(self):
-        # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dashboard_organizations
-         return self.dashboard_datasets() if h.check_access('package_create') else self.dashboard_organizations()
-    
+        # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dataset search page
+        return self.dashboard_datasets() if h.check_access('package_create') else h.redirect_to(controller='package', action='search')
+
     def edit(self, id=None, data=None, errors=None, error_summary=None):
         # Copied from ckan.controllers.user.edit
         context = {'save': 'save' in request.params,
