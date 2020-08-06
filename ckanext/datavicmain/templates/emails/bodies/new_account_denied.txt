@@ -1,0 +1,10 @@
+Hi {{ user_name }}, 
+
+Your requested account on {{ site_title }} has been denied. 
+
+Thank you.
+
+The DataVic Team
+--
+
+Message sent by the {{ site_title }} ({{ site_url }})

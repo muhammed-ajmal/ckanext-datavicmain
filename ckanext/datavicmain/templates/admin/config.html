@@ -8,4 +8,10 @@
         label=_('Additional Resource Formats'),
         value=data['ckan.datavic.authorised_resource_formats'],
         error=errors['ckan.datavic.authorised_resource_formats']) }}
+    {{ form.textarea(
+        'ckan.datavic.request_access_review_emails',
+        id='field-ckan.datavic.request_access_review_emails',
+        label=_('Request Access Review Emails Sent To'),
+        value=data['ckan.datavic.request_access_review_emails'],
+        error=errors['ckan.datavic.request_access_review_emails']) }}
 {% endblock %}

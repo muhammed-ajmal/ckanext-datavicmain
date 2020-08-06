@@ -3,6 +3,9 @@ import ckan.logic as logic
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 import logging
+import ckan.plugins.toolkit as toolkit
+import helpers
+
 from ckan import lib
 from ckan.common import c, request
 
@@ -35,6 +38,9 @@ def datavic_user_create(context, data_dict):
     session = context['session']
 
     _check_access('user_create', context, data_dict)
+
+    # DATAVICIAR-211: If the user registers set the state to PENDING where a sysadmin can activate them
+    data_dict['state'] = ckan.model.State.PENDING
 
     data, errors = _validate(data_dict, schema, context)
 
@@ -83,6 +89,21 @@ def datavic_user_create(context, data_dict):
     context['id'] = user.id
 
     model.Dashboard.get(user.id)  # Create dashboard for user.
+
+    # Send new account requested emails
+    user_emails = [x.strip() for x in toolkit.config.get('ckan.datavic.request_access_review_emails', []).split(',')]
+    helpers.send_email(
+        user_emails,
+        'new_account_requested',
+        {
+            "user_name": user.name,
+            "user_url": toolkit.url_for(controller='user', action='read', id=user.name, qualified=True),
+            "site_title": toolkit.config.get('ckan.site_title'),
+            "site_url": toolkit.config.get('ckan.site_url')
+        }
+    )
+
+    toolkit.h.flash_success(toolkit._('Your requested account has been submitted for review'))
 
     log1.debug('Created user {name}'.format(name=user.name))
     return user_dict
