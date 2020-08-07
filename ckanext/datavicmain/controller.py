@@ -339,14 +339,14 @@ class DataVicUserController(UserController):
                 {
                     "user_name": user.get('name', ''),
                     'login_url': toolkit.url_for('login', qualified=True),
-                    "site_title": toolkit.config.get('ckan.site_title'),
-                    "site_url": toolkit.config.get('ckan.site_url')
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
                 }
             )
 
-            toolkit.h.flash_success(_('User approved'))
+            h.flash_success(_('User approved'))
 
-            return toolkit.redirect_to(controller='user', action='read', id=user['name'])
+            return h.redirect_to(controller='user', action='read', id=user['name'])
         except NotAuthorized:
             abort(403, _('Unauthorized to activate user.'))
         except NotFound, e:
@@ -354,7 +354,7 @@ class DataVicUserController(UserController):
         except DataError:
             abort(400, _(u'Integrity Error'))
         except ValidationError, e:
-            toolkit.h.flash_error(u'%r' % e.error_dict)
+            h.flash_error(u'%r' % e.error_dict)
 
     def deny(self, id):
         try:
@@ -364,7 +364,7 @@ class DataVicUserController(UserController):
             toolkit.check_access('sysadmin', {})
 
             user = toolkit.get_action('user_show')({}, data_dict)
-            # Delete denyed user
+            # Delete denied user
             toolkit.get_action('user_delete')({}, data_dict)
 
             # Send account requested denied email
@@ -373,14 +373,14 @@ class DataVicUserController(UserController):
                 'new_account_denied',
                 {
                     "user_name": user.get('name', ''),
-                    "site_title": toolkit.config.get('ckan.site_title'),
-                    "site_url": toolkit.config.get('ckan.site_url')
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
                 }
             )
 
-            toolkit.h.flash_success(_('User Denied'))
+            h.flash_success(_('User Denied'))
 
-            return toolkit.redirect_to(controller='user', action='read', id=user['name'])
+            return h.redirect_to(controller='user', action='read', id=user['name'])
         except NotAuthorized:
             abort(403, _('Unauthorized to reject user.'))
         except NotFound, e:
@@ -388,4 +388,4 @@ class DataVicUserController(UserController):
         except DataError:
             abort(400, _(u'Integrity Error'))
         except ValidationError, e:
-            toolkit.h.flash_error(u'%r' % e.error_dict)
+            h.flash_error(u'%r' % e.error_dict)

@@ -5,6 +5,7 @@ import ckan.lib.dictization.model_save as model_save
 import logging
 import ckan.plugins.toolkit as toolkit
 import helpers
+import ckanext.datavic_iar_theme.helpers as theme_helpers
 
 from ckan import lib
 from ckan.common import c, request
@@ -39,10 +40,23 @@ def datavic_user_create(context, data_dict):
 
     _check_access('user_create', context, data_dict)
 
-    # DATAVICIAR-211: If the user registers set the state to PENDING where a sysadmin can activate them
+    # DATAVIC-221: If the user registers set the state to PENDING where a sysadmin can activate them
     data_dict['state'] = ckan.model.State.PENDING
 
     data, errors = _validate(data_dict, schema, context)
+
+    # DATAVIC-221: Validate the organisation_id
+    create_org_member = False
+    organisation_id = data_dict.get('organisation_id', None)
+
+    # DATAVIC-221: Ensure the user selected an orgnisation
+    if not organisation_id:
+        errors['organisation_id'] = [u'Please select an Organisation']
+    # DATAVIC-221: Ensure the user selected a valid top-level organisation
+    elif organisation_id not in theme_helpers.get_parent_orgs('list'):
+        errors['organisation_id'] = [u'Invalid Organisation selected']
+    else:
+        create_org_member = True
 
     if errors:
         session.rollback()
@@ -71,6 +85,17 @@ def datavic_user_create(context, data_dict):
         'activity_type': 'new user',
     }
     logic.get_action('activity_create')(activity_create_context, activity_dict)
+
+    # DATAVIC-221: Add the new (pending) user as a member of the organisation
+    if create_org_member:
+        member_dict = {
+            'id': organisation_id,
+            'object': user.id,
+            'object_type': 'user',
+            'capacity': 'member'
+        }
+
+        logic.get_action('member_create')(activity_create_context, member_dict)
 
     if not context.get('defer_commit'):
         model.repo.commit()
