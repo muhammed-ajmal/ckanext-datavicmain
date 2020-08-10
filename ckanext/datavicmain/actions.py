@@ -3,6 +3,10 @@ import ckan.logic as logic
 import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 import logging
+import ckan.plugins.toolkit as toolkit
+import helpers
+import ckanext.datavic_iar_theme.helpers as theme_helpers
+
 from ckan import lib
 from ckan.common import c, request
 
@@ -10,6 +14,7 @@ _validate = ckan.lib.navl.dictization_functions.validate
 _check_access = logic.check_access
 ValidationError = logic.ValidationError
 
+user_is_registering = helpers.user_is_registering
 log1 = logging.getLogger(__name__)
 
 
@@ -36,7 +41,26 @@ def datavic_user_create(context, data_dict):
 
     _check_access('user_create', context, data_dict)
 
+    if user_is_registering():
+        # DATAVIC-221: If the user registers set the state to PENDING where a sysadmin can activate them
+        data_dict['state'] = ckan.model.State.PENDING
+
     data, errors = _validate(data_dict, schema, context)
+
+    create_org_member = False
+
+    if user_is_registering():
+        # DATAVIC-221: Validate the organisation_id
+        organisation_id = data_dict.get('organisation_id', None)
+
+        # DATAVIC-221: Ensure the user selected an orgnisation
+        if not organisation_id:
+            errors['organisation_id'] = [u'Please select an Organisation']
+        # DATAVIC-221: Ensure the user selected a valid top-level organisation
+        elif organisation_id not in theme_helpers.get_parent_orgs('list'):
+            errors['organisation_id'] = [u'Invalid Organisation selected']
+        else:
+            create_org_member = True
 
     if errors:
         session.rollback()
@@ -66,6 +90,15 @@ def datavic_user_create(context, data_dict):
     }
     logic.get_action('activity_create')(activity_create_context, activity_dict)
 
+    if user_is_registering() and create_org_member:
+        # DATAVIC-221: Add the new (pending) user as a member of the organisation
+        logic.get_action('member_create')(activity_create_context, {
+            'id': organisation_id,
+            'object': user.id,
+            'object_type': 'user',
+            'capacity': 'member'
+        })
+
     if not context.get('defer_commit'):
         model.repo.commit()
 
@@ -83,6 +116,22 @@ def datavic_user_create(context, data_dict):
     context['id'] = user.id
 
     model.Dashboard.get(user.id)  # Create dashboard for user.
+
+    if user_is_registering():
+        # DATAVIC-221: Send new account requested emails
+        user_emails = [x.strip() for x in toolkit.config.get('ckan.datavic.request_access_review_emails', []).split(',')]
+        helpers.send_email(
+            user_emails,
+            'new_account_requested',
+            {
+                "user_name": user.name,
+                "user_url": toolkit.url_for(controller='user', action='read', id=user.name, qualified=True),
+                "site_title": toolkit.config.get('ckan.site_title'),
+                "site_url": toolkit.config.get('ckan.site_url')
+            }
+        )
+
+        toolkit.h.flash_success(toolkit._('Your requested account has been submitted for review'))
 
     log1.debug('Created user {name}'.format(name=user.name))
     return user_dict

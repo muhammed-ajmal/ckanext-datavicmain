@@ -1,13 +1,25 @@
+import logging
+from paste.deploy.converters import asbool
+from ckan.common import config
+import ckan.authz as authz
+import ckan.lib.authenticator as authenticator
+from ckan.controllers.user import set_repoze_user
+from ckan.controllers.user import UserController
+import ckan.lib.helpers as h
+import ckan.lib.navl.dictization_functions as dictization_functions
+from ckan.common import _, request
+import ckan.lib.mailer as mailer
 from ckan.common import c, response
 from ckan.controllers.package import PackageController
-#import ckan.lib.package_saver as package_saver
-#from ckan.lib.base import BaseController
+# import ckan.lib.package_saver as package_saver
+# from ckan.lib.base import BaseController
 import ckan.lib.base as base
 import ckan.lib as lib
 import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import json
+import helpers
 
 render = base.render
 NotFound = logic.NotFound
@@ -16,22 +28,12 @@ get_action = logic.get_action
 
 abort = base.abort
 check_access = logic.check_access
-import ckan.lib.mailer as mailer
-from ckan.common import _, request
-import ckan.lib.navl.dictization_functions as dictization_functions
 ValidationError = logic.ValidationError
 UsernamePasswordError = logic.UsernamePasswordError
 DataError = dictization_functions.DataError
 unflatten = dictization_functions.unflatten
-import ckan.lib.helpers as h
-from ckan.controllers.user import UserController
-from ckan.controllers.user import set_repoze_user
-import ckan.lib.authenticator as authenticator
-import ckan.authz as authz
-from ckan.common import config
-from paste.deploy.converters import asbool
-import logging
 log = logging.getLogger(__name__)
+
 
 class DataVicMainController(PackageController):
 
@@ -54,18 +56,18 @@ class DataVicMainController(PackageController):
 
         # used by disqus plugin
         c.current_package_id = c.pkg.id
-        #c.related_count = c.pkg.related_count
+        # c.related_count = c.pkg.related_count
         self._setup_template_variables(context, {'id': id},
                                        package_type=package_type)
 
-        #package_saver.PackageSaver().render_package(c.pkg_dict, context)
+        # package_saver.PackageSaver().render_package(c.pkg_dict, context)
 
         try:
             return render('package/read_historical.html')
         except lib.render.TemplateNotFound:
             msg = _("Viewing {package_type} datasets in {format} format is "
                     "not supported (template file {file} not found).".format(
-                package_type=package_type, format=format, file='package/read_historical.html'))
+                        package_type=package_type, format=format, file='package/read_historical.html'))
             abort(404, msg)
 
         assert False, "We should never get here"
@@ -78,7 +80,6 @@ class DataVicMainController(PackageController):
 
         if not user or not authz.is_sysadmin(user.name):
             base.abort(403, _('You are not permitted to perform this action.'))
-
 
     def create_core_groups(self):
         self.check_sysadmin()
@@ -148,7 +149,8 @@ class DataVicUserController(UserController):
 
         try:
             check_access('user_reset', context)
-        except NotAuthorized:
+        except NotAuthorized as e:
+            log.debug(str(e))
             abort(403, _('Unauthorized to reset password.'))
 
         try:
@@ -204,10 +206,10 @@ class DataVicUserController(UserController):
     def edit(self, id=None, data=None, errors=None, error_summary=None):
         # Copied from ckan.controllers.user.edit
         context = {'save': 'save' in request.params,
-                'schema': self._edit_form_to_db_schema(),
-                'model': model, 'session': model.Session,
-                'user': c.user, 'auth_user_obj': c.userobj
-                }
+                   'schema': self._edit_form_to_db_schema(),
+                   'model': model, 'session': model.Session,
+                   'user': c.user, 'auth_user_obj': c.userobj
+                   }
         if id is None:
             if c.userobj:
                 id = c.userobj.id
@@ -319,3 +321,72 @@ class DataVicUserController(UserController):
             errors = {'oldpassword': [_('Password entered was incorrect')]}
             error_summary = {_('Old Password'): _('incorrect password')}
             return self.edit(id, data_dict, errors, error_summary)
+
+    def approve(self, id):
+        try:
+            data_dict = {'id': id}
+
+            # Only sysadmins can activate a pending user
+            toolkit.check_access('sysadmin', {})
+
+            old_data = toolkit.get_action('user_show')({}, data_dict)
+            old_data['state'] = model.State.ACTIVE
+            user = toolkit.get_action('user_update')({}, old_data)
+
+            # Send new account approved email to user
+            helpers.send_email(
+                [user.get('email', '')],
+                'new_account_approved',
+                {
+                    "user_name": user.get('name', ''),
+                    'login_url': toolkit.url_for('login', qualified=True),
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
+                }
+            )
+
+            h.flash_success(_('User approved'))
+
+            return h.redirect_to(controller='user', action='read', id=user['name'])
+        except NotAuthorized:
+            abort(403, _('Unauthorized to activate user.'))
+        except NotFound, e:
+            abort(404, _('User not found'))
+        except DataError:
+            abort(400, _(u'Integrity Error'))
+        except ValidationError, e:
+            h.flash_error(u'%r' % e.error_dict)
+
+    def deny(self, id):
+        try:
+            data_dict = {'id': id}
+
+            # Only sysadmins can activate a pending user
+            toolkit.check_access('sysadmin', {})
+
+            user = toolkit.get_action('user_show')({}, data_dict)
+            # Delete denied user
+            toolkit.get_action('user_delete')({}, data_dict)
+
+            # Send account requested denied email
+            helpers.send_email(
+                [user.get('email', '')],
+                'new_account_denied',
+                {
+                    "user_name": user.get('name', ''),
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
+                }
+            )
+
+            h.flash_success(_('User Denied'))
+
+            return h.redirect_to(controller='user', action='read', id=user['name'])
+        except NotAuthorized:
+            abort(403, _('Unauthorized to reject user.'))
+        except NotFound, e:
+            abort(404, _('User not found'))
+        except DataError:
+            abort(400, _(u'Integrity Error'))
+        except ValidationError, e:
+            h.flash_error(u'%r' % e.error_dict)

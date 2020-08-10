@@ -92,13 +92,23 @@ def datavic_user_update(context, data_dict=None):
 def datavic_package_update(context, data_dict):
     if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action in ['read', 'edit', 'resource_read', 'resource_edit']:
         # Harvested dataset are not allowed to be updated, apart from sysadmins
-        package_id = data_dict.get('id') if data_dict else toolkit.c.pkg_dict.get('id') if toolkit.c.pkg_dict else None      
+        package_id = data_dict.get('id') if data_dict else toolkit.c.pkg_dict.get('id') if toolkit.c.pkg_dict else None
         if package_id and helpers.is_dataset_harvested(package_id):
             return {'success': False,
                     'msg': _t('User %s not authorized to edit this harvested package') %
-                            (str(context.get('user')))}
+                    (str(context.get('user')))}
 
     return ckan_package_update(context, data_dict)
+
+
+@toolkit.auth_allow_anonymous_access
+def datavic_user_reset(context, data_dict):
+    if helpers.is_user_account_pending_review(context.get('user', None)):
+        return {'success': False,
+                'msg': _t('User %s not authorized to reset password') %
+                (str(context.get('user')))}
+    else:
+        return {'success': True}
 
 
 def is_iar():
@@ -124,7 +134,8 @@ class AuthMiddleware(object):
             # otherwise only login/reset and front pages are accessible
             if (environ['PATH_INFO'] == '/' or environ['PATH_INFO'] == '/user/login' or environ['PATH_INFO'] == '/user/_logout'
                                 or '/user/reset' in environ['PATH_INFO'] or environ['PATH_INFO'] == '/user/logged_out'
-                                or environ['PATH_INFO'] == '/user/logged_in' or environ['PATH_INFO'] == '/user/logged_out_redirect'):
+                                or environ['PATH_INFO'] == '/user/logged_in' or environ['PATH_INFO'] == '/user/logged_out_redirect'
+                                or '/user/register' == environ['PATH_INFO']):
                 return self.app(environ,start_response)
             else:
                 # http://rufuspollock.org/2006/09/28/wsgi-middleware/
@@ -175,7 +186,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_auth_functions(self):
         return {
             'user_update': datavic_user_update,
-            'package_update': datavic_package_update
+            'package_update': datavic_package_update,
+            'user_reset': datavic_user_reset,
         }
 
     # IActions
@@ -207,7 +219,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         # Overridding user_edit
         map.connect('user_edit', '/user/edit/{id:.*}',
             controller='ckanext.datavicmain.controller:DataVicUserController', action='edit')
-            
+
+        map.connect('user_approve', '/user/activate/{id}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='approve')
+
+        map.connect('user_deny', '/user/deny/{id}',
+            controller='ckanext.datavicmain.controller:DataVicUserController', action='deny')
+
         return map
 
 
@@ -405,6 +423,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'autoselect_workflow_status_option': self.autoselect_workflow_status_option,
             'release_date': release_date,
             'is_dataset_harvested': helpers.is_dataset_harvested,
+            'is_user_account_pending_review': helpers.is_user_account_pending_review
         }
 
     ## IConfigurer interface ##
@@ -414,6 +433,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 toolkit.get_validator('ignore_missing'),
                 unicode
             ],
+            'ckan.datavic.request_access_review_emails': [
+                toolkit.get_validator('ignore_missing'),
+                unicode
+            ]
         })
 
         return schema

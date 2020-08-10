@@ -1,5 +1,16 @@
 {% ckan_extends %}
 
+{% block page_primary_action %}
+  {{ super() }}
+  {% if h.check_access('user_dashboard_reports') %}
+    <a href="{{ h.url_for('organisation_member_report') }}" class="btn btn-primary">
+      <i class="fa fa-table"></i>
+      Member report
+    </a>
+  {% endif %}
+{% endblock %}
+
+
 {% block primary_content_inner %}
   <h2 class="hide-heading">{{ _('My Organizations') }}</h2>
   {% set organizations = h.organizations_available('manage_group') %}
