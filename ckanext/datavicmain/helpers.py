@@ -66,3 +66,6 @@ def send_email(user_emails, email_type, extra_vars):
             log.error(u'Failed to send email {email_type} to {user_email}.'.format(email_type=email_type, user_email=user_email))
             log.error('Error: {ex}'.format(ex=ex))
 
+
+def user_is_registering():
+    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']

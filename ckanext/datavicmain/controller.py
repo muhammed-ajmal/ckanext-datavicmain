@@ -149,7 +149,8 @@ class DataVicUserController(UserController):
 
         try:
             check_access('user_reset', context)
-        except NotAuthorized:
+        except NotAuthorized as e:
+            log.debug(str(e))
             abort(403, _('Unauthorized to reset password.'))
 
         try:

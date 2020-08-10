@@ -101,6 +101,7 @@ def datavic_package_update(context, data_dict):
     return ckan_package_update(context, data_dict)
 
 
+@toolkit.auth_allow_anonymous_access
 def datavic_user_reset(context, data_dict):
     if helpers.is_user_account_pending_review(context.get('user', None)):
         return {'success': False,
