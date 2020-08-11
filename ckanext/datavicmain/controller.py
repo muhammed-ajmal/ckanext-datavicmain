@@ -197,11 +197,11 @@ class DataVicUserController(UserController):
                          .format(user_obj.name))
                 try:
                     # DATAVIC-221: Do not create/send reset link if user was self-registered and currently pending
-                    if not user_obj.is_pending() and user_obj.reset_key:
-                        mailer.send_reset_link(user_obj)
-                    else:
+                    if user_obj.is_pending() and not user_obj.reset_key:
                         h.flash_error(_(u'Unable to send reset link - please contact the site administrator.'))
                         return h.redirect_to(u'/user/reset')
+                    else:
+                        mailer.send_reset_link(user_obj)
                 except mailer.MailerException, e:
                     h.flash_error(
                         _(u'Error sending the email. Try again later '
