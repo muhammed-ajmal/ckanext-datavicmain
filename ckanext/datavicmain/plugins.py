@@ -204,6 +204,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
         map.connect('create_core_groups', '/create_core_groups',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
+        map.connect('/user/reset',
+            controller = 'ckanext.datavicmain.controller:DataVicUserController', action='request_reset')
         map.connect('/user/reset/{id:.*}',
             controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
 

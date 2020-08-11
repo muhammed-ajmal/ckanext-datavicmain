@@ -141,6 +141,82 @@ class DataVicMainController(PackageController):
 
 
 class DataVicUserController(UserController):
+    def request_reset(self):
+        """
+        This is copied from CKAN core /ckan/controllers/user.py
+        And adjusted to deny password reset requests from pending self registered users
+        @TODO: This will need to be refactored for CKAN 2.8+ as the user controller is
+        now a blueprint (/ckan/views/user.py) with controller logic for this function in
+        RequestResetView > post() method
+        :return:
+        """
+        context = {'model': model, 'session': model.Session, 'user': c.user,
+                   'auth_user_obj': c.userobj}
+        data_dict = {'id': request.params.get('user')}
+        try:
+            check_access('request_reset', context)
+        except NotAuthorized:
+            abort(403, _('Unauthorized to request reset password.'))
+
+        if request.method == 'POST':
+            id = request.params.get('user')
+            if id in (None, u''):
+                h.flash_error(_(u'Email is required'))
+                return h.redirect_to(u'/user/reset')
+            context = {'model': model,
+                       'user': c.user,
+                       u'ignore_auth': True}
+            user_objs = []
+
+            if u'@' not in id:
+                try:
+                    user_dict = get_action('user_show')(context, {'id': id})
+                    user_objs.append(context['user_obj'])
+                except NotFound:
+                    pass
+            else:
+                user_list = logic.get_action(u'user_list')(context, {
+                    u'email': id
+                })
+                if user_list:
+                    # send reset emails for *all* user accounts with this email
+                    # (otherwise we'd have to silently fail - we can't tell the
+                    # user, as that would reveal the existence of accounts with
+                    # this email address)
+                    for user_dict in user_list:
+                        logic.get_action(u'user_show')(
+                            context, {u'id': user_dict[u'id']})
+                        user_objs.append(context[u'user_obj'])
+
+            if not user_objs:
+                log.info(u'User requested reset link for unknown user: {}'
+                         .format(id))
+
+            for user_obj in user_objs:
+                log.info(u'Emailing reset link to user: {}'
+                         .format(user_obj.name))
+                try:
+                    # DATAVIC-221: Do not create/send reset link if user was self-registered and currently pending
+                    if user_obj.is_pending() and not user_obj.reset_key:
+                        h.flash_error(_(u'Unable to send reset link - please contact the site administrator.'))
+                        return h.redirect_to(u'/user/reset')
+                    else:
+                        mailer.send_reset_link(user_obj)
+                except mailer.MailerException, e:
+                    h.flash_error(
+                        _(u'Error sending the email. Try again later '
+                          'or contact an administrator for help')
+                    )
+                    log.exception(e)
+                    return h.redirect_to(u'/')
+            # always tell the user it succeeded, because otherwise we reveal
+            # which accounts exist or not
+            h.flash_success(
+                _(u'A reset link has been emailed to you '
+                  '(unless the account specified does not exist)'))
+            return h.redirect_to(u'/')
+        return render('user/request_reset.html')
+
     def perform_reset(self, id):
         # FIXME 403 error for invalid key is a non helpful page
         context = {'model': model, 'session': model.Session,
