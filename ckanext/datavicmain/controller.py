@@ -1,13 +1,25 @@
+import logging
+from paste.deploy.converters import asbool
+from ckan.common import config
+import ckan.authz as authz
+import ckan.lib.authenticator as authenticator
+from ckan.controllers.user import set_repoze_user
+from ckan.controllers.user import UserController
+import ckan.lib.helpers as h
+import ckan.lib.navl.dictization_functions as dictization_functions
+from ckan.common import _, request
+import ckan.lib.mailer as mailer
 from ckan.common import c, response
 from ckan.controllers.package import PackageController
-#import ckan.lib.package_saver as package_saver
-#from ckan.lib.base import BaseController
+# import ckan.lib.package_saver as package_saver
+# from ckan.lib.base import BaseController
 import ckan.lib.base as base
 import ckan.lib as lib
 import ckan.logic as logic
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import json
+import helpers
 
 render = base.render
 NotFound = logic.NotFound
@@ -16,22 +28,12 @@ get_action = logic.get_action
 
 abort = base.abort
 check_access = logic.check_access
-import ckan.lib.mailer as mailer
-from ckan.common import _, request
-import ckan.lib.navl.dictization_functions as dictization_functions
 ValidationError = logic.ValidationError
 UsernamePasswordError = logic.UsernamePasswordError
 DataError = dictization_functions.DataError
 unflatten = dictization_functions.unflatten
-import ckan.lib.helpers as h
-from ckan.controllers.user import UserController
-from ckan.controllers.user import set_repoze_user
-import ckan.lib.authenticator as authenticator
-import ckan.authz as authz
-from ckan.common import config
-from paste.deploy.converters import asbool
-import logging
 log = logging.getLogger(__name__)
+
 
 class DataVicMainController(PackageController):
 
@@ -54,18 +56,18 @@ class DataVicMainController(PackageController):
 
         # used by disqus plugin
         c.current_package_id = c.pkg.id
-        #c.related_count = c.pkg.related_count
+        # c.related_count = c.pkg.related_count
         self._setup_template_variables(context, {'id': id},
                                        package_type=package_type)
 
-        #package_saver.PackageSaver().render_package(c.pkg_dict, context)
+        # package_saver.PackageSaver().render_package(c.pkg_dict, context)
 
         try:
             return render('package/read_historical.html')
         except lib.render.TemplateNotFound:
             msg = _("Viewing {package_type} datasets in {format} format is "
                     "not supported (template file {file} not found).".format(
-                package_type=package_type, format=format, file='package/read_historical.html'))
+                        package_type=package_type, format=format, file='package/read_historical.html'))
             abort(404, msg)
 
         assert False, "We should never get here"
@@ -78,7 +80,6 @@ class DataVicMainController(PackageController):
 
         if not user or not authz.is_sysadmin(user.name):
             base.abort(403, _('You are not permitted to perform this action.'))
-
 
     def create_core_groups(self):
         self.check_sysadmin()
@@ -140,6 +141,82 @@ class DataVicMainController(PackageController):
 
 
 class DataVicUserController(UserController):
+    def request_reset(self):
+        """
+        This is copied from CKAN core /ckan/controllers/user.py
+        And adjusted to deny password reset requests from pending self registered users
+        @TODO: This will need to be refactored for CKAN 2.8+ as the user controller is
+        now a blueprint (/ckan/views/user.py) with controller logic for this function in
+        RequestResetView > post() method
+        :return:
+        """
+        context = {'model': model, 'session': model.Session, 'user': c.user,
+                   'auth_user_obj': c.userobj}
+        data_dict = {'id': request.params.get('user')}
+        try:
+            check_access('request_reset', context)
+        except NotAuthorized:
+            abort(403, _('Unauthorized to request reset password.'))
+
+        if request.method == 'POST':
+            id = request.params.get('user')
+            if id in (None, u''):
+                h.flash_error(_(u'Email is required'))
+                return h.redirect_to(u'/user/reset')
+            context = {'model': model,
+                       'user': c.user,
+                       u'ignore_auth': True}
+            user_objs = []
+
+            if u'@' not in id:
+                try:
+                    user_dict = get_action('user_show')(context, {'id': id})
+                    user_objs.append(context['user_obj'])
+                except NotFound:
+                    pass
+            else:
+                user_list = logic.get_action(u'user_list')(context, {
+                    u'email': id
+                })
+                if user_list:
+                    # send reset emails for *all* user accounts with this email
+                    # (otherwise we'd have to silently fail - we can't tell the
+                    # user, as that would reveal the existence of accounts with
+                    # this email address)
+                    for user_dict in user_list:
+                        logic.get_action(u'user_show')(
+                            context, {u'id': user_dict[u'id']})
+                        user_objs.append(context[u'user_obj'])
+
+            if not user_objs:
+                log.info(u'User requested reset link for unknown user: {}'
+                         .format(id))
+
+            for user_obj in user_objs:
+                log.info(u'Emailing reset link to user: {}'
+                         .format(user_obj.name))
+                try:
+                    # DATAVIC-221: Do not create/send reset link if user was self-registered and currently pending
+                    if user_obj.is_pending() and not user_obj.reset_key:
+                        h.flash_error(_(u'Unable to send reset link - please contact the site administrator.'))
+                        return h.redirect_to(u'/user/reset')
+                    else:
+                        mailer.send_reset_link(user_obj)
+                except mailer.MailerException, e:
+                    h.flash_error(
+                        _(u'Error sending the email. Try again later '
+                          'or contact an administrator for help')
+                    )
+                    log.exception(e)
+                    return h.redirect_to(u'/')
+            # always tell the user it succeeded, because otherwise we reveal
+            # which accounts exist or not
+            h.flash_success(
+                _(u'A reset link has been emailed to you '
+                  '(unless the account specified does not exist)'))
+            return h.redirect_to(u'/')
+        return render('user/request_reset.html')
+
     def perform_reset(self, id):
         # FIXME 403 error for invalid key is a non helpful page
         context = {'model': model, 'session': model.Session,
@@ -148,7 +225,8 @@ class DataVicUserController(UserController):
 
         try:
             check_access('user_reset', context)
-        except NotAuthorized:
+        except NotAuthorized as e:
+            log.debug(str(e))
             abort(403, _('Unauthorized to reset password.'))
 
         try:
@@ -198,16 +276,16 @@ class DataVicUserController(UserController):
         return render('user/perform_reset.html')
 
     def user_dashboard(self):
-        # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dashboard_organizations
-         return self.dashboard_datasets() if h.check_access('package_create') else self.dashboard_organizations()
-    
+        # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dataset search page
+        return self.dashboard_datasets() if h.check_access('package_create') else h.redirect_to(controller='package', action='search')
+
     def edit(self, id=None, data=None, errors=None, error_summary=None):
         # Copied from ckan.controllers.user.edit
         context = {'save': 'save' in request.params,
-                'schema': self._edit_form_to_db_schema(),
-                'model': model, 'session': model.Session,
-                'user': c.user, 'auth_user_obj': c.userobj
-                }
+                   'schema': self._edit_form_to_db_schema(),
+                   'model': model, 'session': model.Session,
+                   'user': c.user, 'auth_user_obj': c.userobj
+                   }
         if id is None:
             if c.userobj:
                 id = c.userobj.id
@@ -319,3 +397,72 @@ class DataVicUserController(UserController):
             errors = {'oldpassword': [_('Password entered was incorrect')]}
             error_summary = {_('Old Password'): _('incorrect password')}
             return self.edit(id, data_dict, errors, error_summary)
+
+    def approve(self, id):
+        try:
+            data_dict = {'id': id}
+
+            # Only sysadmins can activate a pending user
+            toolkit.check_access('sysadmin', {})
+
+            old_data = toolkit.get_action('user_show')({}, data_dict)
+            old_data['state'] = model.State.ACTIVE
+            user = toolkit.get_action('user_update')({}, old_data)
+
+            # Send new account approved email to user
+            helpers.send_email(
+                [user.get('email', '')],
+                'new_account_approved',
+                {
+                    "user_name": user.get('name', ''),
+                    'login_url': toolkit.url_for('login', qualified=True),
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
+                }
+            )
+
+            h.flash_success(_('User approved'))
+
+            return h.redirect_to(controller='user', action='read', id=user['name'])
+        except NotAuthorized:
+            abort(403, _('Unauthorized to activate user.'))
+        except NotFound, e:
+            abort(404, _('User not found'))
+        except DataError:
+            abort(400, _(u'Integrity Error'))
+        except ValidationError, e:
+            h.flash_error(u'%r' % e.error_dict)
+
+    def deny(self, id):
+        try:
+            data_dict = {'id': id}
+
+            # Only sysadmins can activate a pending user
+            toolkit.check_access('sysadmin', {})
+
+            user = toolkit.get_action('user_show')({}, data_dict)
+            # Delete denied user
+            toolkit.get_action('user_delete')({}, data_dict)
+
+            # Send account requested denied email
+            helpers.send_email(
+                [user.get('email', '')],
+                'new_account_denied',
+                {
+                    "user_name": user.get('name', ''),
+                    "site_title": config.get('ckan.site_title'),
+                    "site_url": config.get('ckan.site_url')
+                }
+            )
+
+            h.flash_success(_('User Denied'))
+
+            return h.redirect_to(controller='user', action='read', id=user['name'])
+        except NotAuthorized:
+            abort(403, _('Unauthorized to reject user.'))
+        except NotFound, e:
+            abort(404, _('User not found'))
+        except DataError:
+            abort(400, _(u'Integrity Error'))
+        except ValidationError, e:
+            h.flash_error(u'%r' % e.error_dict)

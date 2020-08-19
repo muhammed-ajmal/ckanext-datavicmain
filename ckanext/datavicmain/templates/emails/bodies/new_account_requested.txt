@@ -1,0 +1,1 @@
+{{ user_name }} has requested an account for review {{ user_url }}
