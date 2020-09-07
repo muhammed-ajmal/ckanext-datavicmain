@@ -257,7 +257,7 @@ your custom field won't work!!
 
 
   {% block package_metadata_fields_maintainer %}
-    {% if c.controller == 'package' and c.action == 'edit' %}
+    {% if c.controller in ['dataset', 'package'] and c.action == 'edit' %}
         {{ form.input('data_owner', label=_('Data Owner'), id='field-data-owner', value=data.data_owner, error=errors.data_owner, classes=['control-medium']) }}
     {% endif %}
 
@@ -270,16 +270,15 @@ your custom field won't work!!
         classes=['control-medium'])
       }}
 
-    {{ form.input('maintainer_email', label=_('Email'), id='field-maintainer-email', placeholder=_('joe@example.com'), value=data.maintainer_email|default(tmpl_context.userobj.email), error=errors.maintainer_email, classes=['control-medium']) }}
+    {{ form.input('maintainer_email', label=_('Email'), id='field-maintainer-email', placeholder=_('joe@example.com'), value=data.maintainer_email|default(g.userobj.email), error=errors.maintainer_email, classes=['control-medium']) }}
   {% endblock %}
 
   {#
     {{ super() }}
   #}
 
-  {% resource 'ckanext-datavicmain/jquery-ui.js' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.css' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.structure.css' %}
-  {% resource 'ckanext-datavicmain/datavicmain.js' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-js' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-css' %}
+  {% asset 'ckanext-datavicmain/datavicmain-js' %}
 
 {% endblock %}

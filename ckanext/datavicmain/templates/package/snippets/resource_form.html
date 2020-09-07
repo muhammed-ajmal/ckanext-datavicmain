@@ -66,9 +66,8 @@
 
 {{ super() }}
 
-  {% resource 'ckanext-datavicmain/jquery-ui.js' %}
-  {% resource 'ckanext-datavicmain/datavicmain.js' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.css' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.structure.css' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-js' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-css' %}
+  {% asset 'ckanext-datavicmain/datavicmain-js' %}
 
 {% endblock %}

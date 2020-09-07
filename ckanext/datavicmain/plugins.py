@@ -17,8 +17,6 @@ from ckanext.datavicmain import actions
 from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
 
-import weberror
-
 from ckan.common import config, request
 
 _t = toolkit._
@@ -28,6 +26,7 @@ log1 = logging.getLogger(__name__)
 from ckan import lib
 from ckan.lib import base
 from ckan.logic.auth.update import package_update as ckan_package_update
+from six import text_type
 
 
 workflow_enabled = False
@@ -41,7 +40,7 @@ if "workflow" in config.get('ckan.plugins', False):
 def parse_date(date_str):
     try:
         return calendar.timegm(time.strptime(date_str, "%Y-%m-%d"))
-    except Exception, e:
+    except Exception as e:
         return None
 
 
@@ -250,10 +249,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     @classmethod
     def workflow_status_options(cls, current_workflow_status, owner_org):
-        user = toolkit.c.user
-        #log1.debug("\n\n\n*** workflow_status_options | current_workflow_status: %s | owner_org: %s | user: %s ***\n\n\n", current_workflow_status, owner_org, user)
-        for option in workflow_helpers.get_available_workflow_statuses(current_workflow_status, owner_org, user):
-            yield {'value': option, 'text': option.replace('_', ' ').capitalize()}
+        if "workflow" in config.get('ckan.plugins', False):
+            user = toolkit.c.user
+            #log1.debug("\n\n\n*** workflow_status_options | current_workflow_status: %s | owner_org: %s | user: %s ***\n\n\n", current_workflow_status, owner_org, user)
+            for option in workflow_helpers.get_available_workflow_statuses(current_workflow_status, owner_org, user):
+                yield {'value': option, 'text': option.replace('_', ' ').capitalize()}
+        else:
+            yield {'value': 'draft', 'text': 'Draft'}
 
     @classmethod
     def autoselect_workflow_status_option(cls, current_workflow_status):
@@ -380,7 +382,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                     dict_of_formats.append({'value': item.lower(), 'text': item.upper()})
             dict_of_formats.insert(0, {'value': '', 'text': 'Please select'})
 
-        except Exception, e:
+        except Exception as e:
             return []
         else:
             return dict_of_formats
@@ -433,11 +435,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         schema.update({
             'ckan.datavic.authorised_resource_formats': [
                 toolkit.get_validator('ignore_missing'),
-                unicode
+                text_type
             ],
             'ckan.datavic.request_access_review_emails': [
                 toolkit.get_validator('ignore_missing'),
-                unicode
+                text_type
             ]
         })
 
@@ -479,14 +481,21 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         from ckan.lib.navl.dictization_functions import missing, StopOnError, Invalid
 
+        for field in custom_schema.DATASET_EXTRA_FIELDS:
+            schema.update({
+                field[0]: [toolkit.get_validator('ignore_missing'),
+                            toolkit.get_converter('convert_to_extras')]
+            })
+
+        # DATAVIC-245: this code removed
         # DataVic: Helper function for adding extra dataset fields
-        def append_field(extras_list, data, key):
-            items = filter(lambda t: t['key'] == key, extras_list)
-            if items:
-                items[0]['value'] = data.get((key,))
-            else:
-                extras_list.append({ 'key': key, 'value': data.get((key,)) })
-            return
+        # def append_field(extras_list, data, key):
+        #     items = list(filter(lambda t: t['key'] == key, extras_list))
+        #     if items:
+        #         items[0]['value'] = data.get((key,))
+        #     else:
+        #         extras_list.append({ 'key': key, 'value': data.get((key,)) })
+        #     return
 
         def after_validation_processor(key, data, errors, context):
             assert key[0] == '__after', 'This validator can only be invok ed in the __after stage'
@@ -496,16 +505,18 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             if not extras_list:
                 extras_list = data[('extras',)] = []
             # Note Append "record_modified_at" field as a non-input field
-            datestamp = time.strftime('%Y-%m-%d %T')
-            items = filter(lambda t: t['key'] == 'record_modified_at', extras_list)
-            if items:
-                items[0]['value'] = datestamp
-            else:
-                extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
+            # DATAVIC-245: this code removed
+            # datestamp = time.strftime('%Y-%m-%d %T')
+            # items = filter(lambda t: t['key'] == 'record_modified_at', extras_list)
+            # if items:
+            #     items[0]['value'] = datestamp
+            # else:
+            #     extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
 
             # DataVic: Append extra fields as dynamic (not registered under modify schema) field
-            for field in custom_schema.DATASET_EXTRA_FIELDS:
-                append_field(extras_list, data, field[0])
+            # DATAVIC-245: this code removed
+            # for field in custom_schema.DATASET_EXTRA_FIELDS:
+                #append_field(extras_list, data, field[0])
 
             # DATAVIC-56
             if workflow_enabled:
@@ -528,8 +539,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                     else:
                         extras_list.append({'key': 'workflow_status', 'value': adjusted_workflow_status})
 
-            # Validate our custom schema fields based on the rules set in schema.py
-            if toolkit.c.controller == 'package':
+            #Validate our custom schema fields based on the rules set in schema.py
+            if toolkit.c.controller in ['dataset', 'package']:
                 for custom_field in custom_schema.DATASET_EXTRA_FIELDS:
                     field_id = custom_field[0]
                     field_attributes = custom_field[1]
@@ -556,13 +567,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             for field in custom_schema.DATASET_EXTRA_FIELDS:
                 data[(field[0],)] = data[('__extras',)].get(field[0])
 
-            if toolkit.c.controller == 'package' and toolkit.c.action == 'new':
+            if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action == 'new':
                 # Set the "Data Owner" to Top parent org as default
                 data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
         # Only apply this logic when updating through the UI, otherwise it causes DCAT JSON harvests to fail
-        if toolkit.c.controller == 'package':
+        if toolkit.c.controller in ['dataset', 'package']:
             # Add our custom_resource_text metadata field to the schema
             # schema['resources'].update({
             #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
@@ -576,26 +587,26 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             schema['resources'].update(resources_extra_metadata_fields)
 
             # Add callbacks to the '__after' pseudo-key to be invoked after all key-based validators/converters
-            if not schema.get('__after'):
-                schema['__after'] = []
-            schema['__after'].append(after_validation_processor)
+            # if not schema.get('__after'):
+            #     schema['__after'] = []
+            # schema['__after'].append(after_validation_processor)
 
             # A similar hook is also provided by the '__before' pseudo-key with obvious functionality.
-            if not schema.get('__before'):
-                schema['__before'] = []
-            # any additional validator must be inserted before the default 'ignore' one.
-            schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
+            # if not schema.get('__before'):
+            #     schema['__before'] = []
+            # # any additional validator must be inserted before the default 'ignore' one.
+            # #schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
 
             # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
-            if toolkit.c.controller == 'package':
-                schema['title'] = [toolkit.get_validator('not_empty'), unicode]
-                schema['notes'] = [toolkit.get_validator('not_empty'), unicode]
+            if toolkit.c.controller in ['dataset', 'package']:
+                schema['title'] = [toolkit.get_validator('not_empty'), text_type]
+                schema['notes'] = [toolkit.get_validator('not_empty'), text_type]
 
-                if toolkit.c.controller == 'package' and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
+                if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
                     schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
 
                 # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
-                schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), unicode]
+                schema['resources']['format'] = [toolkit.get_validator('not_empty'), toolkit.get_validator('if_empty_guess_format'), toolkit.get_validator('clean_format'), text_type]
 
         return schema
 
@@ -666,10 +677,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         This is done through through toolkit.c (template thread-local context object).
         '''
         super(DatasetForm, self).setup_template_variables(context, data_dict)
-        c = toolkit.c
-        c.helloworld_magic_number = 99
-        if c.pkg_dict:
-            c.pkg_dict['helloworld'] = { 'plugin-name': self.__class__.__name__ }
+        # c = toolkit.c
+        # c.helloworld_magic_number = 99
+        # if c.pkg_dict:
+        #     c.pkg_dict['helloworld'] = { 'plugin-name': self.__class__.__name__ }
 
     # Note for all *_template hooks: 
     # We choose not to modify the path for each template (so we simply call the super() method). 
@@ -698,16 +709,19 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
-        if toolkit.c.controller == 'package':
+        if toolkit.c.controller in ['dataset', 'package']:
             # Add the package to the group ("category")
-            if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
-                group = model.Group.get(pkg_dict.get('category'))
-                group.add_package_by_name(pkg_dict.get('name'))
+            pkg_group = pkg_dict.get('category', None)
+            pkg_name = pkg_dict.get('name', None)
+            pkg_type = pkg_dict.get('type', None)
+            if pkg_group and pkg_type in ['dataset', 'package']:
+                group = model.Group.get(pkg_group)
+                group.add_package_by_name(pkg_name)
         pass
 
     def after_update(self, context, pkg_dict):
         # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
-        if toolkit.c.controller == 'package':
+        if toolkit.c.controller in ['dataset', 'package']:
             if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
                 helpers.add_package_to_group(pkg_dict, context)
         pass

@@ -4,11 +4,11 @@ import ckan.lib.dictization.model_dictize as model_dictize
 import ckan.lib.dictization.model_save as model_save
 import ckan.plugins.toolkit as toolkit
 import ckanext.datavic_iar_theme.helpers as theme_helpers
-import helpers
 import logging
 
 from ckan import lib
 from ckan.common import c, request
+from ckanext.datavicmain import helpers
 
 _validate = ckan.lib.navl.dictization_functions.validate
 _check_access = logic.check_access

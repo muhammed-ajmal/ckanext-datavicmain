@@ -1,0 +1,29 @@
+jquery-ui-css:
+  contents:
+    - jquery-ui.css
+    - jquery-ui.structure.css
+
+jquery-ui-js:
+  contents:
+    - jquery-ui.js
+  extra:
+    preload:
+      - vendor/jquery
+
+datavicmain-js:
+  contents:
+    - datavicmain.js
+  extra:
+    preload:
+      - vendor/jquery
+
+datavicmain-resource-list-js:
+  contents:
+    - datavicmain-resource-list.js
+  extra:
+    preload:
+      - vendor/jquery
+
+datavicmain-resource-list-css:
+  contents:
+    - datavicmain-resource-list.css
