@@ -246,6 +246,9 @@ your custom field won't work!!
     {% endif %}
   {% endfor %}
 
+  {# CKAN 2.9 Upgrade #}
+  <input type="hidden" name="current_workflow_status" value="{{ data.get('workflow_status') }}" />
+
   {% block package_metadata_fields_url %}
   {% endblock %}
 
