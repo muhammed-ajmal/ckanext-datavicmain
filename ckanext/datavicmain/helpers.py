@@ -6,6 +6,7 @@ import datetime
 import ckan.lib.mailer as mailer
 
 from ckan.lib.base import render_jinja2
+from ckanext.datavicmain import schema as custom_schema
 
 log = logging.getLogger(__name__)
 
@@ -69,3 +70,11 @@ def send_email(user_emails, email_type, extra_vars):
 
 def user_is_registering():
     return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
+
+
+def option_value_to_label(field, value):
+    for extra in custom_schema.DATASET_EXTRA_FIELDS:
+        if extra[0] == field:
+            for option in extra[1]['options']:
+                if option['value'] == value:
+                    return option['text']

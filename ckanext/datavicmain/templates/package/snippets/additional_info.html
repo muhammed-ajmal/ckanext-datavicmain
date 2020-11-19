@@ -94,7 +94,28 @@
         {% if pkg_dict.protective_marking %}
           <tr>
             <th scope="row" class="dataset-label">{{ _('Protective marking') }}</th>
-            <td class="dataset-details">{{ pkg_dict.protective_marking }}</td>
+            <td class="dataset-details">{{ h.option_value_to_label('protective_marking', pkg_dict.protective_marking) }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.bil_confidentiality %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Business Impact Level - Confidentiality Breach') }}</th>
+            <td class="dataset-details">{{ h.option_value_to_label('bil_confidentiality', pkg_dict.bil_confidentiality) }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.bil_availability %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Business Impact Level - Availability') }}</th>
+            <td class="dataset-details">{{ h.option_value_to_label('bil_availability', pkg_dict.bil_availability) }}</td>
+          </tr>
+        {% endif %}
+
+        {% if pkg_dict.bil_integrity %}
+          <tr>
+            <th scope="row" class="dataset-label">{{ _('Business Impact Level - Integrity') }}</th>
+            <td class="dataset-details">{{ h.option_value_to_label('bil_integrity', pkg_dict.bil_integrity) }}</td>
           </tr>
         {% endif %}
 
