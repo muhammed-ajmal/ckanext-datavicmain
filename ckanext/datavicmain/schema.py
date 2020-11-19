@@ -135,6 +135,7 @@ DATASET_EXTRA_FIELDS = [
         'label': 'Business Impact Level - Availability',
         'field_type': 'select',
         'options': [
+            {'value': '', 'text': 'Please select'},
             {'value': 'n_a', 'text': 'N/A'},
             {'value': 'minor', 'text': 'Minor'},
             {'value': 'limited', 'text': 'Limited'},
@@ -155,6 +156,7 @@ DATASET_EXTRA_FIELDS = [
         'label': 'Business Impact Level - Integrity',
         'field_type': 'select',
         'options': [
+            {'value': '', 'text': 'Please select'},
             {'value': 'n_a', 'text': 'N/A'},
             {'value': 'minor', 'text': 'Minor'},
             {'value': 'limited', 'text': 'Limited'},
