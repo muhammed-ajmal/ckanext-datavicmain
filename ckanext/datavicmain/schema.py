@@ -174,6 +174,10 @@ DATASET_EXTRA_FIELDS = [
     # Source ICT System/Container
     ('source_ict_system', {'label': 'Source ICT System', 'field_group': 'security'}),
 
+    ('record_disposal_category', {'label': 'Record Disposal Category', 'field_group': 'security'}),
+    ('disposal_category', {'label': 'Disposal Category', 'field_group': 'security'}),
+    ('disposal_class', {'label': 'Disposal Class', 'field_group': 'security'}),
+
     #
     # WORKFLOW field cluster
     #

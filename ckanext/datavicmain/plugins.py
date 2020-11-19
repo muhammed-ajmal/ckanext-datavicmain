@@ -425,7 +425,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'autoselect_workflow_status_option': self.autoselect_workflow_status_option,
             'release_date': release_date,
             'is_dataset_harvested': helpers.is_dataset_harvested,
-            'is_user_account_pending_review': helpers.is_user_account_pending_review
+            'is_user_account_pending_review': helpers.is_user_account_pending_review,
+            'option_value_to_label': helpers.option_value_to_label,
         }
 
     ## IConfigurer interface ##
