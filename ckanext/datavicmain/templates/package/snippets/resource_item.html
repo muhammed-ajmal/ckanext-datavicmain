@@ -14,10 +14,10 @@
   <p>
     <small>
         {% if res.public_release_date and res.public_release_date != '' %}
-        Release Date: {{res.public_release_date|truncate(10,end='')}} &nbsp;
+        Release Date: {{ h.render_datetime(res.public_release_date, date_format='%d/%m/%Y') }} &nbsp;
         {% endif %}
         {% if res.period_start and res.period_start != '' %}
-        Period: {{res.period_start|truncate(10,end='')}} &raquo; {{res.period_end|truncate(10,end='')}}
+        Period: {{ h.render_datetime(res.period_start, date_format='%d/%m/%Y') }} &raquo; {{ h.render_datetime(res.period_end, date_format='%d/%m/%Y') }}
         {% endif %}
     </small>
   </p>

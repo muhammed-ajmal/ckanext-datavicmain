@@ -35,11 +35,10 @@
           </tr>
         {% endif %}
         {% if pkg_dict.date_created_data_asset %}
-          {% set date_created_data_asset = pkg_dict.date_created_data_asset.split("T")[0] %}
           <tr>
             <th scope="row" class="dataset-label">{{ _("Created (Data asset)") }}</th>
             <td class="dataset-details" property="dct:issued">
-              {{ date_created_data_asset[8:] + '/' + date_created_data_asset[5:7] + '/' + date_created_data_asset[:4] }}
+              {{ h.render_datetime(pkg_dict.date_created_data_asset, date_format='%d/%m/%Y') }}
             </td>
           </tr>
         {% elif pkg_dict.metadata_created %}
@@ -47,24 +46,22 @@
           <tr>
             <th scope="row" class="dataset-label">{{ _("Published (Metadata Record)") }}</th>
             <td class="dataset-details" property="dct:issued">
-              {{ release_date[8:] + '/' + release_date[5:7] + '/' + release_date[:4] }}
+              {{ h.render_datetime(release_date, date_format='%d/%m/%Y') }}
             </td>
           </tr>
         {% endif %}
         {% if pkg_dict.date_modified_data_asset %}
-          {% set date_modified_data_asset = pkg_dict.date_modified_data_asset.split("T")[0] %}
           <tr>
             <th scope="row" class="dataset-label">{{ _("Last modified (Data asset)") }}</th>
             <td class="dataset-details" property="dct:updated">
-              {{ date_modified_data_asset[8:] + '/' + date_modified_data_asset[5:7] + '/' + date_modified_data_asset[:4] }}
+              {{ h.render_datetime(pkg_dict.date_modified_data_asset, date_format='%d/%m/%Y') }}
             </td>
           </tr>
         {% elif pkg_dict.metadata_modified %}
-          {% set metadata_modified = pkg_dict.metadata_modified.split("T")[0] %}
           <tr>
             <th scope="row" class="dataset-label">{{ _("Last updated") }}</th>
             <td class="dataset-details" property="dct:updated">
-              {{ metadata_modified[8:] + '/' + metadata_modified[5:7] + '/' + metadata_modified[:4] }}
+              {{ h.render_datetime(pkg_dict.metadata_modified, date_format='%d/%m/%Y') }}
             </td>
           </tr>
         {% endif %}
