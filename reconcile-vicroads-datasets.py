@@ -118,9 +118,9 @@ try:
         deleted_packages.append(new_package_name)
         print('- - - - -')
 
-        # Mark OLD package_id as active
-        print('>>> Marking OLD package ID as active')
-        cursor.execute("UPDATE package SET state = 'active' WHERE id = '{0}';".format(old_package_id))
+        # Mark OLD package_id as active AND set `source` to new VicRoads JSON feed identifier
+        print('>>> Marking OLD package ID as active AND updating source identifier')
+        cursor.execute("UPDATE package SET state = 'active', url = '{0}' WHERE id = '{1}';".format(new_guid, old_package_id))
         count = cursor.rowcount
         print('>>> {} rows updated'.format(count))
         original_packages_reactivated += 1
