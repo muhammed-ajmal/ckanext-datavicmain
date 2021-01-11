@@ -228,6 +228,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         map.connect('user_deny', '/user/deny/{id}',
             controller='ckanext.datavicmain.controller:DataVicUserController', action='deny')
 
+        map.connect('dataset_purge', '/dataset/purge/{id}',
+            controller='ckanext.datavicmain.purge_controller:PurgeController', action='purge')
+
         return map
 
 
