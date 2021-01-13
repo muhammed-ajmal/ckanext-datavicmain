@@ -26,8 +26,8 @@ setup(
 	entry_points=\
 	"""
         [ckan.plugins]
-
         datavicmain_dataset = ckanext.datavicmain.plugins:DatasetForm
+        odp_deleter = ckanext.datavicmain.odp_deleter.plugin:ODPDeleter
 
         [fanstatic.libraries]
 
