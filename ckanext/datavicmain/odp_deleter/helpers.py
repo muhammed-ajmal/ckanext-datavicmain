@@ -55,6 +55,10 @@ def purge_dataset_from_odp(context, pkg_dict):
 
         # Check the ODP package was created via a harvest, i.e. it has the `harvest_url` extra key
         if odp_pkg and package_has_harvest_url(odp_pkg.get('extras')):
+            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
+            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
+            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
+            # @TODO: Re-enable this after local testing of harvest deletions
             toolkit.enqueue_job(send_package_purge_request, [
                 odp_pkg
             ])
@@ -121,6 +125,12 @@ def send_package_purge_request(odp_pkg):
         'odp_url': odp_url,
         'pkg_dict': pprint(odp_pkg),
     }
+
+    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
+    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
+    log.error(pprint(odp_pkg))
+    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
+    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
 
     odp = RemoteCKAN(odp_url, odp_api_key)
 
