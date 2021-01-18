@@ -1,4 +1,4 @@
-The following dataset has been deleted (purged) from the ODP {{ odp_url|title }} environment:
+The following dataset has been deleted (purged) from the ODP {{ odp_url }} environment:
 
 Dataset ID: {{ id }}
 
