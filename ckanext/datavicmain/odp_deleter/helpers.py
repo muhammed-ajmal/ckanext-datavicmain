@@ -123,14 +123,10 @@ def send_package_purge_request(odp_pkg):
         'id': odp_pkg.get('id'),
         'name': odp_pkg.get('name'),
         'odp_url': odp_url,
-        'pkg_dict': pprint(odp_pkg),
+        'pkg_dict': odp_pkg,
     }
 
-    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
-    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
-    log.error(pprint(odp_pkg))
-    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
-    log.error('>>> odp_pkg in `send_package_purge_request` <<<')
+    log.debug('>>> Sending ODP package purge request for pkg ID: {0} - name: {1} <<<'.format(odp_pkg.get('id'), odp_pkg.get('name')))
 
     odp = RemoteCKAN(odp_url, odp_api_key)
 
