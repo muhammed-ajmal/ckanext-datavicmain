@@ -5,7 +5,6 @@ import os
 
 from ckanapi import RemoteCKAN, NotFound
 from ckan.lib.base import render_jinja2
-from pprint import pprint
 
 log = logging.getLogger(__name__)
 
@@ -55,10 +54,7 @@ def purge_dataset_from_odp(context, pkg_dict):
 
         # Check the ODP package was created via a harvest, i.e. it has the `harvest_url` extra key
         if odp_pkg and package_has_harvest_url(odp_pkg.get('extras')):
-            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
-            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
-            log.error('>>> Purge request to ODP WOULD BE SENT HERE <<<')
-            # @TODO: Re-enable this after local testing of harvest deletions
+            log.debug('>>> Queueing job to send ODP purge request for pkg ID: {0} - name: {1}'.format(odp_pkg.get('id'), odp_pkg.get('name')))
             toolkit.enqueue_job(send_package_purge_request, [
                 odp_pkg
             ])

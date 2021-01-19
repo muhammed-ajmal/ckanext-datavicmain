@@ -1,1 +1,1 @@
-({{ environment }}) Data.Vic IAR - ODP envvars not set
+({{ environment|upper }}) Data.Vic IAR - ODP envvars not set

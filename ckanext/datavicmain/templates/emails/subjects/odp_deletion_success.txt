@@ -1,1 +1,1 @@
-({{ environment }}) Data.Vic IAR - ODP dataset purged
+({{ environment|upper }}) Data.Vic IAR - ODP dataset purged

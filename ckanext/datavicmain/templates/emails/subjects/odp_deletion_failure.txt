@@ -1,1 +1,1 @@
-({{ environment }}) Data.Vic IAR - ODP dataset purge failure
+({{ environment|upper }}) Data.Vic IAR - ODP dataset purge failure

@@ -4,6 +4,6 @@ Dataset ID: {{ id }}
 
 Dataset Name: {{ name }}
 
-Reason: Dataset deleted on IAR {{ environment|title }} environment.
+Reason: Dataset deleted on IAR {{ environment|upper }} environment.
 
 Data: {{ pkg_dict|safe }}
