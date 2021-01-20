@@ -3,7 +3,6 @@
 import json
 import time
 import calendar
-import jsonpickle
 import copy
 import logging
 import ckan.authz as authz
