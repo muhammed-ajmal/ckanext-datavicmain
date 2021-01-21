@@ -9,11 +9,8 @@ from ckan.lib.base import render_jinja2
 log = logging.getLogger(__name__)
 
 # ODP_API_KEY and ODP_URL should be set as a Lagoon environment variables
-# @TODO: Remove default values
-odp_api_key = os.getenv('ODP_API_KEY', '54384e40-e97d-4337-932d-fc7eb77e9511')
-odp_url = os.getenv('ODP_URL', 'https://ckan-datavic-ckan-odp-pr-101.au.amazee.io')
-# odp_api_key = os.getenv('ODP_API_KEY')
-# odp_url = os.getenv('ODP_URL')
+odp_api_key = os.getenv('ODP_API_KEY')
+odp_url = os.getenv('ODP_URL')
 
 
 def purge_dataset_from_odp(context, pkg_dict):
