@@ -68,4 +68,5 @@ def send_email(user_emails, email_type, extra_vars):
 
 
 def user_is_registering():
-    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
+#    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
+     return toolkit.url_for('user.register')

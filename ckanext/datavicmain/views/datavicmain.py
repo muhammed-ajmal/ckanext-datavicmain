@@ -1,6 +1,7 @@
 import logging
 import json
 from operator import itemgetter
+import pdb
 
 from flask import Blueprint
 from flask.views import MethodView
@@ -19,7 +20,7 @@ import ckan.views.dataset as dataset
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
 ValidationError = logic.ValidationError
-TemplateNotFound = logic.TemplateNotFound
+#TemplateNotFound = logic.TemplateNotFound
 check_access = logic.check_access
 get_action = logic.get_action
 tuplize_dict = logic.tuplize_dict
@@ -32,12 +33,13 @@ abort = base.abort
 
 log = logging.getLogger(__name__)
 
-datavicmain = Blueprint('datavic', __name__)
+datavicmain = Blueprint('datavicmain', __name__)
 
 
 def historical(id):
     #response.headers['Content-Type'] = "text/html; charset=utf-8"
     # package_type = _get_package_type(id.split('@')[0])
+    import pdb;pdb.set_trace()
     package_type = dataset._get_package_type(id.split('@')[0]) #check for new function if necessary
 
     context = {'model': model, 'session': model.Session,
@@ -65,7 +67,7 @@ def historical(id):
 
     try:
         return render('package/read_historical.html')
-    except TemplateNotFound:
+    except base.TemplateNotFound:
         msg = _("Viewing {package_type} datasets in {format} format is "
                 "not supported (template file {file} not found).".format(
                     package_type=package_type, format=format, file='package/read_historical.html'))
@@ -85,7 +87,7 @@ def check_sysadmin(self):
 def create_core_groups(self):
     self.check_sysadmin()
 
-    context = {'user': tk.c.user, 'model': model, 'session': model.Session, 'ignore_auth': True, 'return_id_only': True}
+    context = {'user': tk.g.user, 'model': model, 'session': model.Session, 'ignore_auth': True, 'return_id_only': True}
 
     output = '<pre>'
 
@@ -143,3 +145,5 @@ def create_core_groups(self):
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/{id}/historical', view_func=historical)
     blueprint.add_url_rule('/create_core_groups', view_func=create_core_groups)
+
+register_datavicmain_plugin_rules(datavicmain)

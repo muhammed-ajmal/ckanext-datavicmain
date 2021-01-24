@@ -15,6 +15,7 @@ import ckan.logic           as logic
 from ckanext.datavicmain import actions
 from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
+import ckanext.datavicmain.views.datavicmain as blueprint
 
 from ckan.common import config, request
 
@@ -175,10 +176,15 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
     p.implements(p.IMiddleware, inherit=True)
+    p.implements(p.IBlueprint)
 
 
     def make_middleware(self, app, config):
         return AuthMiddleware(app, config)
+
+    # IBlueprint
+    def get_blueprint(self):
+        return [blueprint.datavicmain]
 
     # IAuthFunctions
     def get_auth_functions(self):
@@ -198,8 +204,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     # IRoutes
     def before_map(self, map):
-        map.connect('dataset_historical', '/dataset/{id}/historical',
-            controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
+        # map.connect('dataset_historical', '/dataset/{id}/historical',
+        #     controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
         map.connect('create_core_groups', '/create_core_groups',
             controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
         map.connect('/user/reset',
