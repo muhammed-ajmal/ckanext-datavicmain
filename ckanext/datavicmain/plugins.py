@@ -15,7 +15,6 @@ import ckan.logic           as logic
 from ckanext.datavicmain import actions
 from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
-import ckanext.datavicmain.views.datavicmain as blueprint
 
 from ckan.common import config, request
 
@@ -184,7 +183,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     # IBlueprint
     def get_blueprint(self):
-        return [blueprint.datavicmain]
+        return helpers._register_blueprints()
 
     # IAuthFunctions
     def get_auth_functions(self):

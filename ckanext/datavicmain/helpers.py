@@ -1,3 +1,9 @@
+import os
+import pkgutil
+import inspect
+
+from flask import Blueprint
+
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 import logging
@@ -32,11 +38,14 @@ def set_data_owner(owner_org):
     return data_owner.strip()
 
 
+#TODO: Find a way to determine if the daset is harvested
+#TODO: We will use `package_activity_list` for now 
+
 def is_dataset_harvested(package_id):
     if not package_id:
         return None
-    return any(package_revision for package_revision in toolkit.get_action('package_revision_list')(data_dict={'id': package_id})
-               if 'REST API: Create object' in package_revision.get('message') and h.date_str_to_datetime(package_revision.get('timestamp')) > datetime.datetime(2019, 4, 24, 10, 30))
+    return any(package_revision for package_revision in toolkit.get_action('package_activity_list')(data_dict={'id': package_id})
+               if 'REST API: Create object' in package_revision.get('activity_type') and h.date_str_to_datetime(package_revision.get('timestamp')) > datetime.datetime(2019, 4, 24, 10, 30))
 
 
 def is_user_account_pending_review(user_id):
@@ -70,3 +79,20 @@ def send_email(user_emails, email_type, extra_vars):
 def user_is_registering():
 #    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
      return toolkit.url_for('user.register')
+
+def _register_blueprints():
+    u'''Return all blueprints defined in the `views` folder
+    '''
+    blueprints = []
+
+    def is_blueprint(mm):
+        return isinstance(mm, Blueprint)
+
+    path = os.path.join(os.path.dirname(__file__), 'views')
+
+    for loader, name, _ in pkgutil.iter_modules([path]):
+        module = loader.find_module(name).load_module(name)
+        for blueprint in inspect.getmembers(module, is_blueprint):
+            blueprints.append(blueprint[1])
+            log.info(u'Registered blueprint: {0!r}'.format(blueprint[0]))
+    return blueprints
