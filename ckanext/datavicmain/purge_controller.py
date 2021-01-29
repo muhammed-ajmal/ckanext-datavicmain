@@ -10,6 +10,8 @@ class PurgeController(PackageController):
 
     def purge(self, id):
         try:
+            # Only sysadmins can purge
+            toolkit.check_access('sysadmin', {})
             toolkit.get_action('dataset_purge')({}, {'id': id})
             toolkit.h.flash_success('Successfully purged dataset ID: %s' % id)
         except Exception as e:
