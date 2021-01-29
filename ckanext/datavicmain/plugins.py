@@ -202,36 +202,36 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
 
     # IRoutes
-    def before_map(self, map):
-        # map.connect('dataset_historical', '/dataset/{id}/historical',
-        #     controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
-        map.connect('create_core_groups', '/create_core_groups',
-            controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
-        map.connect('/user/reset',
-            controller = 'ckanext.datavicmain.controller:DataVicUserController', action='request_reset')
-        map.connect('/user/reset/{id:.*}',
-            controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
+    # def before_map(self, map):
+    #     # map.connect('dataset_historical', '/dataset/{id}/historical',
+    #     #     controller='ckanext.datavicmain.controller:DataVicMainController', action='historical')
+    #     # map.connect('create_core_groups', '/create_core_groups',
+    #     #     controller='ckanext.datavicmain.controller:DataVicMainController', action='create_core_groups')
+    #     map.connect('/user/reset',
+    #         controller = 'ckanext.datavicmain.controller:DataVicUserController', action='request_reset')
+    #     map.connect('/user/reset/{id:.*}',
+    #         controller='ckanext.datavicmain.controller:DataVicUserController', action='perform_reset')
 
-        # Re-route /dashboard to the dashboard datasets controller action - this is now the default
-        # landing page after logging in
-        map.connect('user_dashboard', '/dashboard',
-            controller='ckanext.datavicmain.controller:DataVicUserController', action='user_dashboard', ckan_icon='sitemap')
-        # Create a new route for dashboarsd newsfeed which was the previous default landing page on login
-        map.connect('user_dashboard_newsfeed', '/dashboard/newsfeed',
-            controller='ckan.controllers.user:UserController', action='dashboard',
-            ckan_icon='list')
+    #     # Re-route /dashboard to the dashboard datasets controller action - this is now the default
+    #     # landing page after logging in
+    #     map.connect('user_dashboard', '/dashboard',
+    #         controller='ckanext.datavicmain.controller:DataVicUserController', action='user_dashboard', ckan_icon='sitemap')
+    #     # Create a new route for dashboarsd newsfeed which was the previous default landing page on login
+    #     map.connect('user_dashboard_newsfeed', '/dashboard/newsfeed',
+    #         controller='ckan.controllers.user:UserController', action='dashboard',
+    #         ckan_icon='list')
 
-        # Overridding user_edit
-        map.connect('user_edit', '/user/edit/{id:.*}',
-            controller='ckanext.datavicmain.controller:DataVicUserController', action='edit')
+    #     # Overridding user_edit
+    #     map.connect('user_edit', '/user/edit/{id:.*}',
+    #         controller='ckanext.datavicmain.controller:DataVicUserController', action='edit')
 
-        map.connect('user_approve', '/user/activate/{id}',
-            controller='ckanext.datavicmain.controller:DataVicUserController', action='approve')
+    #     map.connect('user_approve', '/user/activate/{id}',
+    #         controller='ckanext.datavicmain.controller:DataVicUserController', action='approve')
 
-        map.connect('user_deny', '/user/deny/{id}',
-            controller='ckanext.datavicmain.controller:DataVicUserController', action='deny')
+    #     map.connect('user_deny', '/user/deny/{id}',
+    #         controller='ckanext.datavicmain.controller:DataVicUserController', action='deny')
 
-        return map
+    #     return map
 
 
 

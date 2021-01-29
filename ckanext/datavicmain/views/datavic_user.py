@@ -6,50 +6,52 @@ import six
 from flask import Blueprint
 from flask.views import MethodView
 
-import ckan.lib.base as base
 import ckan.lib.helpers as h
 import ckan.lib.mailer as mailer
-import ckan.lib.navl.dictization_functions as dictization_functions
-
+import ckan.plugins.toolkit as toolkit
 import ckan.logic as logic
 import ckan.model as model
-from ckan.common import _, config, g, request
-from ckan.lib.navl import dictization_functions
-import ckan.plugins.toolkit as tk
+from ckan.common import _, g, config, request
 
-from ckan.views.user import RequestResetView, PerformResetView
+import ckan.views.user as user
 
 from ckanext.datavicmain.plugins import datavic_user_reset
 
+import ckanext.datavicmain.helpers as helpers
+import ckan.lib.navl.dictization_functions as dictization_functions
 
 
 
-NotFound = logic.NotFound
-NotAuthorized = logic.NotAuthorized
-ValidationError = logic.ValidationError
-#TemplateNotFound = logic.TemplateNotFound
-check_access = logic.check_access
-get_action = logic.get_action
-tuplize_dict = logic.tuplize_dict
-clean_dict = logic.clean_dict
-parse_params = logic.parse_params
-flatten_to_string_key = logic.flatten_to_string_key
+NotFound = toolkit.ObjectNotFound
+NotAuthorized = toolkit.NotAuthorized
+ValidationError = toolkit.ValidationError
 DataError = dictization_functions.DataError
-unflatten = dictization_functions.unflatten
 
-render = base.render
-abort = base.abort
+check_access = toolkit.check_access
+get_action = toolkit.get_action
+asbool = toolkit.asbool
+
+tuplize_dict = logic.tuplize_dict
+parse_params = logic.parse_params
+clean_dict = logic.clean_dict
+
+_edit_form_to_db_schema = user._edit_form_to_db_schema
+_extra_template_variables = user._extra_template_variables
+edit_user_form = user.edit_user_form
+
+render = toolkit.render
+abort = toolkit.abort
 
 log = logging.getLogger(__name__)
 
 datavicuser = Blueprint('datavicuser', __name__)
 
 
-class DataVicRequestResetView(RequestResetView):
+class DataVicRequestResetView(user.RequestResetView):
 
     def get(self):
         self._prepare()
-        return base.render(u'user/request_reset.html', {})
+        return render(u'user/request_reset.html', {})
 
     def post(self):
         '''
@@ -71,16 +73,14 @@ class DataVicRequestResetView(RequestResetView):
             except NotFound:
                 pass
         else:
-            user_list = logic.get_action(u'user_list')(context, {
-                u'email': id
-            })
+            user_list = get_action(u'user_list')(context, {u'email': id})
             if user_list:
                 # send reset emails for *all* user accounts with this email
                 # (otherwise we'd have to silently fail - we can't tell the
                 # user, as that would reveal the existence of accounts with
                 # this email address)
                 for user_dict in user_list:
-                    logic.get_action(u'user_show')(
+                    get_action(u'user_show')(
                         context, {u'id': user_dict[u'id']})
                     user_objs.append(context[u'user_obj'])
 
@@ -113,9 +113,9 @@ class DataVicRequestResetView(RequestResetView):
         return h.redirect_to(u'/')
 
 
-class DataVicPerformResetView(PerformResetView):
+class DataVicPerformResetView(user.PerformResetView):
 
-    def get(self):
+    def get(self, id):
         # FIXME 403 error for invalid key is a non helpful page
         context = {'model': model, 'session': model.Session,
                     'user': id,
@@ -157,9 +157,14 @@ class DataVicPerformResetView(PerformResetView):
             if not g.user:
                 # log the user in programatically
                 set_repoze_user(user_dict['name'])
-                h.redirect_to(controller='user', action='me')
+                h.redirect_to('user.me')
 
-            h.redirect_to('/')
+            # DataVic customisation
+            # Redirect to different pages depending on user access
+            if h.check_access('package_create'):
+                h.redirect_to('user.read', id=user['name'])
+            else:
+                h.redirect_to('dashboard.activity', id=user['name'])
         except NotAuthorized:
             h.flash_error(_('Unauthorized to edit user %s') % id)
         except NotFound as e:
@@ -172,14 +177,210 @@ class DataVicPerformResetView(PerformResetView):
             h.flash_error(six.text_type(ve))
 
 
+class DataVicUserEditView(MethodView):
+    def _prepare(self, id):
+        context = {
+            u'save': u'save' in request.form,
+            u'schema': _edit_form_to_db_schema(),
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user,
+            u'auth_user_obj': g.userobj
+        }
+        if id is None:
+            if g.userobj:
+                id = g.userobj.id
+            else:
+                abort(400, _(u'No user specified'))
+        data_dict = {u'id': id}
+
+        try:
+            check_access(u'user_update', context, data_dict)
+        except NotAuthorized:
+            abort(403, _(u'Unauthorized to edit a user.'))
+        return context, id
+
+    def post(self, id=None):
+        context, id = self._prepare(id)
+        if not context[u'save']:
+            return self.get(id)
+
+        if id in (g.userobj.id, g.userobj.name):
+            current_user = True
+        else:
+            current_user = False
+        old_username = g.userobj.name
+
+        try:
+            data_dict = clean_dict(
+                dictization_functions.unflatten(
+                    tuplize_dict(parse_params(request.form))))
+            data_dict.update(clean_dict(
+                dictization_functions.unflatten(
+                    tuplize_dict(parse_params(request.files))))
+            )
+
+        except dictization_functions.DataError:
+            abort(400, _(u'Integrity Error'))
+        data_dict.setdefault(u'activity_streams_email_notifications', False)
+
+        context[u'message'] = data_dict.get(u'log_message', u'')
+        data_dict[u'id'] = id
+        email_changed = data_dict[u'email'] != g.userobj.email
+
+        if (data_dict[u'password1']
+                and data_dict[u'password2']) or email_changed:
+            identity = {
+                u'login': g.user,
+                u'password': data_dict[u'old_password']
+            }
+            auth = authenticator.UsernamePasswordAuthenticator()
+
+            if auth.authenticate(request.environ, identity) != g.user:
+                errors = {
+                    u'oldpassword': [_(u'Password entered was incorrect')]
+                }
+                error_summary = {_(u'Old Password'): _(u'incorrect password')}
+                return self.get(id, data_dict, errors, error_summary)
+
+        try:
+            user = get_action(u'user_update')(context, data_dict)
+        except NotAuthorized:
+            abort(403, _(u'Unauthorized to edit user %s') % id)
+        except NotFound:
+            abort(404, _(u'User not found'))
+        except ValidationError as e:
+            errors = e.error_dict
+            error_summary = e.error_summary
+            return self.get(id, data_dict, errors, error_summary)
+
+        h.flash_success(_(u'Profile updated'))
+        resp = h.redirect_to(u'user.read', id=user[u'name'])
+        if current_user and data_dict[u'name'] != old_username:
+            # Changing currently logged in user's name.
+            # Update repoze.who cookie to match
+            set_repoze_user(data_dict[u'name'], resp)
+        return resp
+
+    def get(self, id=None, data=None, errors=None, error_summary=None):
+        context, id = self._prepare(id)
+        data_dict = {u'id': id}
+        try:
+            old_data = get_action(u'user_show')(context, data_dict)
+
+            g.display_name = old_data.get(u'display_name')
+            g.user_name = old_data.get(u'name')
+
+            data = data or old_data
+
+        except NotAuthorized:
+            abort(403, _(u'Unauthorized to edit user %s') % u'')
+        except NotFound:
+            abort(404, _(u'User not found'))
+        user_obj = context.get(u'user_obj')
+
+        errors = errors or {}
+        vars = {
+            u'data': data,
+            u'errors': errors,
+            u'error_summary': error_summary
+        }
+
+        extra_vars = _extra_template_variables({
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user
+        }, data_dict)
+
+        extra_vars[u'show_email_notifications'] = asbool(
+            config.get(u'ckan.activity_streams_email_notifications'))
+        vars.update(extra_vars)
+        extra_vars[u'form'] = render(edit_user_form, extra_vars=vars)
+
+        return render(u'user/edit.html', extra_vars)
 
 
 def user_dashboard():
     # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dataset search page
-    return h.redirect_to('dataset.index') if h.check_access('package_create') else h.redirect_to('dataset.search')    
+    return h.redirect_to('dataset.index') if h.check_access('package_create') else h.redirect_to('dataset.search')   
 
+def approve(id):
+    try:
+        data_dict = {'id': id}
+
+        # Only sysadmins can activate a pending user
+        check_access('sysadmin', {})
+
+        old_data = get_action('user_show')({}, data_dict)
+        old_data['state'] = model.State.ACTIVE
+        user = get_action('user_update')({}, old_data)
+
+        # Send new account approved email to user
+        helpers.send_email(
+            [user.get('email', '')],
+            'new_account_approved',
+            {
+                "user_name": user.get('name', ''),
+                'login_url': toolkit.url_for('login', qualified=True),
+                "site_title": config.get('ckan.site_title'),
+                "site_url": config.get('ckan.site_url')
+            }
+        )
+
+        h.flash_success(_('User approved'))
+
+        return h.redirect_to('user.read', id=user['name'])
+    except NotAuthorized:
+        abort(403, _('Unauthorized to activate user.'))
+    except NotFound as e:
+        abort(404, _('User not found'))
+    except DataError:
+        abort(400, _(u'Integrity Error'))
+    except ValidationError as e:
+        h.flash_error(u'%r' % e.error_dict)
+
+def deny(id):
+    try:
+        data_dict = {'id': id}
+
+        # Only sysadmins can activate a pending user
+        check_access('sysadmin', {})
+
+        user = get_action('user_show')({}, data_dict)
+        # Delete denied user
+        get_action('user_delete')({}, data_dict)
+
+        # Send account requested denied email
+        helpers.send_email(
+            [user.get('email', '')],
+            'new_account_denied',
+            {
+                "user_name": user.get('name', ''),
+                "site_title": config.get('ckan.site_title'),
+                "site_url": config.get('ckan.site_url')
+            }
+        )
+
+        h.flash_success(_('User Denied'))
+
+        return h.redirect_to('user.read', id=user['name'])
+    except NotAuthorized:
+        abort(403, _('Unauthorized to reject user.'))
+    except NotFound as e:
+        abort(404, _('User not found'))
+    except DataError:
+        abort(400, _(u'Integrity Error'))
+    except ValidationError as e:
+        h.flash_error(u'%r' % e.error_dict)
+
+
+_edit_view = DataVicUserEditView.as_view(str('edit'))
 def register_datavicuser_plugin_rules(blueprint):
-    blueprint.add_url_rule('/user/reset', view_func=DataVicRequestResetView.as_view(str('request_reset')))
-    blueprint.add_url_rule(u'/reset', view_func= DataVicPerformResetView.as_view(str(u'perform_reset')))
+    blueprint.add_url_rule(u'/user/reset', view_func=DataVicRequestResetView.as_view(str('request_reset')))
+    blueprint.add_url_rule(u'/reset', view_func= DataVicPerformResetView.as_view(str('perform_reset')))
+    blueprint.add_url_rule(u'/edit', view_func=_edit_view)
+    blueprint.add_url_rule(u'/edit/<id>', view_func=_edit_view)
+    blueprint.add_url_rule(u'/user/activate/<id>', view_func=approve)
+    blueprint.add_url_rule(u'/user/deny/<id>', view_func=deny)
 
 register_datavicuser_plugin_rules(datavicuser)

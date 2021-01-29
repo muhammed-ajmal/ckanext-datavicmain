@@ -1,32 +1,26 @@
 import logging
-import json
 from operator import itemgetter
 
 from flask import Blueprint
 from flask.views import MethodView
 
-import ckan.lib.base as base
 import ckan.lib.helpers as h
-import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _,  g
+import ckan.plugins.toolkit as toolkit
 
 import ckan.views.dataset as dataset
 
 
-NotFound = logic.NotFound
-NotAuthorized = logic.NotAuthorized
-ValidationError = logic.ValidationError
-#TemplateNotFound = logic.TemplateNotFound
-check_access = logic.check_access
-get_action = logic.get_action
-tuplize_dict = logic.tuplize_dict
-clean_dict = logic.clean_dict
-parse_params = logic.parse_params
-flatten_to_string_key = logic.flatten_to_string_key
+NotFound = toolkit.ObjectNotFound
+NotAuthorized = toolkit.NotAuthorized
+ValidationError = toolkit.ValidationError
+check_access = toolkit.check_access
+get_action = toolkit.get_action
 
-render = base.render
-abort = base.abort
+
+render = toolkit.render
+abort = toolkit.abort
 
 log = logging.getLogger(__name__)
 
@@ -56,14 +50,12 @@ def historical(id):
     dataset._setup_template_variables(context, data_dict,
                                       package_type=package_type)
 
-    # TODO: remove
-    g.pkg_dict = pkg_dict
-    g.pkg = pkg
-
+    extra_vars = {'pkg_dict': pkg_dict, 'pkg': pkg}
 
     try:
-        return render('package/read_historical.html')
-    except base.TemplateNotFound:
+        return render('package/read_historical.html', extra_vars)
+    # TemplateNotFound is not added to toolkit
+    except NotFound as e:
         msg = _("Viewing {package_type} datasets in {format} format is "
                 "not supported (template file {file} not found).".format(
                     package_type=package_type, format=format, file='package/read_historical.html'))
