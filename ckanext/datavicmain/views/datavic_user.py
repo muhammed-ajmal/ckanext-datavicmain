@@ -164,7 +164,7 @@ class DataVicPerformResetView(user.PerformResetView):
             if h.check_access('package_create'):
                 h.redirect_to('user.read', id=user['name'])
             else:
-                h.redirect_to('dashboard.activity', id=user['name'])
+                h.redirect_to('user.activity', id=user['name'])
         except NotAuthorized:
             h.flash_error(_('Unauthorized to edit user %s') % id)
         except NotFound as e:
