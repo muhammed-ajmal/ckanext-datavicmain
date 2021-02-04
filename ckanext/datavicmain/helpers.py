@@ -76,6 +76,24 @@ def send_email(user_emails, email_type, extra_vars):
             log.error('Error: {ex}'.format(ex=ex))
 
 
+def set_private_activity(pkg_dict, context, activity_type):
+    pkg = model.Package.get(pkg_dict['id'])
+    user = context['user']
+    session = context['session']
+    user_obj = model.User.by_name(user)
+    
+    if user_obj:
+        user_id = user_obj.id
+    else:
+        user_id = str('not logged in')
+    
+    activity = pkg.activity_stream_item(activity_type, user_id)
+    session.add(activity)
+    return pkg_dict
+
+
+
+
 def user_is_registering():
 #    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
      return toolkit.url_for('user.register')

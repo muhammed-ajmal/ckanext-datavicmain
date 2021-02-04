@@ -598,12 +598,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         schema['tags']['__extras'].append(toolkit.get_converter('free_tags_only'))
 
         # Create a dictionary containing the extra fields..
-        dict_extra_fields = {
-            # Add our non-input field (created at after_validation_processor)
-            'record_modified_at': [
-                toolkit.get_converter('convert_from_extras'),
-            ],
-        }
+        dict_extra_fields = {}
+        # dict_extra_fields = {
+        #     # Add our non-input field (created at after_validation_processor)
+        #     'record_modified_at': [
+        #         toolkit.get_converter('convert_from_extras'),
+        #     ],
+        # }
 
         # Loop through our extra fields, adding them to the schema..
         # Applying the same validator to them for now..
@@ -679,7 +680,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
-        if toolkit.c.controller in ['dataset', 'package']:
+        if toolkit.g.controller in ['dataset', 'package']:
             # Add the package to the group ("category")
             pkg_group = pkg_dict.get('category', None)
             pkg_name = pkg_dict.get('name', None)
@@ -687,13 +688,17 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             if pkg_group and pkg_type in ['dataset', 'package']:
                 group = model.Group.get(pkg_group)
                 group.add_package_by_name(pkg_name)
+                 # DATAVIC-251 - Create activity for private datasets
+                helpers.set_private_activity(pkg_dict, context, str('new'))
         pass
 
     def after_update(self, context, pkg_dict):
         # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
-        if toolkit.c.controller in ['dataset', 'package']:
+        if toolkit.g.controller in ['dataset', 'package']:
             if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
                 helpers.add_package_to_group(pkg_dict, context)
+                # DATAVIC-251 - Create activity for private datasets
+                helpers.set_private_activity(pkg_dict, context, str('changed'))
         pass
 
     def after_show(self, context, pkg_dict):
