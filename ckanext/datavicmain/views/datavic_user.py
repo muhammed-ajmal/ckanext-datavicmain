@@ -12,6 +12,8 @@ import ckan.plugins.toolkit as toolkit
 import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, g, config, request
+import ckan.lib.authenticator as authenticator
+
 
 import ckan.views.user as user
 
@@ -38,6 +40,7 @@ clean_dict = logic.clean_dict
 _edit_form_to_db_schema = user._edit_form_to_db_schema
 _extra_template_variables = user._extra_template_variables
 edit_user_form = user.edit_user_form
+set_repoze_user = user.set_repoze_user
 
 render = toolkit.render
 abort = toolkit.abort
@@ -48,6 +51,9 @@ datavicuser = Blueprint('datavicuser', __name__)
 
 
 class DataVicRequestResetView(user.RequestResetView):
+
+    def _prepare(self, id):
+        return super()._prepare(id)
 
     def get(self):
         self._prepare()
@@ -115,6 +121,9 @@ class DataVicRequestResetView(user.RequestResetView):
 
 class DataVicPerformResetView(user.PerformResetView):
 
+    def _prepare(self, id):
+        return super()._prepare(id)
+
     def get(self, id):
         # FIXME 403 error for invalid key is a non helpful page
         context = {'model': model, 'session': model.Session,
@@ -141,7 +150,8 @@ class DataVicPerformResetView(user.PerformResetView):
             abort(403)
         return render('user/perform_reset.html')
 
-    def post(self):
+    def post(self, id):
+        context, user_dict = self._prepare(id)
         try:
             # If you only want to automatically login new users, check that user_dict['state'] == 'pending'
             context['reset_password'] = True
@@ -150,6 +160,7 @@ class DataVicPerformResetView(user.PerformResetView):
             user_dict['reset_key'] = g.reset_key
             user_dict['state'] = model.State.ACTIVE
             user = get_action('user_update')(context, user_dict)
+            user_obj = context['user_obj']
             mailer.create_reset_key(user_obj)
 
             h.flash_success(_("Your password has been reset."))
@@ -177,28 +188,13 @@ class DataVicPerformResetView(user.PerformResetView):
             h.flash_error(six.text_type(ve))
 
 
-class DataVicUserEditView(MethodView):
-    def _prepare(self, id):
-        context = {
-            u'save': u'save' in request.form,
-            u'schema': _edit_form_to_db_schema(),
-            u'model': model,
-            u'session': model.Session,
-            u'user': g.user,
-            u'auth_user_obj': g.userobj
-        }
-        if id is None:
-            if g.userobj:
-                id = g.userobj.id
-            else:
-                abort(400, _(u'No user specified'))
-        data_dict = {u'id': id}
+class DataVicUserEditView(user.EditView):
 
-        try:
-            check_access(u'user_update', context, data_dict)
-        except NotAuthorized:
-            abort(403, _(u'Unauthorized to edit a user.'))
-        return context, id
+    def _prepare(self, id):
+       return super(DataVicUserEditView, self)._prepare(id)
+
+    def get(self, id):
+        return super(DataVicUserEditView, self).get(id)
 
     def post(self, id=None):
         context, id = self._prepare(id)
@@ -262,42 +258,42 @@ class DataVicUserEditView(MethodView):
             set_repoze_user(data_dict[u'name'], resp)
         return resp
 
-    def get(self, id=None, data=None, errors=None, error_summary=None):
-        context, id = self._prepare(id)
-        data_dict = {u'id': id}
-        try:
-            old_data = get_action(u'user_show')(context, data_dict)
+    # def get(self, id=None, data=None, errors=None, error_summary=None):
+    #     context, id = self._prepare(id)
+    #     data_dict = {u'id': id}
+    #     try:
+    #         old_data = logic.get_action(u'user_show')(context, data_dict)
 
-            g.display_name = old_data.get(u'display_name')
-            g.user_name = old_data.get(u'name')
+    #         g.display_name = old_data.get(u'display_name')
+    #         g.user_name = old_data.get(u'name')
 
-            data = data or old_data
+    #         data = data or old_data
 
-        except NotAuthorized:
-            abort(403, _(u'Unauthorized to edit user %s') % u'')
-        except NotFound:
-            abort(404, _(u'User not found'))
-        user_obj = context.get(u'user_obj')
+    #     except logic.NotAuthorized:
+    #         abort(403, _(u'Unauthorized to edit user %s') % u'')
+    #     except logic.NotFound:
+    #         abort(404, _(u'User not found'))
+    #     user_obj = context.get(u'user_obj')
 
-        errors = errors or {}
-        vars = {
-            u'data': data,
-            u'errors': errors,
-            u'error_summary': error_summary
-        }
+    #     errors = errors or {}
+    #     vars = {
+    #         u'data': data,
+    #         u'errors': errors,
+    #         u'error_summary': error_summary
+    #     }
 
-        extra_vars = _extra_template_variables({
-            u'model': model,
-            u'session': model.Session,
-            u'user': g.user
-        }, data_dict)
+    #     extra_vars = _extra_template_variables({
+    #         u'model': model,
+    #         u'session': model.Session,
+    #         u'user': g.user
+    #     }, data_dict)
 
-        extra_vars[u'show_email_notifications'] = asbool(
-            config.get(u'ckan.activity_streams_email_notifications'))
-        vars.update(extra_vars)
-        extra_vars[u'form'] = render(edit_user_form, extra_vars=vars)
+    #     extra_vars[u'show_email_notifications'] = asbool(
+    #         config.get(u'ckan.activity_streams_email_notifications'))
+    #     vars.update(extra_vars)
+    #     extra_vars[u'form'] = render(edit_user_form, extra_vars=vars)
 
-        return render(u'user/edit.html', extra_vars)
+    #     return render(u'user/edit.html', extra_vars)
 
 
 def user_dashboard():
@@ -375,6 +371,7 @@ def deny(id):
 
 
 _edit_view = DataVicUserEditView.as_view(str('edit'))
+
 def register_datavicuser_plugin_rules(blueprint):
     blueprint.add_url_rule(u'/user/reset', view_func=DataVicRequestResetView.as_view(str('request_reset')))
     blueprint.add_url_rule(u'/reset', view_func= DataVicPerformResetView.as_view(str('perform_reset')))

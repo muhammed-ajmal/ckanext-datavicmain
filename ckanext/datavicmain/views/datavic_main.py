@@ -27,7 +27,6 @@ log = logging.getLogger(__name__)
 datavicmain = Blueprint('datavicmain', __name__)
 
 
-#TODO: Will require some rework to send the pkg_dict to templates
 def historical(id):
     package_type = dataset._get_package_type(id.split('@')[0]) #check for new function if necessary
 

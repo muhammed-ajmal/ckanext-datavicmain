@@ -138,13 +138,6 @@ for catalogue in catalogues:
                                                                                              "Environmental")}
     for layerTag in catalogue.find('{http://model.catalogue.dialog.com}layerList'):
 
-        # @Todo: remove this limit
-        # if limit >= 10:
-        #     print 'Limit reached - exiting loop'
-        #     break
-        # else:
-        #     limit += 1
-
         layer = {}
         for layerAttribute in layerTag:
             attId = layerAttribute.tag.split("}")[1][0:]
@@ -159,13 +152,6 @@ for catalogue in catalogues:
         update = False
         new = True
 
-        # @Todo: Remove this output
-        # print '==============================================================='
-        # print 'RAW LAYER DETAILS:'
-        # print '==============================================================='
-        # pprint(layer)
-        # print '==============================================================='
-
         pkg_name = munge_title_to_name(layer['title'].strip())
         if pkg_name in used_slugs:
             continue
@@ -176,16 +162,16 @@ for catalogue in catalogues:
         try:
             pkg_dict = ckan.action.package_show(id=pkg_name)
             new = False
-            print munge_title_to_name(layer['title']) + " existing found"
+            print( munge_title_to_name(layer['title']) + " existing found")
 
             if pkg_dict.get('state', "") == 'deleted':
-                print pkg_dict['name'] + " is deleted. Undeleting..."
+                print( pkg_dict['name'] + " is deleted. Undeleting...")
                 pkg_dict['state'] = 'active'
                 update = True
         except ckanapi.NotFound:
-            print munge_title_to_name(layer['title']) + " not found, must be new"
-        except ckanapi.CKANAPIError, e:
-            print "CKAN api has failed with the following error: " + str(e) + " skipping..."
+            print(munge_title_to_name(layer['title']) + " not found, must be new")
+        except ckanapi.CKANAPIError as e:
+            print("CKAN api has failed with the following error: " + str(e) + " skipping...")
             continue
 
         def get_extra(key, package_dict):
@@ -219,17 +205,17 @@ for catalogue in catalogues:
         pkg_dict['public'] = 'true'
 
         if pkg_dict.get("name", "") != pkg_name:
-            print "name changed"
+            print("name changed")
             update = True
             pkg_dict['name'] = pkg_name
 
         if pkg_dict.get("title", "") != layer['title'].strip():
-            print "title changed"
+            print("title changed")
             update = True
             pkg_dict['title'] = layer['title'].strip()
 
         if pkg_dict.get("license_id", "") != 'cc-by':
-            print "license_id changed"
+            print("license_id changed")
             update = True
             pkg_dict['license_id'] = 'cc-by'
 
@@ -245,25 +231,25 @@ for catalogue in catalogues:
 
             if current_extract and current_extract != extract:
                 update = True
-                print "extract changed"
+                print("extract changed")
                 pkg_dict['extras'].remove(current_extract)
 
             pkg_dict['extras'].append({'key': 'extract', 'value': extract})
 
             if pkg_dict.get("notes", "") != layer['description']['abstractData']:
                 update = True
-                print "notes changed"
+                print("notes changed")
                 pkg_dict['notes'] = layer['description']['abstractData']
         else:
             if layer['description'].get('purpose') and pkg_dict.get("notes", "") != layer['description'][
                 'purpose'].strip():
                 update = True
-                print "notes changed"
+                print( "notes changed")
                 pkg_dict['notes'] = layer['description']['purpose'].strip()
 
             if current_extract and current_extract != layer['description']['abstractData']:
                 update = True
-                print "extract changed"
+                print("extract changed")
                 pkg_dict['extras'].remove(current_extract)
 
             pkg_dict['extras'].append({'key': 'extract', 'value': layer['description']['abstractData']})
@@ -272,60 +258,60 @@ for catalogue in catalogues:
         # if pkg_dict.get("accuracy", "") != layer['details']['attributeAccuracy'] + "\n" + layer['details'][
         #     'positionalAccuracy']:
         #     update = True
-        #     print "accuracy changed"
+        #     print( "accuracy changed")
         #     pkg_dict['accuracy'] = layer['details']['attributeAccuracy'] + "\n" + layer['details']['positionalAccuracy']
 
         # DATAVIC-184: REMOVED - Data.Vic schema does not have an `scale` field
         # if pkg_dict.get("scale", None) != layer['details']['scale']:
         #     update = True
-        #     print "scale changed"
+        #     print ("scale changed")
         #     pkg_dict['scale'] = layer['details']['scale']
 
         full_metadata_url = get_extra('full_metadata_url', pkg_dict)
 
         if full_metadata_url and full_metadata_url != layer['details']['metadataUrl']:
             update = True
-            print "full_metadata_url changed"
+            print("full_metadata_url changed")
             pkg_dict['extras'].remove(full_metadata_url)
         pkg_dict['extras'].append({'key': 'full_metadata_url', 'value': layer['details']['metadataUrl']})
 
         # DATAVIC-184: REMOVED - Data.Vic schema does not have an `external_catalogue` field
         # if pkg_dict.get("external_catalogue", "") != layer['siteKey']:
         #     update = True
-        #     print "external_catalogue changed"
+        #     print( "external_catalogue changed")
         #     pkg_dict['external_catalogue'] = layer['siteKey']
 
         # DATAVIC-184: REMOVED - Data.Vic schema does not have an `citation` field
         # if pkg_dict.get("citation", "") != layer['details']['attribution']:
         #     update = True
-        #     print "citation changed"
+        #     print( "citation changed")
         #     pkg_dict['citation'] = layer['details']['attribution']
 
         if not pkg_dict.get("organization") or pkg_dict.get("organization", {}).get('title', '') != \
                 layer['description']['custodian']:
             update = True
-            print "org changed"
+            print("org changed")
             org_name = layer['description']['custodian'].strip()
             try:
-                print org_name + " search"
+                print( org_name + " search")
                 org = get_org(org_name)
                 pkg_dict['owner_org'] = org['id']
             except ckanapi.NotFound:
-                print org_name + " not found"
+                print( org_name + " not found")
 
         # DATAVIC-72: Add all SDM datasets to spatial-data group
         try:
             pkg_dict['groups'] = [{'id': get_group('Spatial Data')[0]['id']}]
         except ckanapi.NotFound:
-            print "group not found, skipping..."
+            print( "group not found, skipping...")
             continue
         # try:
         #     pkg_dict['groups'].append({'id': get_group('Spatial Data')[0]})
-        # except ckanapi.NotFound:
-        #     print "group not found, skipping..."
+        # except ckanapi.NotFound as e:
+        #     print ("group not found, skipping...")
         #     continue
-        # except ckanapi.CKANAPIError, e:
-        #     print "CKAN api has failed with the following error: " + str(e) + " skipping..."
+        # except ckanapi.CKANAPIError as e:
+        #     print ("CKAN api has failed with the following error: " + str(e) + " skipping...")
         #     continue
         # if layer['groupId']:
         #     for groupId in layer['groupId'].split(','):
@@ -333,11 +319,11 @@ for catalogue in catalogues:
         #         try:
         #             group, group_title = get_group(group_title)
         #             pkg_dict['groups'].append({'id': group['id']})
-        #         except ckanapi.NotFound:
-        #             print "group not found: " + group_title + "skipping..."
+        #         except ckanapi.NotFound as e:
+        #             print ("group not found: " + group_title + "skipping...")
         #             continue
-        #         except ckanapi.CKANAPIError, e:
-        #             print "CKAN api has failed with the following error: " + str(e) + " skipping..."
+        #         except ckanapi.CKANAPIError as e:
+        #             print( "CKAN api has failed with the following error: " + str(e) + " skipping...")
         #             continue
 
         wms_dict = {'format': 'SHP'}
@@ -348,18 +334,18 @@ for catalogue in catalogues:
 
         if wms_dict.get('name', '') != layer['title']:
             update = True
-            print "wms name changed"
+            print( "wms name changed")
             wms_dict['name'] = layer['title']
         if wms_dict.get('url', '') != layer['details']['publicOrderUrl']:
             update = True
-            print "wms url changed"
+            print( "wms url changed")
             wms_dict['url'] = layer['details']['publicOrderUrl']
         if layer['details']['wmsUrl']:
             wms_url = layer['details']['wmsUrl'].replace('httpproxy', 'publicproxy/guest') + "?layers=" + layer['name']
             wms_preview_url = layer['details']['publicPreviewUrl'].replace('httpproxy', 'publicproxy/guest')
             if wms_dict.get('wms_api_url', '') != wms_url:
                 update = True
-                print "wms url 2 changed"
+                print( "wms url 2 changed")
                 wms_dict['format'] = 'wms'
                 wms_dict['wms_url'] = wms_preview_url
                 wms_dict['wms_api_url'] = wms_url
@@ -367,19 +353,19 @@ for catalogue in catalogues:
                 wms_dict['visgis_preview'] = 'active'
         if wms_dict.get('public_order_url', '').strip() != layer['details']['publicOrderUrl'].strip():
             update = True
-            print "public_order_url changed"
+            print( "public_order_url changed")
             wms_dict['public_order_url'] = layer['details']['publicOrderUrl'].strip()
         if wms_dict.get('attribution', '') != layer['details']['attribution']:
             update = True
-            print "wms attribution changed"
+            print( "wms attribution changed")
             wms_dict['attribution'] = layer['details']['attribution']
         if wms_dict.get('period_start', '') != convert_date(layer['details']['beginDate']):
             update = True
-            print "wms period_start changed"
+            print( "wms period_start changed")
             wms_dict['period_start'] = convert_date(layer['details']['beginDate'])
         if wms_dict.get('period_end', '') != convert_date(layer['details']['endDate']):
             update = True
-            print "wms period_end changed"
+            print( "wms period_end changed")
             wms_dict['period_end'] = convert_date(layer['details']['endDate'])
         # print wms_dict
         if new_res:
@@ -420,21 +406,21 @@ for catalogue in catalogues:
             try:
                 if new:
                     pkg = ckan.call_action('package_create', pkg_dict)  # create a new dataset?
-                    print pkg['id'] + " created \n"
+                    print( pkg['id'] + " created \n")
                     datasets_created += 1
                 else:
                     pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
-                    print pkg['id'] + " updated \n"
+                    print( pkg['id'] + " updated \n")
                     datasets_updated += 1
                 #
                 # # @Todo remove this output
                 # pprint(pkg_dict)
-            except ckanapi.errors.CKANAPIError, e:
-                print str(e)
+            except ckanapi.errors.CKANAPIError as e:
+                print( str(e))
                 continue
 
         else:
-            print " no changes for " + layer['title'] + " \n"
+            print( " no changes for " + layer['title'] + " \n")
             # print pkg_dict
 
 # @Todo: Figure out what this does - it involves the ODP
@@ -456,8 +442,8 @@ for catalogue in catalogues:
 #         print spack, 'deleted'
 
 # Output stats on number of datasets created and updated
-print '= = = = = = = = = = = = = = = = = = = = = ='
-print str(datasets_created) + ' datasets created'
-print str(datasets_updated) + ' datasets updated'
-print '= = = = = = = = = = = = = = = = = = = = = ='
+print( '= = = = = = = = = = = = = = = = = = = = = =')
+print( str(datasets_created) + ' datasets created')
+print( str(datasets_updated) + ' datasets updated')
+print( '= = = = = = = = = = = = = = = = = = = = = =')
 
