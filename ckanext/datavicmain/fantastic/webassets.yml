@@ -1,9 +1,11 @@
 jquery-ui-css:
+  output: ckanext-datavicmain/%(version)s_jquery-ui-css
   contents:
     - jquery-ui.css
     - jquery-ui.structure.css
 
 jquery-ui-js:
+  output: ckanext-datavicmain/%(version)s_jquery-ui-js
   contents:
     - jquery-ui.js
   extra:
@@ -11,6 +13,7 @@ jquery-ui-js:
       - vendor/jquery
 
 datavicmain-js:
+  output: ckanext-datavicmain/%(version)s_datavicmain-js
   contents:
     - datavicmain.js
   extra:
@@ -18,6 +21,7 @@ datavicmain-js:
       - vendor/jquery
 
 datavicmain-resource-list-js:
+  output: ckanext-datavicmain/%(version)s_datavicmain-resource-list-js
   contents:
     - datavicmain-resource-list.js
   extra:
@@ -25,5 +29,6 @@ datavicmain-resource-list-js:
       - vendor/jquery
 
 datavicmain-resource-list-css:
+  output: ckanext-datavicmain/%(version)s_datavicmain-resource-list-css
   contents:
     - datavicmain-resource-list.css
