@@ -193,8 +193,8 @@ class DataVicUserEditView(user.EditView):
     def _prepare(self, id):
        return super(DataVicUserEditView, self)._prepare(id)
 
-    def get(self, id):
-        return super(DataVicUserEditView, self).get(id)
+    # def get(self,  id=None, data=None, errors=None, error_summary=None):
+    #     return super(DataVicUserEditView, self).get(id, data, errors, error_summary)
 
     def post(self, id=None):
         context, id = self._prepare(id)
@@ -258,42 +258,42 @@ class DataVicUserEditView(user.EditView):
             set_repoze_user(data_dict[u'name'], resp)
         return resp
 
-    # def get(self, id=None, data=None, errors=None, error_summary=None):
-    #     context, id = self._prepare(id)
-    #     data_dict = {u'id': id}
-    #     try:
-    #         old_data = logic.get_action(u'user_show')(context, data_dict)
+    def get(self, id=None, data=None, errors=None, error_summary=None):
+        context, id = self._prepare(id)
+        data_dict = {u'id': id}
+        try:
+            old_data = logic.get_action(u'user_show')(context, data_dict)
 
-    #         g.display_name = old_data.get(u'display_name')
-    #         g.user_name = old_data.get(u'name')
+            g.display_name = old_data.get(u'display_name')
+            g.user_name = old_data.get(u'name')
 
-    #         data = data or old_data
+            data = data or old_data
 
-    #     except logic.NotAuthorized:
-    #         abort(403, _(u'Unauthorized to edit user %s') % u'')
-    #     except logic.NotFound:
-    #         abort(404, _(u'User not found'))
-    #     user_obj = context.get(u'user_obj')
+        except logic.NotAuthorized:
+            abort(403, _(u'Unauthorized to edit user %s') % u'')
+        except logic.NotFound:
+            abort(404, _(u'User not found'))
+        user_obj = context.get(u'user_obj')
 
-    #     errors = errors or {}
-    #     vars = {
-    #         u'data': data,
-    #         u'errors': errors,
-    #         u'error_summary': error_summary
-    #     }
+        errors = errors or {}
+        vars = {
+            u'data': data,
+            u'errors': errors,
+            u'error_summary': error_summary
+        }
 
-    #     extra_vars = _extra_template_variables({
-    #         u'model': model,
-    #         u'session': model.Session,
-    #         u'user': g.user
-    #     }, data_dict)
+        extra_vars = _extra_template_variables({
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user
+        }, data_dict)
 
-    #     extra_vars[u'show_email_notifications'] = asbool(
-    #         config.get(u'ckan.activity_streams_email_notifications'))
-    #     vars.update(extra_vars)
-    #     extra_vars[u'form'] = render(edit_user_form, extra_vars=vars)
+        extra_vars[u'show_email_notifications'] = asbool(
+            config.get(u'ckan.activity_streams_email_notifications'))
+        vars.update(extra_vars)
+        extra_vars[u'form'] = render(edit_user_form, extra_vars=vars)
 
-    #     return render(u'user/edit.html', extra_vars)
+        return render(u'user/edit.html', extra_vars)
 
 
 def user_dashboard():
