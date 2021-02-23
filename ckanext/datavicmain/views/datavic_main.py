@@ -62,8 +62,21 @@ def historical(id):
 
     assert False, "We should never get here"
 
+def purge(id):
+    try:
+        # Only sysadmins can purge
+        toolkit.check_access('sysadmin', {})
+        toolkit.get_action('dataset_purge')({}, {'id': id})
+        toolkit.h.flash_success('Successfully purged dataset ID: %s' % id)
+    except Exception as e:
+        print(str(e))
+        toolkit.h.flash_error('Exception')
+
+    return toolkit.h.redirect_to('/ckan-admin/trash')
+
 
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)
+    blueprint.add_url_rule('/dataset/purge/<id>', view_func=purge)
 
 register_datavicmain_plugin_rules(datavicmain)
