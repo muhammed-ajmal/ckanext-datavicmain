@@ -75,7 +75,7 @@ def validator_email_not_in_use(user_email, context):
 @toolkit.auth_sysadmins_check
 @toolkit.auth_allow_anonymous_access
 def datavic_user_update(context, data_dict=None):
-    if toolkit.c.controller == 'user' and toolkit.c.action == 'perform_reset':
+    if toolkit.g and toolkit.g.controller == 'user' and toolkit.g.action == 'perform_reset':
         # Allow anonymous access to the user/reset path, i.e. password resets.
         return {'success': True}
     elif 'save' in context and context['save']:
@@ -88,9 +88,9 @@ def datavic_user_update(context, data_dict=None):
 
 
 def datavic_package_update(context, data_dict):
-    if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action in ['read', 'edit', 'resource_read', 'resource_edit']:
+    if toolkit.g and toolkit.g.controller in ['dataset', 'package'] and toolkit.g.action in ['read', 'edit', 'resource_read', 'resource_edit']:
         # Harvested dataset are not allowed to be updated, apart from sysadmins
-        package_id = data_dict.get('id') if data_dict else toolkit.c.pkg_dict.get('id') if toolkit.c.pkg_dict else None
+        package_id = data_dict.get('id') if data_dict else toolkit.g.pkg_dict.get('id') if toolkit.g.pkg_dict else None
         if package_id and helpers.is_dataset_harvested(package_id):
             return {'success': False,
                     'msg': _t('User %s not authorized to edit this harvested package') %
@@ -220,7 +220,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     @classmethod
     def workflow_status_options(cls, current_workflow_status, owner_org):
         if "workflow" in config.get('ckan.plugins', False):
-            user = toolkit.c.user
+            user = toolkit.g.user
             #log1.debug("\n\n\n*** workflow_status_options | current_workflow_status: %s | owner_org: %s | user: %s ***\n\n\n", current_workflow_status, owner_org, user)
             for option in workflow_helpers.get_available_workflow_statuses(current_workflow_status, owner_org, user):
                 yield {'value': option, 'text': option.replace('_', ' ').capitalize()}
@@ -230,7 +230,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     @classmethod
     def autoselect_workflow_status_option(cls, current_workflow_status):
         selected_option = 'draft'
-        user = toolkit.c.user
+        user = toolkit.g.user
         if authz.is_sysadmin(user):
             selected_option = current_workflow_status
         return selected_option
@@ -246,7 +246,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         context = {
             'model': model,
             'session': model.Session,
-            'user': toolkit.c.user,
+            'user': toolkit.g.user,
         }
 
         options = { 'all_fields': True }
@@ -270,7 +270,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     @classmethod
     def is_admin(cls, owner_org):
         if workflow_enabled:
-            user = toolkit.c.userobj
+            user = toolkit.g.userobj
             if authz.is_sysadmin(user.name):
                 return True
             else:
@@ -279,7 +279,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                     return True
 
     def is_sysadmin(self):
-        user = toolkit.c.user
+        user = toolkit.g.user
         if authz.is_sysadmin(user):
             return True
 
@@ -333,7 +333,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             return None
 
     def is_historical(self):
-        if toolkit.c.action == 'historical':
+        if toolkit.g.action == 'historical':
             return True
 
     def get_formats(self, limit=100):
@@ -468,7 +468,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         #     return
 
         def after_validation_processor(key, data, errors, context):
-            assert key[0] == '__after', 'This validator can only be invok ed in the __after stage'
+            assert key[0] == '__after', 'This validator can only be invoked in the __after stage'
             #raise Exception ('Breakpoint after_validation_processor')
             # Demo of howto create/update an automatic extra field 
             extras_list = data.get(('extras',))
@@ -494,7 +494,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 pkg = model.Package.get(data.get(('id',)))
 
                 if pkg and 'workflow_status' in pkg.extras:
-                    user = toolkit.c.userobj
+                    user = toolkit.g.userobj
 
                     adjusted_workflow_status = workflow_helpers.get_workflow_status_for_role(
                         pkg.extras['workflow_status'],
@@ -510,7 +510,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                         extras_list.append({'key': 'workflow_status', 'value': adjusted_workflow_status})
 
             #Validate our custom schema fields based on the rules set in schema.py
-            if toolkit.c.controller in ['dataset', 'package']:
+            if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
                 for custom_field in custom_schema.DATASET_EXTRA_FIELDS:
                     field_id = custom_field[0]
                     field_attributes = custom_field[1]
@@ -537,13 +537,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             for field in custom_schema.DATASET_EXTRA_FIELDS:
                 data[(field[0],)] = data[('__extras',)].get(field[0])
 
-            if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action == 'new':
+            if toolkit.g and toolkit.g.controller in ['dataset', 'package'] and toolkit.g.action == 'new':
                 # Set the "Data Owner" to Top parent org as default
                 data[('data_owner',)] = helpers.set_data_owner(data.get(('owner_org',), None))
             pass
 
         # Only apply this logic when updating through the UI, otherwise it causes DCAT JSON harvests to fail
-        if toolkit.c.controller in ['dataset', 'package']:
+        if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
             # Add our custom_resource_text metadata field to the schema
             # schema['resources'].update({
             #     'custom_resource_text' : [ toolkit.get_validator('ignore_missing') ]
@@ -568,11 +568,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             # #schema['__before'].insert(-1, before_validation_processor) # insert as second-to-last
 
             # Adjust validators for the Dataset/Package fields marked mandatory in the Data.Vic schema
-            if toolkit.c.controller in ['dataset', 'package']:
+            if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
                 schema['title'] = [toolkit.get_validator('not_empty'), text_type]
                 schema['notes'] = [toolkit.get_validator('not_empty'), text_type]
 
-                if toolkit.c.controller in ['dataset', 'package'] and toolkit.c.action not in ['resource_edit', 'new_resource', 'resource_delete']:
+                if toolkit.g and toolkit.g.controller in ['dataset', 'package'] and toolkit.g.action not in ['resource_edit', 'new_resource', 'resource_delete']:
                     schema['tag_string'] = [toolkit.get_validator('not_empty'), toolkit.get_converter('tag_string_convert')]
 
                 # Adjust validators for the Resource fields marked mandatory in the Data.Vic schema
@@ -680,7 +680,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
-        if toolkit.g.controller in ['dataset', 'package']:
+        if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
             # Add the package to the group ("category")
             pkg_group = pkg_dict.get('category', None)
             pkg_name = pkg_dict.get('name', None)
@@ -694,7 +694,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def after_update(self, context, pkg_dict):
         # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
-        if toolkit.g.controller in ['dataset', 'package']:
+        if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
             if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
                 helpers.add_package_to_group(pkg_dict, context)
                 # DATAVIC-251 - Create activity for private datasets
