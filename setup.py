@@ -23,10 +23,9 @@ setup(
 		# -*- Extra requirements: -*-
         "jsonpickle",
 	],
-    entry_points=\
-    """
-     [ckan.plugins]
-
+	entry_points=\
+	"""
+        [ckan.plugins]
         datavicmain_dataset = ckanext.datavicmain.plugins:DatasetForm
 
         [fanstatic.libraries]

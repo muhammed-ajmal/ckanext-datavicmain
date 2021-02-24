@@ -12,6 +12,7 @@ import datetime
 import ckan.lib.mailer as mailer
 
 from ckan.lib.base import render_jinja2
+from ckanext.datavicmain import schema as custom_schema
 
 log = logging.getLogger(__name__)
 
@@ -96,7 +97,7 @@ def set_private_activity(pkg_dict, context, activity_type):
 
 def user_is_registering():
 #    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
-     return toolkit.url_for('user.register')
+     return toolkit.g.controller in ['user'] and toolkit.g.action in ['register']
 
 def _register_blueprints():
     u'''Return all blueprints defined in the `views` folder
@@ -114,3 +115,11 @@ def _register_blueprints():
             blueprints.append(blueprint[1])
             log.info(u'Registered blueprint: {0!r}'.format(blueprint[0]))
     return blueprints
+
+
+def option_value_to_label(field, value):
+    for extra in custom_schema.DATASET_EXTRA_FIELDS:
+        if extra[0] == field:
+            for option in extra[1]['options']:
+                if option['value'] == value:
+                    return option['text']
