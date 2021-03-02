@@ -14,7 +14,7 @@ values      - A tuple of values for the (key, value, delete) fields. If delete
               is truthy the checkbox will be checked.
 placeholder - A tuple of placeholder text for the (key, value) fields.
 error       - A list of error strings for the field or just true to highlight the field.
-classes     - An array of classes to apply to the control-group.
+classes     - An array of classes to apply to the form-group.
 
 Example:
 
@@ -35,10 +35,10 @@ Example:
   {%- do classes.append('control-custom') -%}
 
   {% call ckan_form.input_block(label_id, label or name, error, classes, control_classes=["editor"], extra_html=extra_html) %}
-    <div class="input-prepend" {{ ckan_form.attributes(attrs) }}>
-      <label for="{{ label_id }}" class="add-on">Key</label>
+    <div class="input-group" {{ ckan_form.attributes(attrs) }}>
+      <label for="{{ label_id }}" class="input-group-addon">Key</label>
       <input id="{{ id or names[0] }}-key" type="text" name="{{ names[0] }}" value="{{ values[0] | empty_and_escape }}" placeholder="{{ placeholders[0] }}" />
-      <label for="{{ id or names[1] }}-value" class="add-on">Value</label>
+      <label for="{{ id or names[1] }}-value" class="input-group-addon">Value</label>
       <input id="{{ id or names[1] }}-value" type="text" name="{{ names[1] }}" value="{{ values[1] | empty_and_escape }}" placeholder="{{ placeholders[1] }}" />
       {% if values[0] or values[1] or error %}
       <label class="checkbox inline" for="{{ id or names[2] }}-remove">
