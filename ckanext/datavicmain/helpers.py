@@ -59,8 +59,8 @@ def send_email(user_emails, email_type, extra_vars):
     if not user_emails or len(user_emails) == 0:
         return
 
-    subject = render_jinja2('emails/subjects/{0}.txt'.format(email_type), extra_vars)
-    body = render_jinja2('emails/bodies/{0}.txt'.format(email_type), extra_vars)
+    subject = toolkit.render('emails/subjects/{0}.txt'.format(email_type), extra_vars)
+    body = toolkit.render('emails/bodies/{0}.txt'.format(email_type), extra_vars)
     for user_email in user_emails:
         try:
             log.debug('Attempting to send {0} to: {1}'.format(email_type, user_email))
@@ -97,7 +97,8 @@ def set_private_activity(pkg_dict, context, activity_type):
 
 def user_is_registering():
 #    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
-     return toolkit.g.controller in ['user'] and toolkit.g.action in ['register']
+     (controller, action) = toolkit.get_endpoint()
+     return controller in ['user'] and action in ['register']
 
 def _register_blueprints():
     u'''Return all blueprints defined in the `views` folder

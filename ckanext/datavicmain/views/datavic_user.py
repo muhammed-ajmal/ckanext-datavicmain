@@ -317,7 +317,7 @@ def approve(id):
             'new_account_approved',
             {
                 "user_name": user.get('name', ''),
-                'login_url': toolkit.url_for('login', qualified=True),
+                'login_url': toolkit.url_for('user.login', qualified=True),
                 "site_title": config.get('ckan.site_title'),
                 "site_url": config.get('ckan.site_url')
             }
