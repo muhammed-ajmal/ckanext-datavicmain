@@ -19,9 +19,9 @@ from ckan import plugins as p
 
 @pytest.mark.ckan_config('ckan.plugins','datavicmain_dataset')
 @pytest.mark.usefixtures('clean_db', 'with_plugins', 'with_request_context')
-class TestEndpoints(object):
+class TestDatavicUserEndpoints(object):
 
-    def test_user_aprove(self, app):
+    def test_user_approve(self, app):
 
         admin_pass = "RandomPassword123"
         sysadmin = factories.Sysadmin(password=admin_pass)
@@ -35,6 +35,20 @@ class TestEndpoints(object):
 
         assert 200 == response.status_code
         assert b'User approved' in response.data
+
+    def test_user_approve_not_authorized(self, app):
+
+        admin_pass = "RandomPassword123"
+
+        user = factories.User()
+        #
+        url = url_for('datavicuser.approve', id= user['id'])
+        env = {"REMOTE_USER": six.ensure_str(user["name"])}
+
+        response = app.get(url=url, extra_environ=env, status=403)
+
+        assert 403 == response.status_code
+        assert b'Unauthorized to activate user' in response.data
 
     def test_user_deny(self, app):
 
@@ -50,3 +64,18 @@ class TestEndpoints(object):
 
         assert 200 == response.status_code
         assert b'User Denied' in response.data
+
+
+    def test_user_deny_not_authorized(self, app):
+
+        admin_pass = "RandomPassword123"
+
+        user = factories.User()
+        #
+        url = url_for('datavicuser.deny', id= user['id'])
+        env = {"REMOTE_USER": six.ensure_str(user["name"])}
+
+        response = app.get(url=url, extra_environ=env, status=403)
+
+        assert 403 == response.status_code
+        assert b'Unauthorized to reject user' in response.data
