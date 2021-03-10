@@ -93,7 +93,6 @@ dataset_fields:
   label: Update Frequency
   preset: select
   display_group: General
-  display_property: Please select
   choices:
     - value: continual
       label: Continual
@@ -119,6 +118,141 @@ dataset_fields:
       label: Not Planned
     - value: unknown
       label: Unknown
+
+- field_name: full_metadata_url
+  label: Full Metadata URL
+  display_group: General
+  form_snippet: text.html
+
+  # Security fields
+
+- field_name: personal_information
+  label: Personal Data (Privacy)
+  preset: select
+  display_group: Security
+  required: true
+  choices:
+    - value: not_yet
+      label: Not yet assessed
+    - value: yes
+      label: 'Yes'
+    - value: yes_de_identified
+      label: Yes - with de-identified data
+    - value: no
+      label: 'No'
+
+- field_name: protective_marking
+  label: Protective Marking
+  preset: select
+  display_group: Security
+  required: true
+  choices:
+    - value: secret
+      label: SECRET
+    - value: protected
+      label: PROTECTED
+    - value: cabinet_in_confidence_secret
+      label: 'Cabinet-in-confidence: SECRET'
+    - value: cabinet_in_confidence_protected
+      label: 'Cabinet-in-confidence: PROTECTED'
+    - value: official_sensitive
+      label: 'OFFICIAL: Sensitive'
+    - value: official
+      label: OFFICIAL
+
+- field_name: access
+  label: Access
+  preset: select
+  display_group: security
+  required: true
+  choices:
+    - value: yes
+      label: 'Yes'
+    - value: no
+      label: 'No'
+    - value: not_yet
+      label: Not yet assessed
+
+- field_name: access_description
+  label: Access - description
+  form_snippet: textarea.html
+  display_group: security
+
+- field_name: bil_confidentiality
+  label: Business Impact Level - Confidentiality Breach
+  preset: select
+  display_group: security
+  choices:
+    - value: n_a
+      label: N/A
+    - value: minor
+      label: Minor
+    - value: limited
+      label: Limited
+    - value: major
+      label: Major
+    - value: serious
+      label: Serious
+    - value: exceptional
+      label: Exceptional
+
+- field_name: bil_confidentiality_description
+  label: Business Impact Level - Confidentiality Breach description
+  form_snippet: textarea.html
+  display_group: security
+
+- field_name: bil_integrity
+  label: Business Impact Level - Integrity
+  preset: select
+  display_group: security
+  choices:
+    - value: n_a
+      label: N/A
+    - value: minor
+      label: Minor
+    - value: limited
+      label: Limited
+    - value: major
+      label: Major
+    - value: serious
+      label: Serious
+    - value: exceptional
+      label: Exceptional
+
+- field_name: bil_integrity_description
+  label: Business Impact Level - Integrity description
+  form_snippet: textarea.html
+  display_group: security
+
+- field_name: source_ict_system
+  label: Source ICT System
+  display_group: security
+  form_snippet: text.html
+
+- field_name: record_disposal_category
+  label: Record Disposal Category
+  display_group: security
+  form_snippet: text.html
+
+- field_name: disposal_category
+  label: Disposal Category
+  display_group: security
+  form_snippet: text.html
+
+- field_name: disposal_class
+  label: Disposal Class
+  display_group: security
+  form_snippet: text.html
+
+# Workflow 
+
+- field_name: organization_visibility
+  label: Business Impact Level - Integrity
+  preset: select  # custom select_workflow
+  display_group: workflow
+
+
+
 
 
 
