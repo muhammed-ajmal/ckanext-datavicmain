@@ -399,6 +399,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_dataset_harvested': helpers.is_dataset_harvested,
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
             'option_value_to_label': helpers.option_value_to_label,
+            'available_group_list': helpers.available_group_list,
         }
 
     ## IConfigurer interface ##

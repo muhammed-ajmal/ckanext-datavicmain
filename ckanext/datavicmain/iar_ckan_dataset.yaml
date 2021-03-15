@@ -55,12 +55,8 @@ dataset_fields:
 
 - field_name: category
   label: Category
-  preset: select
+  preset: dataset_category
   display_group: General
-  selected: Please select
-  choices:
-    - value: group
-      label: group_name
 
 - field_name: license_id
   label: License
@@ -246,10 +242,10 @@ dataset_fields:
 
 # Workflow 
 
-- field_name: organization_visibility
-  label: Business Impact Level - Integrity
-  preset: select  # custom select_workflow
-  display_group: workflow
+# - field_name: organization_visibility
+#   label: Business Impact Level - Integrity
+#   preset: select  # custom select_workflow
+#   display_group: workflow
 
 
 

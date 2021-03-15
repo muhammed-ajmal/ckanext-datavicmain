@@ -1,0 +1,14 @@
+{
+    "scheming_presets_version": 1,
+    "about": "these are the custom scheming field presets for IAR scheme",
+    "about_url": "http://github.com/ckan/ckanext-scheming#preset",
+    "presets": [
+      {
+        "preset_name": "dataset_category",
+        "values": {
+            "validators": "owner_org_validator unicode",
+            "form_snippet": "category.html"
+         }
+      }
+      ]
+}

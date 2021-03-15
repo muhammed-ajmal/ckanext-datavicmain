@@ -124,3 +124,7 @@ def option_value_to_label(field, value):
             for option in extra[1]['options']:
                 if option['value'] == value:
                     return option['text']
+
+
+def available_group_list():
+    return toolkit.get_action('group_list')({}, {'all_fields': True})
