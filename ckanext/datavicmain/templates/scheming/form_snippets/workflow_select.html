@@ -1,0 +1,5 @@
+{% for field_id, field_attributes in h.dataset_extra_fields %}
+    {% if field_attributes['hidden'] != True and field_attributes['field_group'] in ['workflow_2'] %}
+       
+    {% endif %}
+  {% endfor %}

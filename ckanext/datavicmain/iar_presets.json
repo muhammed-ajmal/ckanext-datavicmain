@@ -9,6 +9,14 @@
             "validators": "owner_org_validator unicode",
             "form_snippet": "category.html"
          }
+      },
+      {
+        "preset_name": "workflow_select",
+        "values": {
+            "validators": "scheming_choices",
+            "form_snippet": "workflow_select.html"
+         }
       }
+
       ]
 }

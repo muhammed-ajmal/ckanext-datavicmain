@@ -10,20 +10,21 @@ dataset_fields:
   label: Title
   preset: title
   form_placeholder: eg. A descriptive title
-  field_group: General
+  display_group: General
   required: true
 
 - field_name: name
   label: URL
   preset: dataset_slug
   form_placeholder: eg. my-dataset
+  display_group: General
 
 - field_name: notes
   label: Description
   form_snippet: markdown.html
   form_placeholder: eg. Some useful notes about the data
-  display_group: General
   required: true
+  display_group: General
 
 - field_name: extract
   label: Abstract
@@ -68,6 +69,7 @@ dataset_fields:
 - field_name: custom_licence_text
   label: License - other
   form_snippet: text.html
+  display_group: General
 
 - field_name: custom_licence_link
   label: Custom license link
@@ -159,7 +161,7 @@ dataset_fields:
 - field_name: access
   label: Access
   preset: select
-  display_group: security
+  display_group: Security
   required: true
   choices:
     - value: yes
@@ -172,12 +174,12 @@ dataset_fields:
 - field_name: access_description
   label: Access - description
   form_snippet: textarea.html
-  display_group: security
+  display_group: Security
 
 - field_name: bil_confidentiality
   label: Business Impact Level - Confidentiality Breach
   preset: select
-  display_group: security
+  display_group: Security
   choices:
     - value: n_a
       label: N/A
@@ -195,12 +197,12 @@ dataset_fields:
 - field_name: bil_confidentiality_description
   label: Business Impact Level - Confidentiality Breach description
   form_snippet: textarea.html
-  display_group: security
+  display_group: Security
 
 - field_name: bil_integrity
   label: Business Impact Level - Integrity
   preset: select
-  display_group: security
+  display_group: Security
   choices:
     - value: n_a
       label: N/A
@@ -218,34 +220,34 @@ dataset_fields:
 - field_name: bil_integrity_description
   label: Business Impact Level - Integrity description
   form_snippet: textarea.html
-  display_group: security
+  display_group: Security
 
 - field_name: source_ict_system
   label: Source ICT System
-  display_group: security
+  display_group: Security
   form_snippet: text.html
 
 - field_name: record_disposal_category
   label: Record Disposal Category
-  display_group: security
+  display_group: Security
   form_snippet: text.html
 
 - field_name: disposal_category
   label: Disposal Category
-  display_group: security
+  display_group: Security
   form_snippet: text.html
 
 - field_name: disposal_class
   label: Disposal Class
-  display_group: security
+  display_group: Security
   form_snippet: text.html
 
 # Workflow 
 
-# - field_name: organization_visibility
-#   label: Business Impact Level - Integrity
-#   preset: select  # custom select_workflow
-#   display_group: workflow
+- field_name: workflow_status
+  label: Business Impact Level - Integrity
+  preset: workflow_select  # custom select_workflow
+  display_group: Workflow
 
 
 
