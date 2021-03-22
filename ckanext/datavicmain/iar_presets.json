@@ -13,7 +13,7 @@
       {
         "preset_name": "workflow_select",
         "values": {
-            "validators": "scheming_choices",
+            "validators": "ignore_missing scheming_choices",
             "form_snippet": "workflow_select.html"
          }
       }

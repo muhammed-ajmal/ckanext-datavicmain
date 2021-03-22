@@ -132,11 +132,11 @@ dataset_fields:
   choices:
     - value: not_yet
       label: Not yet assessed
-    - value: yes
+    - value: 'yes'
       label: 'Yes'
     - value: yes_de_identified
       label: Yes - with de-identified data
-    - value: no
+    - value: 'no'
       label: 'No'
 
 - field_name: protective_marking
@@ -164,9 +164,9 @@ dataset_fields:
   display_group: Security
   required: true
   choices:
-    - value: yes
+    - value: 'yes'
       label: 'Yes'
-    - value: no
+    - value: 'no'
       label: 'No'
     - value: not_yet
       label: Not yet assessed
@@ -254,7 +254,7 @@ dataset_fields:
 
 - field_name: workflow_status
   label: Workflow Status
-  preset: workflow_select  # custom select_workflow
+  preset: workflow_status  # custom select_workflow
   display_group: Workflow
 
 - field_name: workflow_status_notes
