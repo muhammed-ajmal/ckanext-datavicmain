@@ -1,5 +1,8 @@
-{% for field_id, field_attributes in h.dataset_extra_fields %}
-    {% if field_attributes['hidden'] != True and field_attributes['field_group'] in ['workflow_2'] %}
-       
-    {% endif %}
-  {% endfor %}
+{% import 'macros/form.html' as form %}
+ 
+ 
+ {{ form.select(field_id,
+            options = h.workflow_status_options(data.get(field_id, None), data.get('owner_org', None)),
+            selected = h.autoselect_workflow_status_option(data.get(field_id, 'draft')),
+            attrs = { 'data-module': 'no-autocomplete' })
+          }}

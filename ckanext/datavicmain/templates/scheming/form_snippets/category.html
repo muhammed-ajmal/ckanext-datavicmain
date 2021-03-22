@@ -16,9 +16,6 @@
     data=data,
     errors=errors,
     categories_available=h.available_group_list(),
-    category_required=not h.check_config_permission('create_unowned_dataset')
-      or h.scheming_field_required(field),
+    category_required=not h.check_config_permission('create_unowned_dataset') or h.scheming_field_required(field),
     category_option_tag=category_option_tag %}
-
-
   </div>

@@ -244,13 +244,82 @@ dataset_fields:
 
 # Workflow 
 
+- field_name: organization_visibility
+  label: Organisation Visibility
+  preset: select
+  display_group: Workflow
+  choices:
+    - value: test
+      label: Test
+
 - field_name: workflow_status
-  label: Business Impact Level - Integrity
+  label: Workflow Status
   preset: workflow_select  # custom select_workflow
   display_group: Workflow
 
+- field_name: workflow_status_notes
+  label: Workflow Status Notes
+  form_snippet: textarea.html
+  display_group: Workflow
+
+- field_name: data_owner
+  label: Data Custodian
+  form_placeholder: Joe Bloggs
+  display_group: Custodian
+
+- field_name: role
+  label: Role
+  form_placeholder: Joe Bloggs
+  display_group: Custodian
+
+- field_name: maintainer_email
+  label: Email
+  form_placeholder: data.vic@salsadigital.com.au
+  display_snippet: email.html
+  display_email_name_field: author
+  display_group: Custodian
 
 
+resource_fields:
 
+- field_name: url
+  label: URL
+  preset: resource_url_upload
+
+- field_name: name
+  label: Name
+  form_placeholder: eg. January 2011 Gold Prices
+
+- field_name: description
+  label: Description
+  form_snippet: markdown.html
+  form_placeholder: Some useful notes about the data
+
+- field_name: format
+  label: Format
+  preset: resource_format_autocomplete
+
+- field_name: filesize
+  label: Filesize
+
+- field_name: release_date
+  label: Release Date
+  preset: date
+
+- field_name: period_start
+  label: Temporal Coverage Start
+  preset: date
+
+- field_name: period_end
+  label: Temporal Coverage End
+  preset: date
+
+- field_name: data_quality
+  label: Data Quality Statement
+  form_snippet: textarea.html
+
+- field_name: attribution
+  label: Attribution Statement
+  form_snippet: textarea.html
 
 
