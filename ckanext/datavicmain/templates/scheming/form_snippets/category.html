@@ -4,8 +4,7 @@
 
 {% macro category_option_tag(category, selected_category) %}
   {% block category_option scoped %}
-    <option value="{{ category.id }}"{%
-      if selected_org %} selected="selected"{% endif
+    <option value="{{ category.id }}"{% if selected_category %} selected="selected"{% endif
       %}>{{ category.display_name }}</option>
   {% endblock %}
 {% endmacro %}

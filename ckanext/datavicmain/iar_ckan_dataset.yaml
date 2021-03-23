@@ -180,6 +180,7 @@ dataset_fields:
   label: Business Impact Level - Confidentiality Breach
   preset: select
   display_group: Security
+  required: false
   choices:
     - value: n_a
       label: N/A
@@ -203,6 +204,7 @@ dataset_fields:
   label: Business Impact Level - Integrity
   preset: select
   display_group: Security
+  required: false
   choices:
     - value: n_a
       label: N/A
@@ -248,9 +250,13 @@ dataset_fields:
   label: Organisation Visibility
   preset: select
   display_group: Workflow
-  choices:
-    - value: test
-      label: Test
+  choices_helper: organization_visibility_options
+
+- field_name: private
+  label: Public release
+  preset: public_release  # custom select_workflow
+  display_group: Workflow
+  required: true
 
 - field_name: workflow_status
   label: Workflow Status

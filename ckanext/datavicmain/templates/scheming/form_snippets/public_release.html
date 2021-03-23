@@ -1,0 +1,18 @@
+  {% block package_metadata_fields_visibility %}
+ <div class="form-group">
+    <label for="field-private" class="control-label">
+      <span title="This field is required" class="control-required">*</span>
+      {{ _('Public Release') }}
+    </label>
+    <div class="controls">
+      <select id="field-private" name="private">
+        {% for option in [('True', _('No')), ('False', _('Yes'))] %}
+          <option value="{{ option[0] }}" {% if option[0] == data.private|trim %}selected="selected"{% endif %}>{{ option[1] }}</option>
+        {% endfor %}
+      </select>
+      <span class="info-block info-inline">
+        <strong>Public Release</strong> can only be set to <strong>'Yes'</strong> if Workflow Status is 'Published' and Organisation Visibility is 'All'
+      </span>
+    </div>
+  </div>
+  {% endblock %}

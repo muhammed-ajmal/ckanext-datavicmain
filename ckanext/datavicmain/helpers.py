@@ -16,6 +16,10 @@ from ckanext.datavicmain import schema as custom_schema
 
 log = logging.getLogger(__name__)
 
+YES_NO_OPTIONS = ['yes', 'no']
+
+# NOTE: the of the Z in organization for consistency with usage throughout CKAN
+ORGANIZATION_VISIBILITY_OPTIONS = ['current', 'parent', 'child', 'family', 'all']
 
 def add_package_to_group(pkg_dict, context):
     group_id = pkg_dict.get('category', None)
@@ -128,3 +132,12 @@ def option_value_to_label(field, value):
 
 def available_group_list():
     return toolkit.get_action('group_list')({}, {'all_fields': True})
+
+def organization_visibility_options(field):
+        for option in ORGANIZATION_VISIBILITY_OPTIONS:
+            yield { 'value': option, 'text': option.capitalize() }
+
+def yes_no_options(field):
+    ''' This generator method is only usefull for creating select boxes. '''
+    for option in YES_NO_OPTIONS:
+        yield { 'value': option, 'text': option.capitalize() }

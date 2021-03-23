@@ -6,17 +6,23 @@
       {
         "preset_name": "dataset_category",
         "values": {
-            "validators": "owner_org_validator unicode",
+            "validators": "unicode",
             "form_snippet": "category.html"
          }
       },
       {
-        "preset_name": "workflow_select",
+        "preset_name": "workflow_status",
         "values": {
-            "validators": "ignore_missing scheming_choices",
-            "form_snippet": "workflow_select.html"
+            "form_snippet": "workflow_status.html"
          }
-      }
+      },
+      {
+         "preset_name": "public_release",
+         "values": {
+             "validators": "unicode",
+             "form_snippet": "public_release.html"
+          }
+       }
 
       ]
 }

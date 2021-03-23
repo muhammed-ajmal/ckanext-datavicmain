@@ -176,6 +176,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IAuthFunctions)
     p.implements(p.IMiddleware, inherit=True)
     p.implements(p.IBlueprint)
+    p.implements(p.IValidators)
 
 
     def make_middleware(self, app, config):
@@ -184,6 +185,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IBlueprint
     def get_blueprint(self):
         return helpers._register_blueprints()
+
+    # IValidators
+    def get_validators(self):
+        return {
+            'workflow_status': self.workflow_status_options
+        }
 
     # IAuthFunctions
     def get_auth_functions(self):
@@ -203,20 +210,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     ## helper methods ## 
 
-    YES_NO_OPTIONS = ['yes', 'no']
+    
 
     WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
-    # NOTE: the of the Z in organization for consistency with usage throughout CKAN
-    ORGANIZATION_VISIBILITY_OPTIONS = ['current', 'parent', 'child', 'family', 'all']
-
-
-    @classmethod
-    def yes_no_options(cls):
-        ''' This generator method is only usefull for creating select boxes. '''
-        for option in cls.YES_NO_OPTIONS:
-            yield { 'value': option, 'text': option.capitalize() }
-
+    
     @classmethod
     def workflow_status_options(cls, current_workflow_status, owner_org):
         if "workflow" in config.get('ckan.plugins', False):
@@ -235,10 +233,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             selected_option = current_workflow_status
         return selected_option
 
-    @classmethod
-    def organization_visibility_options(cls):
-        for option in cls.ORGANIZATION_VISIBILITY_OPTIONS:
-            yield { 'value': option, 'text': option.capitalize() }
 
     @classmethod
     def organization_list_objects(cls, org_names = []):
@@ -381,9 +375,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'organization_dict_objects': self.organization_dict_objects,
             'dataset_extra_fields': custom_schema.DATASET_EXTRA_FIELDS,
             'resource_extra_fields': custom_schema.RESOURCE_EXTRA_FIELDS,
-            'yes_no_options': self.yes_no_options,
+            'yes_no_options': helpers.yes_no_options,
             'workflow_status_options': self.workflow_status_options,
-            'organization_visibility_options': self.organization_visibility_options,
+            'organization_visibility_options': helpers.organization_visibility_options,
             'is_admin': self.is_admin,
             'workflow_status_pretty': self.workflow_status_pretty,
             'historical_resources_list': self.historical_resources_list,

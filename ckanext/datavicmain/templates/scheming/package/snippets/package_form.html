@@ -8,7 +8,6 @@
     </p>
   {%- endif -%}
   {%- set schema = h.scheming_get_dataset_schema(dataset_type) -%}
-  {{ schema.dataset_fields }}
   {%- set ns = namespace(display_group='General') -%}
   <h1 class="header">{{ ns.display_group|capitalize }}</h1>
   {%- for field in schema.dataset_fields -%}
