@@ -4,7 +4,7 @@
  {{ form.select(field_id,
             label=h.scheming_language_text(field.label),
             options = h.workflow_status_options(data.get('workflow_status', None), data.get('owner_org', None)),
-            selected = h.autoselect_workflow_status_option(data.get(field_id, 'draft')),
+            selected = h.autoselect_workflow_status_option(data.get('workflow_status', 'draft')),
             attrs = { 'data-module': 'no-autocomplete' })
           }}
 

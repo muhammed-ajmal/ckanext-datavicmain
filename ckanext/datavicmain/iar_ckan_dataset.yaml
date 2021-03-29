@@ -26,7 +26,7 @@ dataset_fields:
   required: true
   display_group: General
 
-- field_name: extract
+- field_name: extract_test
   label: Abstract
   form_snippet: textarea.html
   display_group: General
@@ -53,11 +53,6 @@ dataset_fields:
   label: Agency Program/Domain
   display_group: General
   form_snippet: text.html
-
-- field_name: category
-  label: Category
-  preset: dataset_category
-  display_group: General
 
 - field_name: license_id
   label: License
@@ -228,6 +223,7 @@ dataset_fields:
   label: Source ICT System
   display_group: Security
   form_snippet: text.html
+  display_snippet: link.html
 
 - field_name: record_disposal_category
   label: Record Disposal Category

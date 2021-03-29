@@ -12,6 +12,7 @@ not used as a form_snippet directly #}
     classes=['form-group', 'control-medium'],
     extra_html=caller() if caller,
     ) %}
+    
     <div {{
       form.attributes(field.form_attrs) if 'form_attrs' in field else '' }}>
     <select id="field-categories" name="category" {{ form.attributes(

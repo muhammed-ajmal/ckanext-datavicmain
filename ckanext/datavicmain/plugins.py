@@ -168,7 +168,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.ITemplateHelpers)
     p.implements(p.IConfigurable, inherit=True)
     p.implements(p.IConfigurer, inherit=True)
-    p.implements(p.IDatasetForm, inherit=True)
+   # p.implements(p.IDatasetForm, inherit=True)
     p.implements(p.IPackageController, inherit=True)
     # p.implements(p.IResourceController, inherit=True)
     p.implements(p.IRoutes, inherit=True)
@@ -392,8 +392,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'release_date': release_date,
             'is_dataset_harvested': helpers.is_dataset_harvested,
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
-            'option_value_to_label': helpers.option_value_to_label,
-            'available_group_list': helpers.available_group_list,
+            'option_value_to_label': helpers.option_value_to_label
         }
 
     ## IConfigurer interface ##
@@ -447,11 +446,11 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         from ckan.lib.navl.dictization_functions import missing, StopOnError, Invalid
 
-        for field in custom_schema.DATASET_EXTRA_FIELDS:
-            schema.update({
-                field[0]: [toolkit.get_validator('ignore_missing'),
-                            toolkit.get_converter('convert_to_extras')]
-            })
+        # for field in custom_schema.DATASET_EXTRA_FIELDS:
+        #     schema.update({
+        #         field[0]: [toolkit.get_validator('ignore_missing'),
+        #                     toolkit.get_converter('convert_to_extras')]
+        #     })
 
         # DATAVIC-245: this code removed
         # DataVic: Helper function for adding extra dataset fields
@@ -576,54 +575,54 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
         return schema
 
-    def create_package_schema(self):
-        schema = super(DatasetForm, self).create_package_schema()
-        schema = self._modify_package_schema(schema)
-        return schema
+    # def create_package_schema(self):
+    #     schema = super(DatasetForm, self).create_package_schema()
+    #     schema = self._modify_package_schema(schema)
+    #     return schema
 
-    def update_package_schema(self):
-        schema = super(DatasetForm, self).update_package_schema()
-        schema = self._modify_package_schema(schema)
-        return schema
+    # def update_package_schema(self):
+    #     schema = super(DatasetForm, self).update_package_schema()
+    #     schema = self._modify_package_schema(schema)
+    #     return schema
 
-    def show_package_schema(self):
-        schema = super(DatasetForm, self).show_package_schema()
+    # def show_package_schema(self):
+    #     schema = super(DatasetForm, self).show_package_schema()
 
-        # Don't show vocab tags mixed in with normal 'free' tags
-        # (e.g. on dataset pages, or on the search page)
-        schema['tags']['__extras'].append(toolkit.get_converter('free_tags_only'))
+    #     # Don't show vocab tags mixed in with normal 'free' tags
+    #     # (e.g. on dataset pages, or on the search page)
+    #     schema['tags']['__extras'].append(toolkit.get_converter('free_tags_only'))
 
-        # Create a dictionary containing the extra fields..
-        dict_extra_fields = {}
-        # dict_extra_fields = {
-        #     # Add our non-input field (created at after_validation_processor)
-        #     'record_modified_at': [
-        #         toolkit.get_converter('convert_from_extras'),
-        #     ],
-        # }
+    #     # Create a dictionary containing the extra fields..
+    #     dict_extra_fields = {}
+    #     # dict_extra_fields = {
+    #     #     # Add our non-input field (created at after_validation_processor)
+    #     #     'record_modified_at': [
+    #     #         toolkit.get_converter('convert_from_extras'),
+    #     #     ],
+    #     # }
 
-        # Loop through our extra fields, adding them to the schema..
-        # Applying the same validator to them for now..
-        for field in custom_schema.DATASET_EXTRA_FIELDS:
-            dict_extra_fields[field[0]] = [
-                toolkit.get_converter('convert_from_extras'),
-                toolkit.get_validator('ignore_missing')
-            ]
+    #     # Loop through our extra fields, adding them to the schema..
+    #     # Applying the same validator to them for now..
+    #     for field in custom_schema.DATASET_EXTRA_FIELDS:
+    #         dict_extra_fields[field[0]] = [
+    #             toolkit.get_converter('convert_from_extras'),
+    #             toolkit.get_validator('ignore_missing')
+    #         ]
 
-        # Apply any specific rules / validators that we know of..
-        #
+    #     # Apply any specific rules / validators that we know of..
+    #     #
 
-        schema.update(dict_extra_fields)
+    #     schema.update(dict_extra_fields)
 
 
-        # Update Resource schema
-        schema['resources'].update({
-            'custom_resource_text': [ toolkit.get_validator('ignore_missing') ],
-            'period_start': [toolkit.get_converter('convert_from_extras'),
-                             toolkit.get_validator('ignore_missing')],
-            'period_end': [toolkit.get_converter('convert_from_extras'),
-                           toolkit.get_validator('ignore_missing')],
-        })
+    #     # Update Resource schema
+    #     schema['resources'].update({
+    #         'custom_resource_text': [ toolkit.get_validator('ignore_missing') ],
+    #         'period_start': [toolkit.get_converter('convert_from_extras'),
+    #                          toolkit.get_validator('ignore_missing')],
+    #         'period_end': [toolkit.get_converter('convert_from_extras'),
+    #                        toolkit.get_validator('ignore_missing')],
+    #     })
 
 
         # Append computed fields in the __after stage

@@ -130,9 +130,8 @@ def option_value_to_label(field, value):
                     return option['text']
 
 
-def available_group_list():
-    return toolkit.get_action('group_list')({}, {'all_fields': True})
 
+# Scheming helpers 
 def organization_visibility_options(field):
         for option in ORGANIZATION_VISIBILITY_OPTIONS:
             yield { 'value': option, 'text': option.capitalize() }

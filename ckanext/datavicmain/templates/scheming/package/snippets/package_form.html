@@ -9,6 +9,7 @@
   {%- endif -%}
   {%- set schema = h.scheming_get_dataset_schema(dataset_type) -%}
   {%- set ns = namespace(display_group='General') -%}
+  {{ data }}
   <h1 class="header">{{ ns.display_group|capitalize }}</h1>
   {%- for field in schema.dataset_fields -%}
     {%- if field.display_group is not none and field.display_group != ns.display_group -%}

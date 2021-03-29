@@ -1,20 +1,13 @@
-{# This is specific to datasets' category field and won't work #}
-{# if used with other fields #}
+{% import 'macros/form.html' as form %}
 
+{% set package_groups = data.get('groups', []) %}
+{% set category = package_groups[0]['id'] if package_groups[0] else None %}
 
-{% macro category_option_tag(category, selected_category) %}
-  {% block category_option scoped %}
-    <option value="{{ category.id }}"{% if selected_category %} selected="selected"{% endif
-      %}>{{ category.display_name }}</option>
-  {% endblock %}
-{% endmacro %}
-
-  <div data-module="dataset-visibility">
-  {% snippet "scheming/form_snippets/_category_select.html",
-    field=field,
-    data=data,
-    errors=errors,
-    categories_available=h.available_group_list(),
-    category_required=not h.check_config_permission('create_unowned_dataset') or h.scheming_field_required(field),
-    category_option_tag=category_option_tag %}
-  </div>
+{{ form.select(field_id,
+      label=h.scheming_language_text(field.label),
+      options = h.group_list(),
+      selected = category,
+      attrs = { 'data-module': 'no-autocomplete' },
+      error=errors.get(field_id),
+      is_required=true)
+  }}
