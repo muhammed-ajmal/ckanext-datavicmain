@@ -6,7 +6,7 @@
       {
         "preset_name": "dataset_category",
         "values": {
-            "validators": "unicode",
+            "validators": "unicode category_convertor",
             "form_snippet": "category.html"
          }
       },
@@ -19,7 +19,7 @@
       {
          "preset_name": "public_release",
          "values": {
-             "validators": "unicode",
+             "validators": "boolean_validator",
              "form_snippet": "public_release.html"
           }
        }

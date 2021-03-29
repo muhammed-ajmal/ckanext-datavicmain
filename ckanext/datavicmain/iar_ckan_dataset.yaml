@@ -26,10 +26,11 @@ dataset_fields:
   required: true
   display_group: General
 
-- field_name: extract_test
+- field_name: extract
   label: Abstract
   form_snippet: textarea.html
   display_group: General
+  output_validators: convert_extract
   required: true
 
 - field_name: tag_string
@@ -70,6 +71,11 @@ dataset_fields:
   label: Custom license link
   display_group: General
   form_snippet: text.html
+
+- field_name: category
+  label: Category
+  preset: dataset_category
+  display_group: General
 
 - field_name: date_created_data_asset
   label: Created (Data Asset)
@@ -175,9 +181,8 @@ dataset_fields:
   label: Business Impact Level - Confidentiality Breach
   preset: select
   display_group: Security
-  required: false
   choices:
-    - value: n_a
+    - value: "n_a"
       label: N/A
     - value: minor
       label: Minor
@@ -201,7 +206,7 @@ dataset_fields:
   display_group: Security
   required: false
   choices:
-    - value: n_a
+    - value: "n_a"
       label: N/A
     - value: minor
       label: Minor
@@ -246,13 +251,23 @@ dataset_fields:
   label: Organisation Visibility
   preset: select
   display_group: Workflow
-  choices_helper: organization_visibility_options
+  choices:
+    - value: current
+      label: Current
+    - value: parent
+      label: Parent
+    - value: child
+      label: Child
+    - value: family
+      label: Family
+    - value: all
+      label: All
 
 - field_name: private
   label: Public release
   preset: public_release  # custom select_workflow
   display_group: Workflow
-  required: true
+
 
 - field_name: workflow_status
   label: Workflow Status

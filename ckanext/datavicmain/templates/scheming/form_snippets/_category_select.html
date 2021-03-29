@@ -2,25 +2,18 @@
 
 {# this snippet is meant to be called from category.html,
 not used as a form_snippet directly #}
-
 {% macro _category() %}
-  {% set existing_category = data.group_id %}
+  {% set existing_category = data.category %}
   {% call form.input_block('field-categories',
     label=h.scheming_language_text(field.label),
     error=errors[field.field_name],
-    is_required=org_required,
+    is_required=category_required,
     classes=['form-group', 'control-medium'],
     extra_html=caller() if caller,
     ) %}
-    
     <div {{
       form.attributes(field.form_attrs) if 'form_attrs' in field else '' }}>
-    <select id="field-categories" name="category" {{ form.attributes(
-        field.get('form_select_attrs', {'data-module':'autocomplete'})) }}>
-      {% if not category_required or field.get('form_include_blank_choice', false) %}
-        <option value="">{% if not category_required
-          %}{{ _('No category') }}{% endif %}</option>
-      {% endif %}
+    <select id="field-categories" name="category">
       {% for category in categories_available %}
         {% set selected_category = existing_category == category.id %}
         {{ category_option_tag(category, selected_category) }}
