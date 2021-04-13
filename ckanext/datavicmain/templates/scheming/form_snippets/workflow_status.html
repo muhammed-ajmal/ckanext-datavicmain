@@ -1,0 +1,15 @@
+{% macro workflow_option_tag(workflow_status, selected_workflow_status) %}
+  {% block workflow_status_option scoped %}
+    <option value="{{ workflow_status.get('value') }}"{% if selected_workflow_status %} selected="selected"{% endif
+      %}>{{ workflow_status.get('text')}}</option>
+  {% endblock %}
+{% endmacro %}
+
+{% snippet "scheming/form_snippets/_workflow_select.html",
+    field=field,
+    data=data,
+    errors=errors,
+    workflow_available=h.workflow_status_options(data.get(field_id, None), data.get('owner_org', None)),
+    workflow_required = h.scheming_field_required(field),
+    workflow_option_tag=workflow_option_tag %}
+  </div>

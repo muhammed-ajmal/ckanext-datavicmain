@@ -1,0 +1,342 @@
+scheming_version: 2
+dataset_type: dataset
+about: IAR dataset schema
+about_url: https://github.com/salsadigitalauorg/ckanext-datavicmain
+
+
+dataset_fields:
+
+- field_name: title
+  label: Title
+  preset: title
+  form_placeholder: eg. A descriptive title
+  display_group: General
+  required: true
+
+- field_name: name
+  label: URL
+  preset: dataset_slug
+  form_placeholder: eg. my-dataset
+  display_group: General
+
+- field_name: notes
+  label: Description
+  form_snippet: markdown.html
+  form_placeholder: eg. Some useful notes about the data
+  required: true
+  display_group: General
+
+- field_name: extract
+  label: Abstract
+  form_snippet: textarea.html
+  display_group: General
+  output_validators: convert_extract
+  required: true
+
+- field_name: tag_string
+  label: Keywords
+  preset: tag_string_autocomplete
+  form_placeholder: eg. economy, mental health, government
+  display_group: General
+  required: true
+
+- field_name: primary_purpose_of_collection
+  label: Puropse
+  display_group: General
+  form_snippet: text.html
+
+- field_name: owner_org
+  label: Organization
+  display_group: General
+  preset: dataset_organization
+
+- field_name: agency_program_domain
+  label: Agency Program/Domain
+  display_group: General
+  form_snippet: text.html
+
+- field_name: license_id
+  label: License
+  display_group: General
+  form_snippet: license.html
+  help_text: License definitions and additional information can be found at http://opendefinition.org/
+  required: true
+
+- field_name: custom_licence_text
+  label: License - other
+  form_snippet: text.html
+  display_group: General
+
+- field_name: custom_licence_link
+  label: Custom license link
+  display_group: General
+  form_snippet: text.html
+
+- field_name: category
+  label: Category
+  preset: dataset_category
+  display_group: General
+
+- field_name: date_created_data_asset
+  label: Created (Data Asset)
+  display_group: General
+  preset: date
+  required: true
+
+- field_name: date_modified_data_asset
+  label: Last Modified (Data Asset
+  display_group: General
+  preset: date
+
+- field_name: update_frequency
+  label: Update Frequency
+  preset: select
+  display_group: General
+  choices:
+    - value: continual
+      label: Continual
+    - value: daily
+      label: Daily
+    - value: weekly
+      label: Weekly
+    - value: fortnightly
+      label: Fortnightly
+    - value: monthly
+      label: Monthly
+    - value: quarterly
+      label: Quarterly
+    - value: biannually
+      label: Biannually
+    - value: annually
+      label: Annually
+    - value: asNeeded
+      label: As Needed
+    - value: irregular
+      label: Irregular
+    - value: notPlanned
+      label: Not Planned
+    - value: unknown
+      label: Unknown
+
+- field_name: full_metadata_url
+  label: Full Metadata URL
+  display_group: General
+  form_snippet: text.html
+
+  # Security fields
+
+- field_name: personal_information
+  label: Personal Data (Privacy)
+  preset: select
+  display_group: Security
+  required: true
+  choices:
+    - value: not_yet
+      label: Not yet assessed
+    - value: 'yes'
+      label: 'Yes'
+    - value: yes_de_identified
+      label: Yes - with de-identified data
+    - value: 'no'
+      label: 'No'
+
+- field_name: protective_marking
+  label: Protective Marking
+  preset: select
+  display_group: Security
+  required: true
+  choices:
+    - value: secret
+      label: SECRET
+    - value: protected
+      label: PROTECTED
+    - value: cabinet_in_confidence_secret
+      label: 'Cabinet-in-confidence: SECRET'
+    - value: cabinet_in_confidence_protected
+      label: 'Cabinet-in-confidence: PROTECTED'
+    - value: official_sensitive
+      label: 'OFFICIAL: Sensitive'
+    - value: official
+      label: OFFICIAL
+
+- field_name: access
+  label: Access
+  preset: select
+  display_group: Security
+  required: true
+  choices:
+    - value: 'yes'
+      label: 'Yes'
+    - value: 'no'
+      label: 'No'
+    - value: not_yet
+      label: Not yet assessed
+
+- field_name: access_description
+  label: Access - description
+  form_snippet: textarea.html
+  display_group: Security
+
+- field_name: bil_confidentiality
+  label: Business Impact Level - Confidentiality Breach
+  preset: select
+  display_group: Security
+  choices:
+    - value: "n_a"
+      label: N/A
+    - value: minor
+      label: Minor
+    - value: limited
+      label: Limited
+    - value: major
+      label: Major
+    - value: serious
+      label: Serious
+    - value: exceptional
+      label: Exceptional
+
+- field_name: bil_confidentiality_description
+  label: Business Impact Level - Confidentiality Breach description
+  form_snippet: textarea.html
+  display_group: Security
+
+- field_name: bil_integrity
+  label: Business Impact Level - Integrity
+  preset: select
+  display_group: Security
+  required: false
+  choices:
+    - value: "n_a"
+      label: N/A
+    - value: minor
+      label: Minor
+    - value: limited
+      label: Limited
+    - value: major
+      label: Major
+    - value: serious
+      label: Serious
+    - value: exceptional
+      label: Exceptional
+
+- field_name: bil_integrity_description
+  label: Business Impact Level - Integrity description
+  form_snippet: textarea.html
+  display_group: Security
+
+- field_name: source_ict_system
+  label: Source ICT System
+  display_group: Security
+  form_snippet: text.html
+  display_snippet: link.html
+
+- field_name: record_disposal_category
+  label: Record Disposal Category
+  display_group: Security
+  form_snippet: text.html
+
+- field_name: disposal_category
+  label: Disposal Category
+  display_group: Security
+  form_snippet: text.html
+
+- field_name: disposal_class
+  label: Disposal Class
+  display_group: Security
+  form_snippet: text.html
+
+# Workflow 
+
+- field_name: organization_visibility
+  label: Organisation Visibility
+  preset: select
+  display_group: Workflow
+  choices:
+    - value: current
+      label: Current
+    - value: parent
+      label: Parent
+    - value: child
+      label: Child
+    - value: family
+      label: Family
+    - value: all
+      label: All
+
+- field_name: private
+  label: Public release
+  preset: public_release  # custom select_workflow
+  display_group: Workflow
+
+
+- field_name: workflow_status
+  label: Workflow Status
+  preset: workflow_status  # custom select_workflow
+  display_group: Workflow
+
+- field_name: workflow_status_notes
+  label: Workflow Status Notes
+  form_snippet: textarea.html
+  display_group: Workflow
+
+- field_name: data_owner
+  label: Data Custodian
+  form_placeholder: Joe Bloggs
+  display_group: Custodian
+
+- field_name: role
+  label: Role
+  form_placeholder: Joe Bloggs
+  display_group: Custodian
+
+- field_name: maintainer_email
+  label: Email
+  form_placeholder: data.vic@salsadigital.com.au
+  display_snippet: email.html
+  display_email_name_field: author
+  display_group: Custodian
+
+
+resource_fields:
+
+- field_name: url
+  label: URL
+  preset: resource_url_upload
+
+- field_name: name
+  label: Name
+  form_placeholder: eg. January 2011 Gold Prices
+
+- field_name: description
+  label: Description
+  form_snippet: markdown.html
+  form_placeholder: Some useful notes about the data
+
+- field_name: format
+  label: Format
+  preset: resource_format_autocomplete
+
+- field_name: filesize
+  label: Filesize
+
+- field_name: release_date
+  label: Release Date
+  preset: date
+
+- field_name: period_start
+  label: Temporal Coverage Start
+  preset: date
+
+- field_name: period_end
+  label: Temporal Coverage End
+  preset: date
+
+- field_name: data_quality
+  label: Data Quality Statement
+  form_snippet: textarea.html
+
+- field_name: attribution
+  label: Attribution Statement
+  form_snippet: textarea.html
+
+

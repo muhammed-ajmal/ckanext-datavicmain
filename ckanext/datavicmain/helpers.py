@@ -5,6 +5,9 @@ import inspect
 from flask import Blueprint
 
 import ckan.model as model
+import ckan.authz as authz
+from ckan.common import config
+
 import ckan.plugins.toolkit as toolkit
 import logging
 import ckan.lib.helpers as h
@@ -14,7 +17,17 @@ import ckan.lib.mailer as mailer
 from ckan.lib.base import render_jinja2
 from ckanext.datavicmain import schema as custom_schema
 
+
+# Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
+if "workflow" in config.get('ckan.plugins', False):
+    from ckanext.workflow import helpers as workflow_helpers
+    workflow_enabled = True
+
+
 log = logging.getLogger(__name__)
+
+
+WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
 
 def add_package_to_group(pkg_dict, context):
@@ -124,3 +137,33 @@ def option_value_to_label(field, value):
             for option in extra[1]['options']:
                 if option['value'] == value:
                     return option['text']
+
+
+
+def group_list():
+    return toolkit.get_action('group_list')({}, {'all_fields': True})
+
+
+def workflow_status_options(current_workflow_status, owner_org):
+    options = []
+    if "workflow" in config.get('ckan.plugins', False):
+        user = toolkit.g.user
+       
+        #log1.debug("\n\n\n*** workflow_status_options | current_workflow_status: %s | owner_org: %s | user: %s ***\n\n\n", current_workflow_status, owner_org, user)
+        for option in workflow_helpers.get_available_workflow_statuses(current_workflow_status, owner_org, user):
+            options.append({'value': option, 'text': option.replace('_', ' ').capitalize()})
+
+        return options    
+    else:
+        return [{'value': 'draft', 'text': 'Draft'}]
+
+def autoselect_workflow_status_option(current_workflow_status):
+    selected_option = 'draft'
+    user = toolkit.g.user
+    if authz.is_sysadmin(user):
+        selected_option = current_workflow_status
+    return selected_option
+
+
+def workflow_status_pretty(workflow_status):
+    return workflow_status.replace('_', ' ').capitalize()
