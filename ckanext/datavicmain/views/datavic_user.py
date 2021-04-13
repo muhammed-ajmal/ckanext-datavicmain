@@ -295,10 +295,22 @@ class DataVicUserEditView(user.EditView):
 
         return render(u'user/edit.html', extra_vars)
 
+def logged_in():
+    # redirect if needed
+    came_from = request.params.get(u'came_from', u'')
+    if h.url_is_local(came_from):
+        return h.redirect_to(str(came_from))
 
-def user_dashboard():
-    # If user has access to create packages, show the dashboard_datasets, otherwise fall back to show dataset search page
-    return h.redirect_to('dataset.index') if h.check_access('package_create') else h.redirect_to('dataset.search')   
+    if g.user:
+        return me()
+    else:
+        err = _(u'Login failed. Bad username or password.')
+        h.flash_error(err)
+        return login()
+
+def me():
+    return h.redirect_to(config.get(u'ckan.route_after_login', u'dashboard.datasets')) \
+        if h.check_access('package_create') else h.redirect_to('dataset.search') 
 
 def approve(id):
     try:
@@ -379,5 +391,7 @@ def register_datavicuser_plugin_rules(blueprint):
     blueprint.add_url_rule(u'/edit/<id>', view_func=_edit_view)
     blueprint.add_url_rule(u'/user/activate/<id>', view_func=approve)
     blueprint.add_url_rule(u'/user/deny/<id>', view_func=deny)
+    blueprint.add_url_rule(u'/user/logged_in', view_func=logged_in)
+    blueprint.add_url_rule(u'/user/me', view_func=me)
 
 register_datavicuser_plugin_rules(datavicuser)
