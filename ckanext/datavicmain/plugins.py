@@ -90,7 +90,7 @@ def datavic_user_update(context, data_dict=None):
 def datavic_package_update(context, data_dict):
     if toolkit.g and toolkit.g.controller in ['dataset', 'package'] and toolkit.g.action in ['read', 'edit', 'resource_read', 'resource_edit']:
         # Harvested dataset are not allowed to be updated, apart from sysadmins
-        package_id = data_dict.get('id') if data_dict else toolkit.g.pkg_dict.get('id') if toolkit.g.pkg_dict else None
+        package_id = data_dict.get('id') if data_dict else toolkit.g.pkg_dict.get('id') if 'pkg_dict' in toolkit.g else None
         if package_id and helpers.is_dataset_harvested(package_id):
             return {'success': False,
                     'msg': _t('User %s not authorized to edit this harvested package') %
@@ -130,15 +130,38 @@ class AuthMiddleware(object):
             return self.app(environ,start_response)
         else:
             # otherwise only login/reset and front pages are accessible
-            if (environ['PATH_INFO'] == '/' or environ['PATH_INFO'] == '/user/login' or environ['PATH_INFO'] == '/user/_logout'
-                                or '/user/reset' in environ['PATH_INFO'] or environ['PATH_INFO'] == '/user/logged_out'
-                                or environ['PATH_INFO'] == '/user/logged_in' or environ['PATH_INFO'] == '/user/logged_out_redirect'
-                                or '/user/register' == environ['PATH_INFO']):
-                return self.app(environ,start_response)
+            if (environ['PATH_INFO'] == '/'
+            or environ['PATH_INFO'] == '/user/login'
+            or environ['PATH_INFO'] == '/user/_logout'
+            or '/user/reset' in environ['PATH_INFO']
+            or environ['PATH_INFO'] == '/user/logged_out'
+            or environ['PATH_INFO'] == '/user/logged_in'
+            or environ['PATH_INFO'] == '/user/logged_out_redirect'
+            or environ['PATH_INFO'] == '/user/register'
+            or environ['PATH_INFO'].startswith('/api')
+            or environ['PATH_INFO'].startswith('/base')
+            or environ['PATH_INFO'].startswith('/webassets')
+            or environ['PATH_INFO'].startswith('/images')
+            or environ['PATH_INFO'].startswith('/css')
+            or environ['PATH_INFO'].startswith('/js')
+            or environ['PATH_INFO'].startswith('/_debug')
+            or environ['PATH_INFO'].startswith('/uploads')
+            or environ['PATH_INFO'].startswith('/fonts')
+            or environ['PATH_INFO'].startswith('/assets')
+            or environ['PATH_INFO'].endswith('svg')):
+                return self.app(environ, start_response)
             else:
-                # http://rufuspollock.org/2006/09/28/wsgi-middleware/
-                environ['wsgiorg.routing_args'] = '',{'action': 'login', 'controller': 'user'}
-                return self.app(environ,start_response)
+                log1.debug(f"Unauthorized page accessed: {environ['PATH_INFO']}")
+                # Status code needs to be 3xx (redirection) for Location header to be used
+                status = "302 Unauthorized"
+                location = '/user/login'
+                headers = [('Location', location),
+                           ('Content-Length', '0')]
+                log1.debug(f"Redirecting to: {location}")
+                start_response(status, headers)
+                # Return now as we want to end the request
+                return []
+
 
     def _get_user_for_apikey(self, environ):
         # Adapted from https://github.com/ckan/ckan/blob/625b51cdb0f1697add59c7e3faf723a48c8e04fd/ckan/lib/base.py#L396
