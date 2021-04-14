@@ -200,6 +200,29 @@ dataset_fields:
   form_snippet: textarea.html
   display_group: Security
 
+- field_name: bil_availability
+  label: Business Impact Level - Availability
+  preset: select
+  display_group: Security
+  choices:
+    - value: "n_a"
+      label: N/A
+    - value: minor
+      label: Minor
+    - value: limited
+      label: Limited
+    - value: major
+      label: Major
+    - value: serious
+      label: Serious
+    - value: exceptional
+      label: Exceptional
+
+- field_name: bil_availability_description
+  label: Business Impact Level - Availability description
+  form_snippet: textarea.html
+  display_group: Security
+
 - field_name: bil_integrity
   label: Business Impact Level - Integrity
   preset: select
