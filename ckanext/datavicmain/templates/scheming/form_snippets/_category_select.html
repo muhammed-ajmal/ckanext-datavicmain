@@ -4,7 +4,7 @@
 not used as a form_snippet directly #}
 {% macro _category() %}
   {% set existing_category = data.category %}
-  {% call form.input_block('field-categories',
+  {% call form.input_block('field-category',
     label=h.scheming_language_text(field.label),
     error=errors[field.field_name],
     is_required=category_required,
@@ -13,7 +13,7 @@ not used as a form_snippet directly #}
     ) %}
     <div {{
       form.attributes(field.form_attrs) if 'form_attrs' in field else '' }}>
-    <select id="field-categories" name="category">
+    <select id="field-category" name="category">
       {% for category in categories_available %}
         {% set selected_category = existing_category == category.id %}
         {{ category_option_tag(category, selected_category) }}
