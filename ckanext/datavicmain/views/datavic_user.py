@@ -13,15 +13,14 @@ import ckan.logic as logic
 import ckan.model as model
 from ckan.common import _, g, config, request
 import ckan.lib.authenticator as authenticator
-
-
+from ckan import authz
+import ckan.lib.captcha as captcha
 import ckan.views.user as user
 
 from ckanext.datavicmain.plugins import datavic_user_reset
 
 import ckanext.datavicmain.helpers as helpers
 import ckan.lib.navl.dictization_functions as dictization_functions
-
 
 
 NotFound = toolkit.ObjectNotFound
@@ -41,6 +40,8 @@ _edit_form_to_db_schema = user._edit_form_to_db_schema
 _extra_template_variables = user._extra_template_variables
 edit_user_form = user.edit_user_form
 set_repoze_user = user.set_repoze_user
+_new_form_to_db_schema = user._new_form_to_db_schema
+_new_user_form = user.new_user_form
 
 render = toolkit.render
 abort = toolkit.abort
@@ -68,8 +69,8 @@ class DataVicRequestResetView(user.RequestResetView):
             h.flash_error(_(u'Email is required'))
             return h.redirect_to(u'/user/reset')
         context = {'model': model,
-                    'user': g.user,
-                    u'ignore_auth': True}
+                   'user': g.user,
+                   u'ignore_auth': True}
         user_objs = []
 
         if u'@' not in id:
@@ -92,11 +93,11 @@ class DataVicRequestResetView(user.RequestResetView):
 
         if not user_objs:
             log.info(u'User requested reset link for unknown user: {}'
-                        .format(id))
+                     .format(id))
 
         for user_obj in user_objs:
             log.info(u'Emailing reset link to user: {}'
-                        .format(user_obj.name))
+                     .format(user_obj.name))
             try:
                 # DATAVIC-221: Do not create/send reset link if user was self-registered and currently pending
                 if user_obj.is_pending() and not user_obj.reset_key:
@@ -127,8 +128,8 @@ class DataVicPerformResetView(user.PerformResetView):
     def get(self, id):
         # FIXME 403 error for invalid key is a non helpful page
         context = {'model': model, 'session': model.Session,
-                    'user': id,
-                    'keep_email': True}
+                   'user': id,
+                   'keep_email': True}
 
         try:
             check_access('user_reset', context)
@@ -182,7 +183,7 @@ class DataVicPerformResetView(user.PerformResetView):
             h.flash_error(_('User not found'))
         except DataError as e:
             h.flash_error(_(u'Integrity Error'))
-        except ValidationError as  e:
+        except ValidationError as e:
             h.flash_error(u'%r' % e.error_dict)
         except ValueError as ve:
             h.flash_error(six.text_type(ve))
@@ -191,7 +192,7 @@ class DataVicPerformResetView(user.PerformResetView):
 class DataVicUserEditView(user.EditView):
 
     def _prepare(self, id):
-       return super(DataVicUserEditView, self)._prepare(id)
+        return super(DataVicUserEditView, self)._prepare(id)
 
     # def get(self,  id=None, data=None, errors=None, error_summary=None):
     #     return super(DataVicUserEditView, self).get(id, data, errors, error_summary)
@@ -295,6 +296,7 @@ class DataVicUserEditView(user.EditView):
 
         return render(u'user/edit.html', extra_vars)
 
+
 def logged_in():
     # redirect if needed
     came_from = request.params.get(u'came_from', u'')
@@ -308,9 +310,11 @@ def logged_in():
         h.flash_error(err)
         return login()
 
+
 def me():
     return h.redirect_to(config.get(u'ckan.route_after_login', u'dashboard.datasets')) \
-        if h.check_access('package_create') else h.redirect_to('dataset.search') 
+        if h.check_access('package_create') else h.redirect_to('dataset.search')
+
 
 def approve(id):
     try:
@@ -347,6 +351,7 @@ def approve(id):
     except ValidationError as e:
         h.flash_error(u'%r' % e.error_dict)
 
+
 def deny(id):
     try:
         data_dict = {'id': id}
@@ -382,16 +387,119 @@ def deny(id):
         h.flash_error(u'%r' % e.error_dict)
 
 
+class RegisterView(MethodView):
+    '''
+    This is copied from ckan_core views/user
+    There is only 1 small change at the end which is to not login in registering users 
+    and redirect the user to the home page
+    '''
+
+    def _prepare(self):
+        context = {
+            u'model': model,
+            u'session': model.Session,
+            u'user': g.user,
+            u'auth_user_obj': g.userobj,
+            u'schema': _new_form_to_db_schema(),
+            u'save': u'save' in request.form
+        }
+        try:
+            logic.check_access(u'user_create', context)
+        except logic.NotAuthorized:
+            toolkit.abort(403, _(u'Unauthorized to register as a user.'))
+        return context
+
+    def post(self):
+        context = self._prepare()
+        try:
+            data_dict = logic.clean_dict(
+                dictization_functions.unflatten(
+                    logic.tuplize_dict(logic.parse_params(request.form))))
+            data_dict.update(logic.clean_dict(
+                dictization_functions.unflatten(
+                    logic.tuplize_dict(logic.parse_params(request.files)))
+            ))
+
+        except dictization_functions.DataError:
+            toolkit.abort(400, _(u'Integrity Error'))
+
+        context[u'message'] = data_dict.get(u'log_message', u'')
+        try:
+            captcha.check_recaptcha(request)
+        except captcha.CaptchaError:
+            error_msg = _(u'Bad Captcha. Please try again.')
+            h.flash_error(error_msg)
+            return self.get(data_dict)
+
+        try:
+            logic.get_action(u'user_create')(context, data_dict)
+        except logic.NotAuthorized:
+            toolkit.abort(403, _(u'Unauthorized to create user %s') % u'')
+        except logic.NotFound:
+            toolkit.abort(404, _(u'User not found'))
+        except logic.ValidationError as e:
+            errors = e.error_dict
+            error_summary = e.error_summary
+            return self.get(data_dict, errors, error_summary)
+
+        if g.user:
+            # #1799 User has managed to register whilst logged in - warn user
+            # they are not re-logged in as new user.
+            h.flash_success(
+                _(u'User "%s" is now registered but you are still '
+                  u'logged in as "%s" from before') % (data_dict[u'name'],
+                                                       g.user))
+            if authz.is_sysadmin(g.user):
+                # the sysadmin created a new user. We redirect him to the
+                # activity page for the newly created user
+                return h.redirect_to(u'user.activity', id=data_dict[u'name'])
+            else:
+                return toolkit.render(u'user/logout_first.html')
+
+        # DATAVIC custom updates
+        if helpers.user_is_registering():
+            # If user is registering, do not login them and redirect them to the home page
+            h.flash_success(toolkit._('Your requested account has been submitted for review'))
+            resp = h.redirect_to(controller='home', action='index')
+        else:
+            # log the user in programatically
+            resp = h.redirect_to(u'user.me')
+            set_repoze_user(data_dict[u'name'], resp)
+        return resp
+
+    def get(self, data=None, errors=None, error_summary=None):
+        self._prepare()
+
+        if g.user and not data and not authz.is_sysadmin(g.user):
+            # #1799 Don't offer the registration form if already logged in
+            return toolkit.render(u'user/logout_first.html', {})
+
+        form_vars = {
+            u'data': data or {},
+            u'errors': errors or {},
+            u'error_summary': error_summary or {}
+        }
+
+        extra_vars = {
+            u'is_sysadmin': authz.is_sysadmin(g.user),
+            u'form': toolkit.render(_new_user_form, form_vars)
+        }
+        return toolkit.render(u'user/new.html', extra_vars)
+
+
 _edit_view = DataVicUserEditView.as_view(str('edit'))
+
 
 def register_datavicuser_plugin_rules(blueprint):
     blueprint.add_url_rule(u'/user/reset', view_func=DataVicRequestResetView.as_view(str('request_reset')))
-    blueprint.add_url_rule(u'/reset', view_func= DataVicPerformResetView.as_view(str('perform_reset')))
+    blueprint.add_url_rule(u'/reset', view_func=DataVicPerformResetView.as_view(str('perform_reset')))
     blueprint.add_url_rule(u'/edit', view_func=_edit_view)
     blueprint.add_url_rule(u'/edit/<id>', view_func=_edit_view)
     blueprint.add_url_rule(u'/user/activate/<id>', view_func=approve)
     blueprint.add_url_rule(u'/user/deny/<id>', view_func=deny)
     blueprint.add_url_rule(u'/user/logged_in', view_func=logged_in)
     blueprint.add_url_rule(u'/user/me', view_func=me)
+    blueprint.add_url_rule(u'/user/register', view_func=RegisterView.as_view(str(u'register')))
+
 
 register_datavicuser_plugin_rules(datavicuser)

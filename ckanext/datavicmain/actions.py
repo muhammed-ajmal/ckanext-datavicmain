@@ -5,6 +5,7 @@ import ckan.lib.dictization.model_save as model_save
 import ckan.plugins.toolkit as toolkit
 import ckanext.datavic_iar_theme.helpers as theme_helpers
 import logging
+from ckan.lib.navl.validators import not_empty
 
 from ckan import lib
 from ckan.common import c, request
@@ -19,25 +20,13 @@ user_is_registering = helpers.user_is_registering
 ValidationError = logic.ValidationError
 
 
-def email_in_use(user_email, context):
-    model = context['model']
-    session = context['session']
-    return session.query(model.User).filter_by(email=user_email).first()
-
-
-def user_email_unique(user_email, context):
-    result = email_in_use(user_email, context)
-    if result:
-        raise lib.navl.dictization_functions.Invalid('Email address ' + user_email + ' already in use for user: ' + result.name)
-
-    return user_email
-
-
 def datavic_user_create(context, data_dict):
     model = context['model']
     schema = context.get('schema') or logic.schema.default_user_schema()
     # DATAVICIAR-42: Add unique email validation
-    schema['email'].append(user_email_unique)
+    # unique email validation is their by default now in CKAN 2.9 email_is_unique
+    # But they have removed not_empty so lets insert it back in
+    schema['email'].insert(0, not_empty)
     session = context['session']
 
     _check_access('user_create', context, data_dict)
@@ -131,10 +120,6 @@ def datavic_user_create(context, data_dict):
                 "site_url": config.get('ckan.site_url')
             }
         )
-
-        h.flash_success(toolkit._('Your requested account has been submitted for review'))
-
-        h.redirect_to(controller='home', action='index')
 
     log1.debug('Created user {name}'.format(name=user.name))
     return user_dict

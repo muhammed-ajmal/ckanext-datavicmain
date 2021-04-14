@@ -52,8 +52,8 @@ def set_data_owner(owner_org):
     return data_owner.strip()
 
 
-#TODO: Find a way to determine if the daset is harvested
-#TODO: We will use `package_activity_list` for now 
+# TODO: Find a way to determine if the daset is harvested
+# TODO: We will use `package_activity_list` for now
 
 def is_dataset_harvested(package_id):
     if not package_id:
@@ -95,23 +95,22 @@ def set_private_activity(pkg_dict, context, activity_type):
     user = context['user']
     session = context['session']
     user_obj = model.User.by_name(user)
-    
+
     if user_obj:
         user_id = user_obj.id
     else:
         user_id = str('not logged in')
-    
+
     activity = pkg.activity_stream_item(activity_type, user_id)
     session.add(activity)
     return pkg_dict
 
 
-
-
 def user_is_registering():
-#    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
-     (controller, action) = toolkit.get_endpoint()
-     return controller in ['user'] and action in ['register']
+    #    return toolkit.c.controller in ['user'] and toolkit.c.action in ['register']
+    (controller, action) = toolkit.get_endpoint()
+    return controller in ['datavicuser'] and action in ['register']
+
 
 def _register_blueprints():
     u'''Return all blueprints defined in the `views` folder
@@ -139,7 +138,6 @@ def option_value_to_label(field, value):
                     return option['text']
 
 
-
 def group_list():
     return toolkit.get_action('group_list')({}, {'all_fields': True})
 
@@ -148,14 +146,15 @@ def workflow_status_options(current_workflow_status, owner_org):
     options = []
     if "workflow" in config.get('ckan.plugins', False):
         user = toolkit.g.user
-       
+
         #log1.debug("\n\n\n*** workflow_status_options | current_workflow_status: %s | owner_org: %s | user: %s ***\n\n\n", current_workflow_status, owner_org, user)
         for option in workflow_helpers.get_available_workflow_statuses(current_workflow_status, owner_org, user):
             options.append({'value': option, 'text': option.replace('_', ' ').capitalize()})
 
-        return options    
+        return options
     else:
         return [{'value': 'draft', 'text': 'Draft'}]
+
 
 def autoselect_workflow_status_option(current_workflow_status):
     selected_option = 'draft'
