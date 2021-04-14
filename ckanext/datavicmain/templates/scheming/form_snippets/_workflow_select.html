@@ -4,7 +4,7 @@
 not used as a form_snippet directly #}
 {% macro _workflow_status() %}
   {% set existing_workflow_status = data.workflow_status %}
-  {% call form.input_block('field-workflow-status',
+  {% call form.input_block('field-'+field.field_name,
     label=h.scheming_language_text(field.label),
     error=errors[field.field_name],
     is_required=workflow_required,
@@ -13,7 +13,7 @@ not used as a form_snippet directly #}
     ) %}
     <div {{
       form.attributes(field.form_attrs) if 'form_attrs' in field else '' }}>
-    <select id="field-workflow-status" name="workflow">
+    <select id="field-{{field.field_name}}" name="workflow">
       {% for workflow_status in workflow_available %}
         {% set selected_workflow_status = existing_workflow_status == workflow_status %}
         {{ workflow_option_tag(workflow_status, selected_workflow_status) }}
