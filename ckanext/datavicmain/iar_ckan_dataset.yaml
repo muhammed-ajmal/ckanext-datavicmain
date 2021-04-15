@@ -90,7 +90,7 @@ dataset_fields:
 
 - field_name: update_frequency
   label: Update Frequency
-  preset: select
+  preset: datavic_select
   display_group: General
   choices:
     - value: continual
@@ -179,11 +179,11 @@ dataset_fields:
 
 - field_name: bil_confidentiality
   label: Business Impact Level - Confidentiality Breach
-  preset: select
+  preset: datavic_select
   display_group: Security
   choices:
-    - value: "n_a"
-      label: N/A
+    - value: 'n_a'
+      label: 'N/A'
     - value: minor
       label: Minor
     - value: limited
@@ -202,11 +202,11 @@ dataset_fields:
 
 - field_name: bil_availability
   label: Business Impact Level - Availability
-  preset: select
+  preset: datavic_select
   display_group: Security
   choices:
-    - value: "n_a"
-      label: N/A
+    - value: 'n_a'
+      label: 'N/A'
     - value: minor
       label: Minor
     - value: limited
@@ -225,12 +225,11 @@ dataset_fields:
 
 - field_name: bil_integrity
   label: Business Impact Level - Integrity
-  preset: select
+  preset: datavic_select
   display_group: Security
-  required: false
   choices:
-    - value: "n_a"
-      label: N/A
+    - value: 'n_a'
+      label: 'N/A'
     - value: minor
       label: Minor
     - value: limited
@@ -272,7 +271,7 @@ dataset_fields:
 
 - field_name: organization_visibility
   label: Organisation Visibility
-  preset: select
+  preset: datavic_select
   display_group: Workflow
   choices:
     - value: current
