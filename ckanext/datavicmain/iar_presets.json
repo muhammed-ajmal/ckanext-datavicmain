@@ -26,8 +26,8 @@
        {
           "preset_name": "datavic_select",
           "values": {
-             "validators" :"scheming_required scheming_choices ignore_missing",
-             "form_snippet": "datavic_select.html"
+             "validators" : "ignore_empty scheming_required scheming_choices",
+             "form_snippet": "select.html"
           }
        }]
 }
