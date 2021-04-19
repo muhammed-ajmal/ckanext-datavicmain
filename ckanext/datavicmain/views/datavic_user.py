@@ -308,7 +308,7 @@ def logged_in():
     else:
         err = _(u'Login failed. Bad username or password.')
         h.flash_error(err)
-        return login()
+        return user.login()
 
 
 def me():
