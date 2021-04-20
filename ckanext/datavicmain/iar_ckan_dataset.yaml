@@ -11,6 +11,7 @@ dataset_fields:
   preset: title
   form_placeholder: eg. A descriptive title
   display_group: General
+  validators: not_empty
   required: true
 
 - field_name: name
@@ -38,11 +39,13 @@ dataset_fields:
   preset: tag_string_autocomplete
   form_placeholder: eg. economy, mental health, government
   display_group: General
+  validators: not_empty
   required: true
 
 - field_name: primary_purpose_of_collection
   label: Puropse
   display_group: General
+  form_placeholder: Purpose
   form_snippet: text.html
 
 - field_name: owner_org
@@ -52,23 +55,7 @@ dataset_fields:
 
 - field_name: agency_program_domain
   label: Agency Program/Domain
-  display_group: General
-  form_snippet: text.html
-
-- field_name: license_id
-  label: License
-  display_group: General
-  form_snippet: license.html
-  help_text: License definitions and additional information can be found at http://opendefinition.org/
-  required: true
-
-- field_name: custom_licence_text
-  label: License - other
-  form_snippet: text.html
-  display_group: General
-
-- field_name: custom_licence_link
-  label: Custom license link
+  form_placeholder: Agency Program/Domain
   display_group: General
   form_snippet: text.html
 
@@ -76,11 +63,34 @@ dataset_fields:
   label: Category
   preset: dataset_category
   display_group: General
+  validators: not_empty
+  required: true
+
+- field_name: license_id
+  label: License
+  display_group: General
+  form_snippet: license.html
+  help_text: License definitions and additional information can be found at http://opendefinition.org/
+  validators: not_empty
+  required: true
+
+- field_name: custom_licence_text
+  label: License - other
+  form_snippet: text.html
+  form_placeholder: License - other
+  display_group: General
+
+- field_name: custom_licence_link
+  label: Custom license link
+  display_group: General
+  form_placeholder: Custom license link
+  form_snippet: text.html
 
 - field_name: date_created_data_asset
   label: Created (Data Asset)
   display_group: General
   preset: date
+  validators: not_empty
   required: true
 
 - field_name: date_modified_data_asset
@@ -92,6 +102,8 @@ dataset_fields:
   label: Update Frequency
   preset: datavic_select
   display_group: General
+  validators: not_empty
+  required: true
   choices:
     - value: continual
       label: Continual
@@ -120,6 +132,7 @@ dataset_fields:
 
 - field_name: full_metadata_url
   label: Full Metadata URL
+  form_placeholder: Full Metadata URL
   display_group: General
   form_snippet: text.html
 
@@ -129,6 +142,7 @@ dataset_fields:
   label: Personal Data (Privacy)
   preset: select
   display_group: Security
+  validators: not_empty
   required: true
   choices:
     - value: not_yet
@@ -144,6 +158,7 @@ dataset_fields:
   label: Protective Marking
   preset: select
   display_group: Security
+  validators: not_empty
   required: true
   choices:
     - value: secret
@@ -164,6 +179,7 @@ dataset_fields:
   preset: select
   display_group: Security
   required: true
+  validators: not_empty
   choices:
     - value: 'yes'
       label: 'Yes'
@@ -250,20 +266,24 @@ dataset_fields:
   label: Source ICT System
   display_group: Security
   form_snippet: text.html
+  form_placeholder: Source ICT System
   display_snippet: link.html
 
 - field_name: record_disposal_category
   label: Record Disposal Category
+  form_placeholder: Record Disposal Category
   display_group: Security
   form_snippet: text.html
 
 - field_name: disposal_category
   label: Disposal Category
+  form_placeholder: Disposal Category
   display_group: Security
   form_snippet: text.html
 
 - field_name: disposal_class
   label: Disposal Class
+  form_placeholder: Disposal Class
   display_group: Security
   form_snippet: text.html
 
@@ -273,6 +293,8 @@ dataset_fields:
   label: Organisation Visibility
   preset: datavic_select
   display_group: Workflow
+  required: true
+  validators: not_empty
   choices:
     - value: current
       label: Current
@@ -295,6 +317,9 @@ dataset_fields:
   label: Workflow Status
   preset: workflow_status  # custom select_workflow
   display_group: Workflow
+  validators: not_empty
+  required: true
+
 
 - field_name: workflow_status_notes
   label: Workflow Status Notes
@@ -314,7 +339,6 @@ dataset_fields:
 - field_name: maintainer_email
   label: Email
   form_placeholder: data.vic@salsadigital.com.au
-  display_snippet: email.html
   display_email_name_field: author
   display_group: Custodian
 
