@@ -8,6 +8,7 @@ import ckan.lib.mailer as mailer
 from ckan.lib.base import render_jinja2
 from ckanext.datavicmain import schema as custom_schema
 
+
 log = logging.getLogger(__name__)
 
 
@@ -78,3 +79,26 @@ def option_value_to_label(field, value):
             for option in extra[1]['options']:
                 if option['value'] == value:
                     return option['text']
+
+
+def get_organisations_allowed_to_upload_resources():
+    orgs =  toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
+    return orgs
+
+def get_user_organizations(username):
+    user = model.User.get(username)
+    return user.get_groups('organization')
+
+
+def user_org_can_upload():
+    user = toolkit.g.user
+    id = toolkit.g.id
+    context = {'user': user}
+    dataset = toolkit.get_action('package_show')( context, {'id': id })
+    allowed_organisations = get_organisations_allowed_to_upload_resources()
+    user_orgs = get_user_organizations(user)
+    for org in user_orgs:
+        if org.name in allowed_organisations and org.name == dataset.get('organization').get('name'):
+            return True
+    return False
+
