@@ -2,7 +2,6 @@
 
     {% block basic_fields_url %}
    
-   {{ g.userobj }}
       {% set is_upload = (data.url_type == 'upload') %}
       {{ form.image_upload(data, errors, field_url='url', field_upload='upload', field_clear='clear_upload',
          is_upload_enabled=True if h.uploads_enabled() and (h.is_sysadmin() or h.user_org_can_upload()) else False, is_url=data.url and not is_upload, is_upload=is_upload,
