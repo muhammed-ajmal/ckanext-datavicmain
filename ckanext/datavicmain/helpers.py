@@ -82,7 +82,7 @@ def option_value_to_label(field, value):
 
 
 def get_organisations_allowed_to_upload_resources():
-    orgs =  toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['central-highlands-water'])
+    orgs =  toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
     return orgs
 
 def get_user_organizations(username):
