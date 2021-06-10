@@ -73,16 +73,17 @@ try:
                         # print('resource_view_delete: {}'.format(ex))
 
                 try:
+                    ckan.action.package_delete(id=dataset.get('id'))
                     ckan.action.dataset_purge(id=dataset.get('id'))
-                    # print('Successfully deleted {}'.format(dataset))
+                    print('Successfully deleted {}'.format(dataset.get('name')))
 
                     row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
                     csv.write(row)
                 except Exception as ex:
                     # log and ignore
                     datasets_failed.append(dataset)
-                    print('dataset_purge: {}'.format(ex))
-                    print(dataset)
+                    print('Failed to delete {0}: {1}'.format(dataset.get('name'), ex))
+                    # print(dataset)
 
         with open('sdm_datasets_failed_to_delete.csv', 'w') as csv:
             header = "title,url,full_metadata_url\n"
