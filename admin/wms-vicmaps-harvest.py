@@ -415,17 +415,17 @@ for catalogue in catalogues:
             try:
                 if new:
                     pkg = ckan.call_action('package_create', pkg_dict)  # create a new dataset?
-                    print pkg['name'] + " created \n"
-                    datasets_created.append(pkg)
+                    print pkg_dict['name'] + " created \n"
+                    datasets_created.append(pkg_dict)
                 else:
-                    pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
-                    print pkg['name'] + " updated \n"
-                    datasets_updated.append(pkg)
+                #   pkg = ckan.call_action('package_update', pkg_dict)  # create a new dataset?
+                    print pkg_dict['name'] + " updated \n"
+                    datasets_updated.append(pkg_dict)
                 #
                 # # @Todo remove this output
                 # pprint(pkg_dict)
             except ckanapi.errors.CKANAPIError, e:
-                datasets_errors.append(pg_dict)
+                datasets_errors.append(pkg_dict)
                 print str(e)
                 continue
 
@@ -457,7 +457,7 @@ print str(len(datasets_created)) + ' datasets created'
 print str(len(datasets_updated)) + ' datasets updated'
 print str(len(datasets_errors)) + ' datasets errors'
 print '= = = = = = = = = = = = = = = = = = = = = ='
-
+url = sys.argv[1]
 with open('sdm_datasets_created.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
@@ -476,6 +476,5 @@ with open('sdm_datasets_errors.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_errors:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title', '').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
         csv.write(row)
-
