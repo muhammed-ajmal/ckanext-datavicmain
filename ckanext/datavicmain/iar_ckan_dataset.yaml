@@ -39,7 +39,8 @@ dataset_fields:
   preset: tag_string_autocomplete
   form_placeholder: eg. economy, mental health, government
   display_group: General
-  validators: not_empty
+  form_snippet: tags.html
+  validators: ignore_missing tag_string_convert
   required: true
 
 - field_name: primary_purpose_of_collection
@@ -361,6 +362,8 @@ resource_fields:
 - field_name: format
   label: Format
   preset: resource_format_autocomplete
+  form_snippet: tags.html
+  validators: ignore_missing tag_string_convert
 
 - field_name: filesize
   label: Filesize
