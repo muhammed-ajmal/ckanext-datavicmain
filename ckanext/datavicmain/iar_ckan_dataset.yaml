@@ -44,7 +44,7 @@ dataset_fields:
   required: true
 
 - field_name: primary_purpose_of_collection
-  label: Puropse
+  label: Purpose
   display_group: General
   form_placeholder: Purpose
   form_snippet: text.html
