@@ -386,7 +386,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'release_date': release_date,
             'is_dataset_harvested': helpers.is_dataset_harvested,
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
-            'option_value_to_label': helpers.option_value_to_label
+            'option_value_to_label': helpers.option_value_to_label,
+            'user_org_can_upload': helpers.user_org_can_upload,
         }
 
     ## IConfigurer interface ##
