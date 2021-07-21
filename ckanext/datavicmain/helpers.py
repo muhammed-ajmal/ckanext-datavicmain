@@ -2,11 +2,12 @@ import os
 import pkgutil
 import inspect
 
-from flask import Blueprint
+from flask import Blueprint, request
 
 import ckan.model as model
 import ckan.authz as authz
 from ckan.common import config
+from urllib.parse import urlsplit
 
 import ckan.plugins.toolkit as toolkit
 import logging
@@ -182,8 +183,15 @@ def user_org_can_upload(pkg_id):
     user = toolkit.g.user
     context = {'user': user}
     org_name = None
+    if pkg_id is None:
+        request_path = urlsplit(request.url)
+        if request_path.path is not None:
+            fragments = request_path.path.split('/')
+            if fragments[1] == 'dataset':
+                pkg_id = fragments[2]
+
     if pkg_id is not None:
-        dataset = toolkit.get_action('package_show')(context, {'id': pkg_id})
+        dataset = toolkit.get_action('package_show')(context, {'name_or_id': pkg_id})
         org_name = dataset.get('organization').get('name')
     allowed_organisations = get_organisations_allowed_to_upload_resources()
     user_orgs = get_user_organizations(user)
