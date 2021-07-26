@@ -20,9 +20,10 @@ WHITELIST_DATASETS = ['popular-baby-names']
 
 def purge_dataset(dataset):
     with RemoteCKAN(odp, apikey=apikey) as ckan:
-        print("Purged for datsaet {0}".format(dataset))
         for names in WHITELIST_DATASETS:
             if names not in dataset.get('name'):
+                # print("Purging dataset {0}".format(dataset.get('name')))
+                purged_datasets.append(dataset)
                 ckan.call_action.purge_dataset(id=dataset.get('name'))
 
 
@@ -53,14 +54,14 @@ def main():
                 iar_dataset = iarCKAN.action.package_show(id=dataset_id)
                 if iar_dataset.get('private'):
                     purge_dataset(dataset)
-                    purged_datasets.append(dataset)
+                    # purged_datasets.append(dataset)
             except NotFound:
                 purge_dataset(dataset)
-                purged_datasets.append(dataset)
+                # purged_datasets.append(dataset)
             except CKANAPIError as e:
                 error_datasets.append(dataset)
                 print("Error for dataset {0} with error {1}".format(dataset_name, e))
-    with open('odp_datasets_to_purge_uat.csv', 'w') as csvfile:
+    with open('odp_purged_datasets_uat.csv', 'w') as csvfile:
         write_to_csv(csvfile, purged_datasets)
     with open('error_datasets.csv', 'w') as csvfile:
         write_to_csv(csvfile, error_datasets)
