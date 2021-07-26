@@ -8,7 +8,7 @@ apikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
 username = 'salsa'
 iar = 'https://develop.directory.data.vic.gov.au'
 
-local = 'http://datavic-ckan.docker.amazee.io/'
+# local = 'http://datavic-ckan.docker.amazee.io/'
 # iarCKAN = iarCKAN(username=username)
 
 purged_datasets = []
@@ -48,7 +48,7 @@ def main():
         # get dataset id and name
         dataset_id = dataset.get('id')
         dataset_name = dataset.get('name')
-        with RemoteCKAN(local, apikey=apikey) as iarCKAN:
+        with RemoteCKAN(iar, apikey=apikey) as iarCKAN:
             try:
                 iar_dataset = iarCKAN.action.package_show(id=dataset_id)
                 if iar_dataset.get('private'):
