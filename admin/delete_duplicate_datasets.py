@@ -65,7 +65,7 @@ def main():
             error_datasets.append(dataset)
             print("Error for dataset {0} with error {1}".format(dataset_name, e.message))
     purge_dataset(purging_dataset)
-    with open('odp_purged_datasets_uat.csv', 'w') as csvfile:
+    with open('odp_purged_datasets_prod.csv', 'w') as csvfile:
         write_to_csv(csvfile, purged_datasets)
     with open('error_datasets.csv', 'w') as csvfile:
         write_to_csv(csvfile, error_datasets)
