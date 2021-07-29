@@ -3,20 +3,21 @@ import csv
 
 
 # url = os.environ['LAGOON_ROUTE']
-# odp = 'https://discover.data.vic.gov.au/'
-odp = 'https://nginx.pr-126.datavic-ckan-odp.sdp2.sdp.vic.gov.au/'
-iar = 'https://ckan.pr-148.datavic-ckan.sdp2.sdp.vic.gov.au/'
+odp = 'https://discover.data.vic.gov.au/'
+# odp = 'https://nginx.pr-126.datavic-ckan-odp.sdp2.sdp.vic.gov.au/'
+# iar = 'https://ckan.pr-148.datavic-ckan.sdp2.sdp.vic.gov.au/'
 odpapikey = '0eabf140-439c-46a0-81bc-1c73320303b8'
 iarapikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
 username = 'salsa'
-# iar = 'https://directory.data.vic.gov.au/'
+iar = 'https://directory.data.vic.gov.au/'
 
 # local = 'http://datavic-ckan.docker.amazee.io/'
 iarCKAN = RemoteCKAN(iar, apikey=iarapikey)
 odpCKAN = RemoteCKAN(odp, apikey=odpapikey)
-purged_datasets = []
 
 purging_dataset = []
+
+purged_datasets = []
 error_datasets = []
 
 WHITELIST_DATASETS = ['popular-baby-names']
@@ -55,9 +56,10 @@ def main():
     for dataset in datasets:
         # get dataset id and name
         dataset_id = dataset.get('id')
-        dataset_name = dataset.get('name') 
+        dataset_name = dataset.get('name')
         try:
-            with RemoteCKAN(odp, apikey=odpapikey) as iarCKAN:
+            with RemoteCKAN(iar, apikey=iarapikey) as iarCKAN:
+                # import pdb; pdb.set_trace()
                 result = iarCKAN.action.package_search(q='id:{0}'.format(dataset_id))
                 results = result.get('results', [])
                 # print("Processing dataset {}".format(dataset_name))
