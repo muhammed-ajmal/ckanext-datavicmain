@@ -60,8 +60,9 @@ def main():
             with RemoteCKAN(odp, apikey=odpapikey) as iarCKAN:
                 result = iarCKAN.action.package_search(q='id:{0}'.format(dataset_id))
                 results = result.get('results', [])
-                print("Processing dataset {}".format(dataset_name))
+                # print("Processing dataset {}".format(dataset_name))
                 if len(results) == 0 or results[0].get('private'):
+                    print("Add for purge {0}".format(dataset_name))
                     purging_dataset.append(dataset)
         except NotFound:
             purging_dataset.append(dataset)
@@ -69,6 +70,7 @@ def main():
         except CKANAPIError as e:
             error_datasets.append(dataset)
             print("Error for dataset {0} with error {1}".format(dataset_name, e.message))
+
     purge_dataset(purging_dataset)
     with open('odp_purged_datasets_prod.csv', 'w') as csvfile:
         write_to_csv(csvfile, purged_datasets)
