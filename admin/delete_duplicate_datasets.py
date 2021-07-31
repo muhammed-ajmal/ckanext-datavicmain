@@ -3,13 +3,13 @@ import csv
 
 
 # url = os.environ['LAGOON_ROUTE']
-odp = 'https://discover.data.vic.gov.au/'
-# odp = 'https://nginx.pr-126.datavic-ckan-odp.sdp2.sdp.vic.gov.au/'
-# iar = 'https://ckan.pr-148.datavic-ckan.sdp2.sdp.vic.gov.au/'
+# odp = 'https://discover.data.vic.gov.au/'
+odp = 'https://nginx.pr-126.datavic-ckan-odp.sdp2.sdp.vic.gov.au/'
+iar = 'https://ckan.pr-148.datavic-ckan.sdp2.sdp.vic.gov.au/'
 odpapikey = '0eabf140-439c-46a0-81bc-1c73320303b8'
 iarapikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
 username = 'salsa'
-iar = 'https://directory.data.vic.gov.au/'
+# iar = 'https://directory.data.vic.gov.au/'
 
 # local = 'http://datavic-ckan.docker.amazee.io/'
 iarCKAN = RemoteCKAN(iar, apikey=iarapikey)
