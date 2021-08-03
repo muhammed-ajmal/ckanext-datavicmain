@@ -33,6 +33,7 @@ def purge_dataset(datasets):
                     try:
                         ckan.action.dataset_purge(id=dataset.get('name'))
                     except CKANAPIError:
+                        error_datasets.append(dataset)
                         print("Error purging dataset {0}".format(dataset.get('name')))
 
 
