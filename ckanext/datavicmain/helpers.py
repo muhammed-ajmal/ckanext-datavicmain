@@ -7,6 +7,7 @@ import ckan.lib.mailer as mailer
 
 from ckan.lib.base import render_jinja2
 from ckanext.datavicmain import schema as custom_schema
+from ckanext.harvest.model import HarvestObject
 
 
 log = logging.getLogger(__name__)
@@ -37,8 +38,10 @@ def set_data_owner(owner_org):
 def is_dataset_harvested(package_id):
     if not package_id:
         return None
-    return any(package_revision for package_revision in toolkit.get_action('package_revision_list')(data_dict={'id': package_id})
-               if 'REST API: Create object' in package_revision.get('message') and h.date_str_to_datetime(package_revision.get('timestamp')) > datetime.datetime(2019, 4, 24, 10, 30))
+
+    harvested = model.Session.query(model.Session.query(HarvestObject).filter_by(package_id=package_id).filter_by(state='COMPLETE').exists()).scalar()
+
+    return harvested
 
 
 def is_user_account_pending_review(user_id):
@@ -82,7 +85,7 @@ def option_value_to_label(field, value):
 
 
 def get_organisations_allowed_to_upload_resources():
-    orgs =  toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
+    orgs = toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
     return orgs
 
 def get_user_organizations(username):
