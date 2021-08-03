@@ -54,16 +54,14 @@ def set_data_owner(owner_org):
     return data_owner.strip()
 
 
-# TODO: Find a way to determine if the daset is harvested
-# TODO: We will use `package_activity_list` for now
 
 def is_dataset_harvested(package_id):
     if not package_id:
         return None
 
-    query = model.Session.query(HarvestObject).filter_by(package_id=package_id).filter_by(state='COMPLETE').count()
+    harvested = model.Session.query(model.Session.query(HarvestObject).filter_by(package_id=package_id).filter_by(state='COMPLETE').exists()).scalar()   
 
-    return query > 0
+    return harvested
 
 
 def is_user_account_pending_review(user_id):
