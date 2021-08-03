@@ -17,6 +17,7 @@ import ckan.lib.mailer as mailer
 
 from ckan.lib.base import render_jinja2
 from ckanext.datavicmain import schema as custom_schema
+from ckanext.harvest.model import HarvestObject
 
 
 # Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
@@ -53,14 +54,13 @@ def set_data_owner(owner_org):
     return data_owner.strip()
 
 
-# TODO: Find a way to determine if the daset is harvested
-# TODO: We will use `package_activity_list` for now
-
 def is_dataset_harvested(package_id):
     if not package_id:
         return None
-    return any(package_revision for package_revision in toolkit.get_action('package_activity_list')(data_dict={'id': package_id})
-               if 'REST API: Create object' in package_revision.get('activity_type') and h.date_str_to_datetime(package_revision.get('timestamp')) > datetime.datetime(2019, 4, 24, 10, 30))
+
+    harvested = model.Session.query(model.Session.query(HarvestObject).filter_by(package_id=package_id).filter_by(state='COMPLETE').exists()).scalar()
+
+    return harvested
 
 
 def is_user_account_pending_review(user_id):
@@ -170,7 +170,7 @@ def workflow_status_pretty(workflow_status):
 
 
 def get_organisations_allowed_to_upload_resources():
-    orgs =  toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
+    orgs = toolkit.config.get('ckan.organisations_allowed_to_upload_resources', ['victorian-state-budget'])
     return orgs
 
 
