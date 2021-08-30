@@ -598,3 +598,34 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         
         return pkg_dict
 
+class RefreshDatasetDatastore(p.SingletonPlugin):
+
+    p.implements(p.ITemplateHelpers)
+    p.implements(p.IConfigurable, inherit=True)
+    p.implements(p.IConfigurer, inherit=True)
+    p.implements(p.IRoutes, inherit=True)
+    p.implements(p.IActions)
+    
+    toolkit.add_ckan_admin_tab(toolkit.config, 'datastore_refresh_config', 'Datastore refresh',
+                               config_var='ckan.admin_tabs')
+
+    def get_helpers(self):
+        return {}
+
+    def get_actions(self):
+        return {}
+    
+    ## IConfigurable interface ##
+
+    def configure(self, config):
+        ''' Apply configuration options to this plugin '''
+        pass
+
+    #IRoutes
+    def before_map(self, m):
+        m.connect(
+            u'datastore_refresh_config',
+            u'/ckan-admin/datastore_refresh_config',
+            controller=u'ckanext.datavicmain.controller:DataVicAdminController',
+            action=u'datastore_refresh_config')
+        return m
