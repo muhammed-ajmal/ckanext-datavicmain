@@ -1,6 +1,6 @@
 from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.domain_object import DomainObject
-
+from ckan.model.types import make_uuid
 
 from sqlalchemy import types, Column, Table
 import datetime
@@ -14,7 +14,7 @@ refresh_dataset_datastore_table = Table(
     Column('id',
         types.UnicodeText,
         primary_key=True,
-        default=types.make_uuid),
+        default=make_uuid()),
     Column('dataset_id',
         types.UnicodeText,
         nullable=False,
@@ -35,6 +35,12 @@ refresh_dataset_datastore_table = Table(
 )
 
 class RefreshDatasetDatastore(DomainObject):
+
+    def __init__(self, **kwargs):
+        for k, v in kwargs.items():
+            setattr(self, k, v)
+        self.id = make_uuid()
+        self.created_at = datetime.datetime.utcnow()
 
     @classmethod
     def get(cls, id):

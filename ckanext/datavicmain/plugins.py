@@ -231,6 +231,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             # DATAVICIAR-42: Override CKAN's core `user_create` method
             'user_create': actions.datavic_user_create,
+            'refresh_datastore_dataset_create': actions.refresh_dataset_datastore_create,
+            'refresh_dataset_datastore_list': actions.refresh_dataset_datastore_list,
+            'refresh_dataset_datastore_delete': actions.refresh_dataset_datastore_delete
         }
 
 
