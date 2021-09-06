@@ -9,23 +9,13 @@
     <h3> Configure  dataset datastore refresh </h3>
 
     {{ errors }}
-
-    {{ form.select(
-      name='dataset',
-      id='dataset',
-      label=_('Select dataset'),
-      options=[
-        {}
-      ],
-      selected='general',
-      error=errors if errors else None
-    ) }}
-
+    {% set datasets_available = h.get_datasets_available() %}
+   
     {{ form.select(
       'frequency',
       id='frequency',
       label=_('Frequency'),
-      selected= '10 minutes',
+      options = h.get_frequency_options(),
       error=errors if errors else None
     ) }}
 

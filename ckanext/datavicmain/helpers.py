@@ -7,6 +7,8 @@ from flask import Blueprint, request
 import ckan.model as model
 import ckan.authz as authz
 from ckan.common import config
+from ckan.lib.navl.dictization_functions import unflatten
+from ckan.logic import clean_dict, tuplize_dict, parse_params
 from urllib.parse import urlsplit
 
 import ckan.plugins.toolkit as toolkit
@@ -199,3 +201,23 @@ def user_org_can_upload(pkg_id):
         if org.name in allowed_organisations and org.name == org_name:
             return True
     return False
+
+
+def get_datasets_available(dataset=" "):
+    user = toolkit.g.user
+    context = {'user': user} 
+    data_dict = {
+        'q': dataset,
+        'limit': 10
+    }
+    datasets = toolkit.get_action('package_autocomplete')(context, data_dict)
+    return datasets
+
+def get_frequency_options():
+    return [{
+        'ten_miutes': '10 minutes'},
+        {'two_hours': '2 hours'},
+        {'daily': 'Daily'}]
+        
+def clean_params(params):
+    return clean_dict(unflatten(tuplize_dict(parse_params(params))))

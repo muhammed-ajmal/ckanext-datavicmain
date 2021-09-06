@@ -10,6 +10,7 @@ from ckan.common import _,  g
 import ckan.plugins.toolkit as toolkit
 
 import ckan.views.dataset as dataset
+import ckanext.datavicmain.helpers as helpers
 
 
 NotFound = toolkit.ObjectNotFound
@@ -75,8 +76,53 @@ def purge(id):
     return toolkit.h.redirect_to('/ckan-admin/trash')
 
 
+class DatastoreRefreshConfigView(MethodView):
+
+    def _setup_extra_template_variables():
+        user = toolkit.g.userobj
+        context = {u'for_view': True, u'user': user.name, u'auth_user_obj': user}
+        data_dict = {u'user_obj': user, u'include_datasets': True}
+        return context, data_dict
+
+    def _get_context():
+        return {
+            'model': model,
+            'session': model.Session,
+            'user': toolkit.g.user,
+            'auth_user_obj': toolkit.g.userobj
+    }
+
+    
+    def get(self, context=None):
+        context = self._get_context()
+        results = toolkit.get_action('refresh_dataset_datastore_list')(context)
+        extra_vars = self._setup_extra_template_variables()
+        extra_vars["data"] = results
+        return toolkit.render('admin/datastore_refresh.html')
+    
+    def post(self):
+        context = self._get_context()
+        params = helpers.clean_params(toolkit.request.form)
+
+        config_dict = {
+            "dataset_id": params.dataset_id,
+            "frequency": params.frequency
+        }
+        if not config_dict.values():
+            return self.get()
+        results = toolkit.get_action('refresh_dataset_datastore_create')(context, config_dict)
+        extra_vars = self._setup_extra_template_variables()
+        extra_vars["data"] = results
+        return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
+
+
+    
+
+
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)
     blueprint.add_url_rule('/dataset/purge/<id>', view_func=purge)
+    blueprint.add_url_rule('/ckan-admin/datastore-refresh-config',
+                view_func=DatastoreRefreshConfigView.as_view(str('datastore_refresh_config')))
 
 register_datavicmain_plugin_rules(datavicmain)

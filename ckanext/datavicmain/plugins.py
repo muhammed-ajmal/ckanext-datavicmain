@@ -391,6 +391,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
             'option_value_to_label': helpers.option_value_to_label,
             'user_org_can_upload': helpers.user_org_can_upload,
+            'get_datasets_available': helpers.get_datasets_available,
+            'get_frequency_options': helpers.get_frequency_options,
         }
 
     ## IConfigurer interface ##
@@ -609,11 +611,11 @@ class RefreshDatasetDatastore(p.SingletonPlugin):
     p.implements(p.IRoutes, inherit=True)
     p.implements(p.IActions)
     
-    toolkit.add_ckan_admin_tab(toolkit.config, 'datastore_refresh_config', 'Datastore refresh',
+    toolkit.add_ckan_admin_tab(toolkit.config, 'datavicmain.datastore_refresh_config', 'Datastore refresh',
                                config_var='ckan.admin_tabs')
 
     def get_helpers(self):
-        return {}
+        return {'get_datasets_available': helpers.get_datasets_available}
 
     def get_actions(self):
         return {}
@@ -624,11 +626,11 @@ class RefreshDatasetDatastore(p.SingletonPlugin):
         ''' Apply configuration options to this plugin '''
         pass
 
-    #IRoutes
-    def before_map(self, m):
-        m.connect(
-            u'datastore_refresh_config',
-            u'/ckan-admin/datastore_refresh_config',
-            controller=u'ckanext.datavicmain.controller:DataVicAdminController',
-            action=u'datastore_refresh_config')
-        return m
+    # #IRoutes
+    # def before_map(self, m):
+    #     m.connect(
+    #         u'datastore_refresh_config',
+    #         u'/ckan-admin/datastore_refresh_config',
+    #         controller=u'ckanext.datavicmain.controller:DataVicAdminController',
+    #         action=u'datastore_refresh_config')
+    #     return m
