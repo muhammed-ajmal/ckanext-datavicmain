@@ -27,7 +27,7 @@ setup(
 	"""
         [ckan.plugins]
         datavicmain_dataset = ckanext.datavicmain.plugins:DatasetForm
-		refresh_dataset_datastore = ckanext.datavicmain.plugins:RefreshDatasetDatastore
+		refresh_dataset_datastore = ckanext.datavicmain.datastore_config.plugins:RefreshDatasetDatastore
 
         [fanstatic.libraries]
     """,

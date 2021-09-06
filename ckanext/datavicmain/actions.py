@@ -128,6 +128,7 @@ def datavic_user_create(context, data_dict):
     return user_dict
 
 
+@toolkit.side_effect_free
 def refresh_dataset_datastore_create(context, data_dict):
     
     if data_dict:
@@ -149,7 +150,8 @@ def refresh_dataset_datastore_create(context, data_dict):
 
     return _table_dictize(rdd, context)
 
-def refresh_dataset_datastore_list(context):
+@toolkit.side_effect_free
+def refresh_dataset_datastore_list(context, data_dict=None):
 
     results = RefreshDatasetDatastore.get_all()
 

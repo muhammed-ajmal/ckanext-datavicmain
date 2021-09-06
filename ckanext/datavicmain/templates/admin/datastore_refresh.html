@@ -10,7 +10,12 @@
 
     {{ errors }}
     {% set datasets_available = h.get_datasets_available() %}
+
+    {{ datasets_available }}
    
+   <input id="datasets" type="text" name="dataset" placeholder="{{ _('Username') }}" value={{ datasets_available }} class="control-medium" data-module="autocomplete"
+            data-module-source="/api/3/util/dataset/autocomplete=?">
+
     {{ form.select(
       'frequency',
       id='frequency',

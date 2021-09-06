@@ -78,13 +78,13 @@ def purge(id):
 
 class DatastoreRefreshConfigView(MethodView):
 
-    def _setup_extra_template_variables():
+    def _setup_extra_template_variables(self):
         user = toolkit.g.userobj
         context = {u'for_view': True, u'user': user.name, u'auth_user_obj': user}
-        data_dict = {u'user_obj': user, u'include_datasets': True}
-        return context, data_dict
+        #data_dict = {u'user_obj': user, u'include_datasets': True}
+        return context
 
-    def _get_context():
+    def _get_context(self):
         return {
             'model': model,
             'session': model.Session,
@@ -98,7 +98,8 @@ class DatastoreRefreshConfigView(MethodView):
         results = toolkit.get_action('refresh_dataset_datastore_list')(context)
         extra_vars = self._setup_extra_template_variables()
         extra_vars["data"] = results
-        return toolkit.render('admin/datastore_refresh.html')
+        
+        return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
     
     def post(self):
         context = self._get_context()

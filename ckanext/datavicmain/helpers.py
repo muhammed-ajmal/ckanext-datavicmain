@@ -203,7 +203,7 @@ def user_org_can_upload(pkg_id):
     return False
 
 
-def get_datasets_available(dataset=" "):
+def get_datasets_available(dataset=None):
     user = toolkit.g.user
     context = {'user': user} 
     data_dict = {
@@ -213,6 +213,12 @@ def get_datasets_available(dataset=" "):
     datasets = toolkit.get_action('package_autocomplete')(context, data_dict)
     return datasets
 
+
+def get_frequency_options_list():
+    return [
+        {'value': frequency.keys(), 'text': frequency.values()}
+        for frequency in get_frequency_options()
+    ]
 def get_frequency_options():
     return [{
         'ten_miutes': '10 minutes'},

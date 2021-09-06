@@ -16,6 +16,7 @@ from ckanext.datavicmain import actions
 from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
 from ckanext.datavicmain import validators
+from ckanext.datavicmain.cli import get_commands
 
 from ckan.common import config, request
 
@@ -231,9 +232,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             # DATAVICIAR-42: Override CKAN's core `user_create` method
             'user_create': actions.datavic_user_create,
-            'refresh_datastore_dataset_create': actions.refresh_dataset_datastore_create,
-            'refresh_dataset_datastore_list': actions.refresh_dataset_datastore_list,
-            'refresh_dataset_datastore_delete': actions.refresh_dataset_datastore_delete
         }
 
 
@@ -391,8 +389,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
             'option_value_to_label': helpers.option_value_to_label,
             'user_org_can_upload': helpers.user_org_can_upload,
-            'get_datasets_available': helpers.get_datasets_available,
-            'get_frequency_options': helpers.get_frequency_options,
         }
 
     ## IConfigurer interface ##
@@ -602,35 +598,3 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             item['key'] = field_key_map.get(k, k)
         
         return pkg_dict
-
-class RefreshDatasetDatastore(p.SingletonPlugin):
-
-    p.implements(p.ITemplateHelpers)
-    p.implements(p.IConfigurable, inherit=True)
-    p.implements(p.IConfigurer, inherit=True)
-    p.implements(p.IRoutes, inherit=True)
-    p.implements(p.IActions)
-    
-    toolkit.add_ckan_admin_tab(toolkit.config, 'datavicmain.datastore_refresh_config', 'Datastore refresh',
-                               config_var='ckan.admin_tabs')
-
-    def get_helpers(self):
-        return {'get_datasets_available': helpers.get_datasets_available}
-
-    def get_actions(self):
-        return {}
-    
-    ## IConfigurable interface ##
-
-    def configure(self, config):
-        ''' Apply configuration options to this plugin '''
-        pass
-
-    # #IRoutes
-    # def before_map(self, m):
-    #     m.connect(
-    #         u'datastore_refresh_config',
-    #         u'/ckan-admin/datastore_refresh_config',
-    #         controller=u'ckanext.datavicmain.controller:DataVicAdminController',
-    #         action=u'datastore_refresh_config')
-    #     return m
