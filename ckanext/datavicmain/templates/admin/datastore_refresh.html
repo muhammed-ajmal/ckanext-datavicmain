@@ -5,11 +5,16 @@
 
 <div id="datastore_config">
   <form action="" method="post" class="form-horizontal">
+  <div>
     <h3> Configure  dataset datastore refresh </h3>
 
     {{ errors }}
     {% set datastore_refresh_configs = h.get_datastore_refresh_configs() %}
-    {% set dataset_attrs ={'data-module': 'autocomplete', 'data-module-dataset': '', 'data-module-source': '/api/2/util/dataset/autocomplete?incomplete=?'} %}
+    {% set dataset_attrs ={'data-module': 'autocomplete', 'data-module-dataset': '', 
+          'data-module-label': 'title',
+          'data-module-tags': 'false',
+          'data-module-createtags': 'false',
+          'data-module-source': '/api/2/util/dataset/autocomplete?incomplete=?'} %}
     
     {{ form.input(
       'dataset', 
@@ -31,6 +36,7 @@
 
     <button class="btn btn-primary">Add</button>
 
+</div>
 
 <div class="table">
     <small>
@@ -47,7 +53,7 @@
         <tr>
           <td> {{ refresh_config.dataset_id }} </td>
           <td> {{ refresh_config.frequency }} </td>
-          <td> <button type="submit" name="delete_config" value="{{refresh_config.id}}"> Delete</button> </td>
+          <td> <button class="btn btn-danger" type="submit" name="delete_config" value="{{refresh_config.id}}"> Delete</button> </td>
         {% endfor%}
       </tbody>
     </table>
@@ -56,6 +62,7 @@
 
   </form>
 </div>
+
 {% endblock %}
 
 {% block secondary_content %}

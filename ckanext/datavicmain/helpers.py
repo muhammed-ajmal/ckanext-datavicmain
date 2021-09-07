@@ -203,8 +203,8 @@ def user_org_can_upload(pkg_id):
     return False
 
 def get_frequency_options():
-    return [{
-        'value':'ten_miutes', 'text':'10 minutes'},
+    return [
+        {'value':'ten_minutes', 'text':'10 minutes'},
         { 'value':'two_hours',  'text': '2 hours'},
         { 'value':'daily', 'text':'Daily'}]
         
