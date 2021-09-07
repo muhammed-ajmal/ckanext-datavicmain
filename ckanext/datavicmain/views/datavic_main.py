@@ -93,32 +93,40 @@ class DatastoreRefreshConfigView(MethodView):
     }
 
     
-    def get(self, context=None):
+    def get(self, context=None, errors=None, error_summary=None):
         context = self._get_context()
-        results = toolkit.get_action('refresh_dataset_datastore_list')(context)
+        
         extra_vars = self._setup_extra_template_variables()
-        extra_vars["data"] = results
+        extra_vars['errors'] = errors
+        extra_vars['error_summary'] = error_summary
         
         return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
     
     def post(self):
         context = self._get_context()
         params = helpers.clean_params(toolkit.request.form)
+        if params.get('delete_config'):
+            toolkit.get_action('refresh_dataset_datastore_delete')(context, {'id': params.get('delete_config')})
+            h.flash_success(toolkit._("Succesfully deleted configuration"))
+            return self.get()
+
+        if not params.get('dataset'):
+            h.flash_error(toolkit._('Please select dataset'))
+            return self.get()
 
         config_dict = {
-            "dataset_id": params.dataset_id,
-            "frequency": params.frequency
+            "dataset_id": params.get('dataset'),
+            "frequency": params.get('frequency')
         }
-        if not config_dict.values():
+        try:
+            dataset = toolkit.get_action('package_show')(context, {'id': config_dict.get('dataset_id')})
+        except NotFound as e:
+            h.flash_error(toolkit._('Selected dataset does not exists'))
             return self.get()
-        results = toolkit.get_action('refresh_dataset_datastore_create')(context, config_dict)
+        results = toolkit.get_action('refresh_datastore_dataset_create')(context, config_dict)
         extra_vars = self._setup_extra_template_variables()
         extra_vars["data"] = results
         return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
-
-
-    
-
 
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)

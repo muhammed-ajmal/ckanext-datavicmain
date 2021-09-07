@@ -128,10 +128,8 @@ def datavic_user_create(context, data_dict):
     return user_dict
 
 
-@toolkit.side_effect_free
-def refresh_dataset_datastore_create(context, data_dict):
-    
-    if data_dict:
+def refresh_datastore_dataset_create(context, data_dict):
+    if not data_dict:
         raise ValidationError()
 
     session = context['session']
@@ -139,8 +137,8 @@ def refresh_dataset_datastore_create(context, data_dict):
 
     rdd = RefreshDatasetDatastore()
 
-    rdd.dataset_id = data_dict.dataset_id
-    rdd.frequency = data_dict.frequency
+    rdd.dataset_id = data_dict.get('dataset_id')
+    rdd.frequency = data_dict.get('frequency')
     rdd.created_user_id = user
 
     rdd.save()
@@ -150,7 +148,6 @@ def refresh_dataset_datastore_create(context, data_dict):
 
     return _table_dictize(rdd, context)
 
-@toolkit.side_effect_free
 def refresh_dataset_datastore_list(context, data_dict=None):
 
     results = RefreshDatasetDatastore.get_all()

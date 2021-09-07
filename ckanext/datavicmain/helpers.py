@@ -202,28 +202,17 @@ def user_org_can_upload(pkg_id):
             return True
     return False
 
-
-def get_datasets_available(dataset=None):
-    user = toolkit.g.user
-    context = {'user': user} 
-    data_dict = {
-        'q': dataset,
-        'limit': 10
-    }
-    datasets = toolkit.get_action('package_autocomplete')(context, data_dict)
-    return datasets
-
-
-def get_frequency_options_list():
-    return [
-        {'value': frequency.keys(), 'text': frequency.values()}
-        for frequency in get_frequency_options()
-    ]
 def get_frequency_options():
     return [{
-        'ten_miutes': '10 minutes'},
-        {'two_hours': '2 hours'},
-        {'daily': 'Daily'}]
+        'value':'ten_miutes', 'text':'10 minutes'},
+        { 'value':'two_hours',  'text': '2 hours'},
+        { 'value':'daily', 'text':'Daily'}]
         
 def clean_params(params):
     return clean_dict(unflatten(tuplize_dict(parse_params(params))))
+
+
+def get_datastore_refresh_configs():
+    user = toolkit.g.user
+    context = {'user': user}
+    return toolkit.get_action('refresh_dataset_datastore_list')(context, {})

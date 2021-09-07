@@ -3,32 +3,36 @@
 
 {% block primary_content_inner %}
 
-
-<div id="datavic_reporting">
+<div id="datastore_config">
   <form action="" method="post" class="form-horizontal">
     <h3> Configure  dataset datastore refresh </h3>
 
     {{ errors }}
-    {% set datasets_available = h.get_datasets_available() %}
-
-    {{ datasets_available }}
-   
-   <input id="datasets" type="text" name="dataset" placeholder="{{ _('Username') }}" value={{ datasets_available }} class="control-medium" data-module="autocomplete"
-            data-module-source="/api/3/util/dataset/autocomplete=?">
+    {% set datastore_refresh_configs = h.get_datastore_refresh_configs() %}
+    {% set dataset_attrs ={'data-module': 'autocomplete', 'data-module-dataset': '', 'data-module-source': '/api/2/util/dataset/autocomplete?incomplete=?'} %}
+    
+    {{ form.input(
+      'dataset', 
+      id='fieald-datasets', 
+      label=_('Dataset'), 
+      value="", 
+      error="", 
+      classes=['control-full'], 
+      attrs=dataset_attrs)}}
 
     {{ form.select(
       'frequency',
       id='frequency',
       label=_('Frequency'),
+      selected=" ",
       options = h.get_frequency_options(),
       error=errors if errors else None
     ) }}
 
     <button class="btn btn-primary">Add</button>
 
-  </form>
-</div>
-<div>
+
+<div class="table">
     <small>
     <table class="table table-bordered table-striped table-condensed">
       <thead>
@@ -39,10 +43,18 @@
         </tr>
       </thead>
       <tbody>
-        
+        {% for refresh_config in datastore_refresh_configs %}
+        <tr>
+          <td> {{ refresh_config.dataset_id }} </td>
+          <td> {{ refresh_config.frequency }} </td>
+          <td> <button type="submit" name="delete_config" value="{{refresh_config.id}}"> Delete</button> </td>
+        {% endfor%}
       </tbody>
     </table>
       </small>
+</div>
+
+  </form>
 </div>
 {% endblock %}
 

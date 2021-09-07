@@ -34,13 +34,13 @@ class RefreshDatasetDatastore(p.SingletonPlugin):
 
     def get_helpers(self):
         return {  
-            'get_datasets_available': helpers.get_datasets_available,
-            'get_frequency_options': helpers.get_frequency_options_list,
+            'get_frequency_options': helpers.get_frequency_options,
+            'get_datastore_refresh_configs': helpers.get_datastore_refresh_configs
         }
 
     def get_actions(self):
         return {
-            'refresh_datastore_dataset_create': actions.refresh_dataset_datastore_create,
+            'refresh_datastore_dataset_create': actions.refresh_datastore_dataset_create,
             'refresh_dataset_datastore_list': actions.refresh_dataset_datastore_list,
             'refresh_dataset_datastore_delete': actions.refresh_dataset_datastore_delete
         }
