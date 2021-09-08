@@ -1,17 +1,18 @@
-"""Add new table for datastore refresh config
+"""Add new table with relationship
 
-Revision ID: 0eaa360150e3
-Revises: 
-Create Date: 2021-09-06 18:10:28.634873
+Revision ID: 49ea96a793f8
+Revises: 58c0a90936d6
+Create Date: 2021-09-08 16:26:58.692504
 
 """
 from alembic import op
 import sqlalchemy as sa
+import datetime
 
 
 # revision identifiers, used by Alembic.
-revision = '0eaa360150e3'
-down_revision = None
+revision = '49ea96a793f8'
+down_revision = '58c0a90936d6'
 branch_labels = None
 depends_on = None
 
@@ -20,11 +21,10 @@ def upgrade():
      op.create_table(
         'refresh_dataset_datastore',
         sa.Column('id',
-            sa.UnicodeText,
-            primary_key=True,
-            default=make_uuid()),
+            sa.UnicodeText, 
+            primary_key=True),
         sa.Column('dataset_id',
-            sa.UnicodeText,
+            sa.UnicodeText, sa.ForeignKey('package.id'),
             nullable=False,
             index=True),
         sa.Column('frequency',

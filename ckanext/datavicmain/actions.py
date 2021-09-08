@@ -152,8 +152,13 @@ def refresh_dataset_datastore_list(context, data_dict=None):
 
     results = RefreshDatasetDatastore.get_all()
 
-    return [_table_dictize(dataset, context) for dataset in results]
-    
+    res_dict = []
+    for res in results:
+        pkg = res._asdict()
+        res_dict.append(pkg)
+
+    # return [_table_dictize(dataset, context) for dataset in res_dict]
+    return res_dict    
 
 def refresh_dataset_datastore_delete(context, data_dict):
 

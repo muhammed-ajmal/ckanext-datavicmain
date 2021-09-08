@@ -51,9 +51,9 @@
       <tbody>
         {% for refresh_config in datastore_refresh_configs %}
         <tr>
-          <td> {{ refresh_config.dataset_id }} </td>
-          <td> {{ refresh_config.frequency }} </td>
-          <td> <button class="btn btn-danger" type="submit" name="delete_config" value="{{refresh_config.id}}"> Delete</button> </td>
+          <td> {{ refresh_config.Package.title }} </td>
+          <td> {{ refresh_config.RefreshDatasetDatastore.frequency }} </td>
+          <td> <button class="btn btn-danger" type="submit" name="delete_config" value="{{refresh_config.RefreshDatasetDatastore.id}}"> Delete</button> </td>
         {% endfor%}
       </tbody>
     </table>

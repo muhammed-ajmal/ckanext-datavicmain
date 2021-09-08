@@ -216,3 +216,7 @@ def get_datastore_refresh_configs():
     user = toolkit.g.user
     context = {'user': user}
     return toolkit.get_action('refresh_dataset_datastore_list')(context, {})
+
+def get_datasore_refresh_config_option(frequency):
+    options = get_frequency_options()
+    return [option['text'] for option in options if option['value'] == frequency]

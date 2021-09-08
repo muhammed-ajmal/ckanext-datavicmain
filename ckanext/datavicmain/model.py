@@ -1,8 +1,10 @@
 from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.domain_object import DomainObject
 from ckan.model.types import make_uuid
+from ckan.model.package import Package
+from sqlalchemy import types, Column, Table, ForeignKey, orm
+from sqlalchemy.orm import lazyload
 
-from sqlalchemy import types, Column, Table
 import datetime
 import logging    
 
@@ -16,7 +18,7 @@ refresh_dataset_datastore_table = Table(
         primary_key=True,
         default=make_uuid()),
     Column('dataset_id',
-        types.UnicodeText,
+        types.UnicodeText, ForeignKey('package.id'),
         nullable=False,
         index=True),
     Column('frequency',
@@ -42,6 +44,10 @@ class RefreshDatasetDatastore(DomainObject):
         self.id = make_uuid()
         self.created_at = datetime.datetime.utcnow()
 
+    # def __repr__(self):
+    #     return f"{self.id}, {self.dataset.name}"
+
+
     @classmethod
     def get(cls, id):
         return Session.query(cls).get(id)
@@ -55,9 +61,18 @@ class RefreshDatasetDatastore(DomainObject):
 
     @classmethod
     def get_all(cls):
-        return Session.query(cls).all()
+        query = Session.query(cls, Package).join(Package).filter(Package.id == cls.dataset_id )
+        return query.all()
 
-mapper(RefreshDatasetDatastore, refresh_dataset_datastore_table)
+
+mapper(RefreshDatasetDatastore, refresh_dataset_datastore_table,
+properties={
+        u"dataset": orm.relationship(
+            Package, backref=orm.backref(u"refresh_dataset_datastores",
+            uselist=False,
+            cascade=u"all, delete")
+        )}
+)
 
 def setup():
     metadata.create_all(engine)
