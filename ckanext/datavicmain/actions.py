@@ -10,7 +10,6 @@ from ckan.lib.navl.validators import not_empty
 from ckan import lib
 from ckan.common import c, request
 from ckanext.datavicmain import helpers
-from ckanext.datavicmain.model import RefreshDatasetDatastore
 
 _validate = ckan.lib.navl.dictization_functions.validate
 _check_access = logic.check_access
@@ -19,8 +18,6 @@ h = toolkit.h
 log1 = logging.getLogger(__name__)
 user_is_registering = helpers.user_is_registering
 ValidationError = logic.ValidationError
-_table_dictize = lib.dictization.table_dictize
-
 
 
 def datavic_user_create(context, data_dict):
@@ -126,48 +123,3 @@ def datavic_user_create(context, data_dict):
 
     log1.debug('Created user {name}'.format(name=user.name))
     return user_dict
-
-
-def refresh_datastore_dataset_create(context, data_dict):
-    if not data_dict:
-        raise ValidationError()
-
-    session = context['session']
-    user = context['user']
-
-    rdd = RefreshDatasetDatastore()
-
-    rdd.dataset_id = data_dict.get('dataset_id')
-    rdd.frequency = data_dict.get('frequency')
-    rdd.created_user_id = user
-
-    rdd.save()
-
-    session.add(rdd)
-    session.commit()
-
-    return _table_dictize(rdd, context)
-
-def refresh_dataset_datastore_list(context, data_dict=None):
-
-    results = RefreshDatasetDatastore.get_all()
-
-    res_dict = []
-    for res in results:
-        pkg = res._asdict()
-        res_dict.append(pkg)
-
-    # return [_table_dictize(dataset, context) for dataset in res_dict]
-    return res_dict    
-
-def refresh_dataset_datastore_delete(context, data_dict):
-
-    rdd_id = data_dict['id']
-
-    rdd = RefreshDatasetDatastore.get(rdd_id)
-
-    if rdd:
-        RefreshDatasetDatastore.delete(rdd_id)
-    else:
-        raise ValidationError("Not found")
-

@@ -16,7 +16,6 @@ from ckanext.datavicmain import actions
 from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
 from ckanext.datavicmain import validators
-from ckanext.datavicmain.cli import get_commands
 
 from ckan.common import config, request
 
@@ -598,3 +597,4 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             item['key'] = field_key_map.get(k, k)
         
         return pkg_dict
+

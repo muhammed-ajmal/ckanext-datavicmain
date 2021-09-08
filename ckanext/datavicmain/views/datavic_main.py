@@ -10,7 +10,6 @@ from ckan.common import _,  g
 import ckan.plugins.toolkit as toolkit
 
 import ckan.views.dataset as dataset
-import ckanext.datavicmain.helpers as helpers
 
 
 NotFound = toolkit.ObjectNotFound
@@ -76,63 +75,8 @@ def purge(id):
     return toolkit.h.redirect_to('/ckan-admin/trash')
 
 
-class DatastoreRefreshConfigView(MethodView):
-
-    def _setup_extra_template_variables(self):
-        user = toolkit.g.userobj
-        context = {u'for_view': True, u'user': user.name, u'auth_user_obj': user}
-        #data_dict = {u'user_obj': user, u'include_datasets': True}
-        return context
-
-    def _get_context(self):
-        return {
-            'model': model,
-            'session': model.Session,
-            'user': toolkit.g.user,
-            'auth_user_obj': toolkit.g.userobj
-    }
-
-    
-    def get(self, context=None, errors=None, error_summary=None):
-        context = self._get_context()
-        
-        extra_vars = self._setup_extra_template_variables()
-        extra_vars['errors'] = errors
-        extra_vars['error_summary'] = error_summary
-        
-        return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
-    
-    def post(self):
-        context = self._get_context()
-        params = helpers.clean_params(toolkit.request.form)
-        if params.get('delete_config'):
-            toolkit.get_action('refresh_dataset_datastore_delete')(context, {'id': params.get('delete_config')})
-            h.flash_success(toolkit._("Succesfully deleted configuration"))
-            return self.get()
-
-        if not params.get('dataset'):
-            h.flash_error(toolkit._('Please select dataset'))
-            return self.get()
-        try:
-            dataset = toolkit.get_action('package_show')(context, {'id': params.get('dataset')})
-        except NotFound as e:
-            h.flash_error(toolkit._('Selected dataset does not exists'))
-            return self.get()
-        
-        frequency =  helpers.get_datasore_refresh_config_option(params.get('frequency'))
-        config_dict = {
-            "dataset_id": dataset.get('id'),
-            "frequency": frequency.pop()
-        }
-        results = toolkit.get_action('refresh_datastore_dataset_create')(context, config_dict)
-        extra_vars = self._setup_extra_template_variables()
-        extra_vars["data"] = results
-        return toolkit.render('admin/datastore_refresh.html', extra_vars=extra_vars)
-
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)
     blueprint.add_url_rule('/dataset/purge/<id>', view_func=purge)
-    blueprint.add_url_rule('/ckan-admin/datastore-refresh-config',
-                view_func=DatastoreRefreshConfigView.as_view(str('datastore_refresh_config')))
 
 register_datavicmain_plugin_rules(datavicmain)
