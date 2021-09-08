@@ -20,7 +20,8 @@
       'dataset', 
       id='fieald-datasets', 
       label=_('Dataset'), 
-      value="", 
+      value="",
+      placeholder = "Select datset", 
       error="", 
       classes=['control-full'], 
       attrs=dataset_attrs)}}
@@ -51,7 +52,7 @@
       <tbody>
         {% for refresh_config in datastore_refresh_configs %}
         <tr>
-          <td> {{ refresh_config.Package.title }} </td>
+          <td>  <a href="{{ h.url_for('dataset.read', id=refresh_config.Package.id) }}"> {{ refresh_config.Package.title }}</a> </td>
           <td> {{ refresh_config.RefreshDatasetDatastore.frequency }} </td>
           <td> <button class="btn btn-danger" type="submit" name="delete_config" value="{{refresh_config.RefreshDatasetDatastore.id}}"> Delete</button> </td>
         {% endfor%}
