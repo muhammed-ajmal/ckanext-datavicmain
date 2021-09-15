@@ -343,26 +343,26 @@ for catalogue in catalogues:
             update = True
             # print "wms name changed"
             wms_dict['name'] = layer_title
-        if wms_dict.get('url', '') != layer['details']['publicOrderUrl']:
-            update = True
-            # print "wms url changed"
-            wms_dict['url'] = layer['details']['publicOrderUrl']
         if layer['details']['wmsUrl']:
             wms_url = layer['details']['wmsUrl'].replace('httpproxy', 'publicproxy/guest') + "?layers=" + layer['name']
             wms_preview_url = layer['details']['publicPreviewUrl'].replace('httpproxy', 'publicproxy/guest')
-            if wms_dict.get('wms_api_url', '') != wms_url:
+            # if wms_dict.get('wms_api_url', '') != wms_url:
+            #     update = True
+            #     # print "wms url 2 changed"
+            #     wms_dict['format'] = 'wms'
+            #     # wms_dict['wms_url'] = wms_preview_url
+            #     wms_dict['wms_api_url'] = wms_url
+            #     wms_dict['wms_layer'] = layer['name']
+            #     wms_dict['visgis_preview'] = 'active'
+            if wms_dict.get('url', '') != layer['details']['wms_preview_url']:
                 update = True
-                # print "wms url 2 changed"
-                wms_dict['format'] = 'wms'
-                wms_dict['wms_url'] = wms_preview_url
-                wms_dict['wms_api_url'] = wms_url
-                wms_dict['wms_layer'] = layer['name']
-                wms_dict['visgis_preview'] = 'active'
+                # print "wms url changed"
+                wms_dict['url'] = wms_preview_url
         # Removed for https://digital-engagement.atlassian.net/browse/DATAVIC-308
-        # if wms_dict.get('public_order_url', '').strip() != layer['details']['publicOrderUrl'].strip():
+        # if wms_dict.get('public_order_url', '').strip() != layer['details']['wms_preview_url'].strip():
         #     update = True
         #     print "public_order_url changed"
-        #     wms_dict['public_order_url'] = layer['details']['publicOrderUrl'].strip()
+        #     wms_dict['public_order_url'] = layer['details']['wms_preview_url'].strip()
         if wms_dict.get('attribution', '') != layer['details']['attribution']:
             update = True
             # print "wms attribution changed"
