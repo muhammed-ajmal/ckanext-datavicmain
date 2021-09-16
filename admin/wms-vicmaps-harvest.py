@@ -332,8 +332,7 @@ for catalogue in catalogues:
         #         except ckanapi.CKANAPIError, e:
         #             print "CKAN api has failed with the following error: " + str(e) + " skipping..."
         #             continue
-
-        wms_dict = {'format': 'SHP'}
+        wms_dict = {'format': 'WMS'}
         new_res = True
         if len(pkg_dict['resources']) > 0:
             wms_dict = pkg_dict['resources'][0]
@@ -346,6 +345,7 @@ for catalogue in catalogues:
         if layer['details']['wmsUrl']:
             wms_url = layer['details']['wmsUrl'].replace('httpproxy', 'publicproxy/guest') + "?layers=" + layer['name']
             wms_preview_url = layer['details']['publicPreviewUrl'].replace('httpproxy', 'publicproxy/guest')
+
             # if wms_dict.get('wms_api_url', '') != wms_url:
             #     update = True
             #     # print "wms url 2 changed"
@@ -354,7 +354,8 @@ for catalogue in catalogues:
             #     wms_dict['wms_api_url'] = wms_url
             #     wms_dict['wms_layer'] = layer['name']
             #     wms_dict['visgis_preview'] = 'active'
-            if wms_dict.get('url', '') != layer['details']['wms_preview_url']:
+            
+            if wms_dict.get('url', '') != wms_preview_url:
                 update = True
                 # print "wms url changed"
                 wms_dict['url'] = wms_preview_url
