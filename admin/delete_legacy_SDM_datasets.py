@@ -27,7 +27,7 @@ try:
                     # print('Dataset {0} has {1} resource\n'.format(dataset.get('name'), len(dataset.get('resources', []))))
                 for resource in dataset.get('resources', []):
                     # print(resource)
-                    if resource.get('public_order_url', None) or 'order?email=:emailAddress' in resource.get('url', ''):
+                    if resource.get('public_order_url', None)  or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', ''):
                         # data_dict = {"id": dataset.get('id')}
                         datasets.append(dataset)
                         data_dict = dataset.get('id')

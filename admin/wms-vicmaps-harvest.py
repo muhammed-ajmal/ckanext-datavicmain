@@ -114,17 +114,25 @@ used_slugs = []
 datasets_created = []
 datasets_updated = []
 datasets_errors = []
+datasets_skipped = []
 
 # @Todo: remove this limit
 limit = 0
 
 for catalogue in catalogues:
+    print(len(catalogues))
     groups = {"description": "", "name": "Spatial Data"}
     for layerGroup in catalogue.find('{http://model.catalogue.dialog.com}groupList'):
         groups[layerGroup.find('{http://model.catalogue.dialog.com}id').text] = \
             {"description": layerGroup.find('{http://model.catalogue.dialog.com}description').text,
              "name": layerGroup.find('{http://model.catalogue.dialog.com}name').text.replace("Environment",
                                                                                              "Environmental")}
+    catalogs = catalogue.find('{http://model.catalogue.dialog.com}layerList')
+    print("************************************************")
+    print("************************************************")
+    print(len(catalogs))
+    print("************************************************")
+    print("************************************************")
     for layerTag in catalogue.find('{http://model.catalogue.dialog.com}layerList'):
 
         # @Todo: remove this limit
@@ -144,6 +152,7 @@ for catalogue in catalogues:
         # print json.dumps(layer)
         # We only want to create/update datasets that have wmsURL https://digital-engagement.atlassian.net/browse/DATAVIC-308
         if not layer['details']['wmsUrl']:
+            datasets_skipped.append(layer['title'])
             print("Dataset {0} does not have wms resource so skipping".format(layer['title'].strip()))
             continue
 
@@ -457,6 +466,7 @@ print '= = = = = = = = = = = = = = = = = = = = = ='
 print str(len(datasets_created)) + ' datasets created'
 print str(len(datasets_updated)) + ' datasets updated'
 print str(len(datasets_errors)) + ' datasets errors'
+print str(len(datasets_skipped)) + ' datasets  skipped'
 print '= = = = = = = = = = = = = = = = = = = = = ='
 url = sys.argv[1]
 with open('sdm_datasets_created.csv', 'w') as csv:
@@ -478,4 +488,11 @@ with open('sdm_datasets_errors.csv', 'w') as csv:
     csv.write(header)
     for dataset in datasets_errors:
         row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title', '').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        csv.write(row)
+
+with open('sdm_datasets_skipped.csv', 'w') as csv:
+    header = "title\n"
+    csv.write(header)
+    for dataset in datasets_skipped:
+        row = "{0}\n".format(dataset)
         csv.write(row)
