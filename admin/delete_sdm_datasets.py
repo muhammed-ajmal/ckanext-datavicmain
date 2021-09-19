@@ -1,27 +1,40 @@
-
 from __future__ import print_function
 from __future__ import absolute_import
 import argparse
-import sys
-from collections import defaultdict
-from six.moves import input
-from six import text_type
-from ckanapi import RemoteCKAN, NotFound
 import json
 import os
+
+
+from ckan.common import config
+import sqlalchemy
+
 import ckan.logic as logic
+from ckan.lib.dictization.model_dictize import package_dictize
 
-from ckanapi.errors import CKANAPIError
+import ckan.lib.jobs as jobs
+import ckan.lib.navl.dictization_functions
+import ckan.model as model
 
-url = os.environ['LAGOON_ROUTE']
-apikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
+import ckan.plugins as plugins
+import ckan.lib.search as search
+import ckan.lib.plugins as lib_plugins
 
-datasets_errors = []
+
+from ckan.common import _
+
+NotFound = logic.NotFound
+ValidationError = logic.ValidationError
+
+
 _context = None
+url = os.environ['LAGOON_ROUTE']
+
+spatial_datasets = []
+
+datasets_failed = []
+datasets_errors = []
 
 def get_context():
-    from ckan import model
-    import ckan.logic as logic
     global _context
     if not _context:
         user = logic.get_action(u'get_site_user')(
@@ -30,50 +43,43 @@ def get_context():
                     u'user': user[u'name']}
     return _context
 
-def get_sdm_datasets(result):
-    datasets = []
-    for dataset in result:
-        try:
-            data_dict = logic.get_action('package_show')(get_context(), { "id": dataset })
-            datasets.append(data_dict)
-        except CKANAPIError as e:
-            print(e)
-            datasets_errors.append(dataset)
-            continue
 
-    return datasets
+def get_datasets():
+    data_dict = {}
+    packages = model.Session.query(model.Package).all()
 
+    for package in packages:
+        for group in package.get_groups():
+            if group.name.lower() == 'spatial-data':
+                spatial_datasets.append(package_dictize(package, get_context())) 
+    print(len(spatial_datasets))
 
-def collect_datasets():
-    start = 0
-    rows = 1000
-    datasets = []
-    datasets_failed = []
-    # while start < 3000:  # There should be less then 2000 so have this as backup to exit loop
-
-    #result = ckan.action.package_search(fq='groups:spatial-data', start=start, rows=rows)
-    import pdb; pdb.set_trace()
-
-    result = logic.get_action('package_list')(get_context(), {})
-    results = get_sdm_datasets(result)
+    delete_datasets(spatial_datasets)
     
 
-    print ("There are {0} spatial-data datasets".format(len(results)))
-    for dataset in results:
+def delete_datasets(spatial_datasets):
+    datasets = []
+
+    # Find the WMS datasets that conain `public_oreder_url` or `wms_url`
+    for dataset in spatial_datasets:
 
         for resource in dataset.get('resources', []):
             if resource.get('public_order_url', None)  or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', ''):
                 datasets.append(dataset)
-                data_dict = dataset.get('id')
                 if dataset not in datasets:
-                    f = open('legacy-sdm-datasets/{}.json'.format(dataset.get('id')), "w")
-                    f.write(json.dumps(dataset, indent=2))
-                    f.close()
+                    with open('legacy-sdm-datasets/{}.json'.format(dataset.get('id')), "w") as f:
+                        f.write(json.dumps(dataset, indent=2))
                     datasets.append(dataset)
 
-    print("Datasets to delete {0}".format(len(datasets)))
+    with open('wms_datasets_to_be_deleted.csv', 'w') as csv:
+        header = "title,url,full_metadata_url\n"
+        csv.write(header)
+        for dataset in datasets:
+            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            csv.write(row)
 
-    with open('sdm_datasets_deleted.csv', 'w') as csv:
+    print("Datasets to delete {0}".format(len(datasets)))
+    with open('wms_datasets_deleted.csv', 'w') as csv:
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets:
@@ -107,7 +113,7 @@ def collect_datasets():
                 print('Failed to delete {0}: {1}'.format(dataset.get('name'), ex))
                 # print(dataset)
 
-    with open('sdm_datasets_failed_to_delete.csv', 'w') as csv:
+    with open('wms_datasets_failed_to_delete.csv', 'w') as csv:
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets_failed:
@@ -120,6 +126,7 @@ def collect_datasets():
         for dataset in datasets_errors:
             row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
             csv.write(row)
+
 
 if __name__ == u'__main__':
     parser = argparse.ArgumentParser(usage=__doc__)
@@ -145,4 +152,4 @@ if __name__ == u'__main__':
             return
         load_config(args.config)
     print("Collect datasets")
-    collect_datasets()
+    get_datasets()

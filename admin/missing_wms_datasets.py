@@ -22,11 +22,22 @@ with RemoteCKAN(local, apikey=iarapikey) as localCKAN:
     local_datasets = result.get('results', [])
 
 
-missing_datasets = [
-    dataset
-    for dataset in iar_datasets
-    if dataset.get('name') not in local_datasets
-]
+missing_datasets = []
+# missing_datasets = [dataset for d, dataset in zip(iar_datasets, local_datasets) if dataset.get('full_metadata_url') != d.get('full_metadata_url')]
+
+# for dataset in local_datasets:
+    # if dataset.get('full_metadata_url') not in local_datasets:
+        # missing_datasets.append(dataset)
+    # missing_datasets = [d for d in iar_datasets if dataset.get('full_metadata_url') != d.get('full_metadata_url')]
+
+data_dict = {}
+for i, item in enumerate(iar_datasets):
+    data_dict[item['full_metadata_url']] = item
+
+for item in local_datasets:
+    if not item['full_metadata_url'] in data_dict:
+        import pdb; pdb.set_trace()
+        missing_datasets.append(item)
 
 
 with open('missing_datasets.csv', 'w') as csv:

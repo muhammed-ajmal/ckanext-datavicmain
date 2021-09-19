@@ -116,6 +116,8 @@ datasets_updated = []
 datasets_errors = []
 datasets_skipped = []
 
+datasets_not_found = []
+
 # @Todo: remove this limit
 limit = 0
 
@@ -184,9 +186,11 @@ for catalogue in catalogues:
                 pkg_dict['state'] = 'active'
                 update = True
         except ckanapi.NotFound:
+            datasets_not_found.append(pkg_name)
             pass
             # print(pkg_name + " not found, must be new")
         except ckanapi.CKANAPIError, e:
+            datasets_errors.append(pkg_name)
             print("CKAN api has failed with the following error: " + str(e) + " skipping...")
             continue
 
@@ -467,6 +471,7 @@ print str(len(datasets_created)) + ' datasets created'
 print str(len(datasets_updated)) + ' datasets updated'
 print str(len(datasets_errors)) + ' datasets errors'
 print str(len(datasets_skipped)) + ' datasets  skipped'
+print str(len(datasets_not_found)) + ' datasets  not found'
 print '= = = = = = = = = = = = = = = = = = = = = ='
 url = sys.argv[1]
 with open('sdm_datasets_created.csv', 'w') as csv:
@@ -494,5 +499,12 @@ with open('sdm_datasets_skipped.csv', 'w') as csv:
     header = "title\n"
     csv.write(header)
     for dataset in datasets_skipped:
+        row = "{0}\n".format(dataset)
+        csv.write(row)
+
+with open('sdm_datasets_not_found.csv', 'w') as csv:
+    header = "title\n"
+    csv.write(header)
+    for dataset in datasets_not_found:
         row = "{0}\n".format(dataset)
         csv.write(row)
