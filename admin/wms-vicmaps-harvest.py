@@ -86,6 +86,11 @@ def convert_vicgislite_urls(url, dataset_name):
         'https://discover.data.vic.gov.au/dataset/' + dataset_name + '/order'
     )
 
+def get_full_metadata_url(extras):
+    for extra in extras:
+        if extra['key'] == 'full_metadata_url':
+            return extra['value']
+
 
 '''## http://services.land.vic.gov.au/catalogue/cxfservices/CatalogWebServiceV3?wsdl
 from pysimplesoap.client import SoapClient
@@ -117,6 +122,8 @@ datasets_errors = []
 datasets_skipped = []
 
 datasets_not_found = []
+
+dataset_all = []
 
 # @Todo: remove this limit
 limit = 0
@@ -154,14 +161,20 @@ for catalogue in catalogues:
         # print json.dumps(layer)
         # We only want to create/update datasets that have wmsURL https://digital-engagement.atlassian.net/browse/DATAVIC-308
         if not layer['details']['wmsUrl']:
-            datasets_skipped.append(layer['title'])
+            
+            layer_title = layer['title'].strip()[:93] + ' - WMS'
+            pkg_name = munge_title_to_name(layer_title)
             print("Dataset {0} does not have wms resource so skipping".format(layer['title'].strip()))
+
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_skipped.append(pkg)
+            dataset_all.append(pkg)
             continue
 
         pkg_dict = {'groups': [], 'resources': [], 'extract': ''}
         update = False
         new = True
-
+     
         # @Todo: Remove this output
         # print '==============================================================='
         # print 'RAW LAYER DETAILS:'
@@ -176,6 +189,9 @@ for catalogue in catalogues:
         if delete_only:
             continue
 
+        pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+        dataset_all.append(pkg)
+
         try:
             pkg_dict = ckan.action.package_show(id=pkg_name)
             new = False
@@ -186,11 +202,13 @@ for catalogue in catalogues:
                 pkg_dict['state'] = 'active'
                 update = True
         except ckanapi.NotFound:
-            datasets_not_found.append(pkg_name)
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_not_found.append(pkg)
             pass
             # print(pkg_name + " not found, must be new")
         except ckanapi.CKANAPIError, e:
-            datasets_errors.append(pkg_name)
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_errors.append(pkg)
             print("CKAN api has failed with the following error: " + str(e) + " skipping...")
             continue
 
@@ -439,7 +457,8 @@ for catalogue in catalogues:
                 # # @Todo remove this output
                 # pprint(pkg_dict)
             except ckanapi.errors.CKANAPIError, e:
-                datasets_errors.append(pkg_dict)
+                pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+                datasets_errors.append(pkg)
                 print str(e)
                 continue
 
@@ -472,39 +491,49 @@ print str(len(datasets_updated)) + ' datasets updated'
 print str(len(datasets_errors)) + ' datasets errors'
 print str(len(datasets_skipped)) + ' datasets  skipped'
 print str(len(datasets_not_found)) + ' datasets  not found'
+print str(len(dataset_all)) + ' datasets all'
 print '= = = = = = = = = = = = = = = = = = = = = ='
 url = sys.argv[1]
-with open('sdm_datasets_created.csv', 'w') as csv:
+with open('wms_datasets_created.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_created:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
         csv.write(row)
 
-with open('sdm_datasets_updated.csv', 'w') as csv:
+with open('wms_datasets_updated.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_updated:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
         csv.write(row)
 
-with open('sdm_datasets_errors.csv', 'w') as csv:
-    header = "title,url,full_metadata_url\n"
+with open('wms_datasets_errors.csv', 'w') as csv:
+    header = "title,name,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_errors:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title', '').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
         csv.write(row)
 
-with open('sdm_datasets_skipped.csv', 'w') as csv:
-    header = "title\n"
+with open('wms_datasets_skipped.csv', 'w') as csv:
+    header = "title, name, full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_skipped:
-        row = "{0}\n".format(dataset)
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
         csv.write(row)
 
-with open('sdm_datasets_not_found.csv', 'w') as csv:
-    header = "title\n"
+with open('wms_datasets_not_found.csv', 'w') as csv:
+    header = "title, name, full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_not_found:
-        row = "{0}\n".format(dataset)
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
+        csv.write(row)
+
+with open('wms_datasets_all.csv', 'w') as csv:
+    header = "title,name,full_metadata_url\n"
+    csv.write(header)
+    for dataset in dataset_all:
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
         csv.write(row)

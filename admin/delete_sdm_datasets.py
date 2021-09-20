@@ -43,11 +43,15 @@ def get_context():
                     u'user': user[u'name']}
     return _context
 
+def get_full_metadata_url(extras):
+    for extra in extras:
+        if extra['key'] == 'full_metadata_url':
+            return extra['value']
 
 def get_datasets():
     data_dict = {}
     packages = model.Session.query(model.Package).all()
-
+    print("Collected {0} datasets".format(len(packages)))
     for package in packages:
         for group in package.get_groups():
             if group.name.lower() == 'spatial-data':
@@ -62,7 +66,8 @@ def print_datasets(spatial_datasets):
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in spatial_datasets:
-            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
             csv.write(row)
 
 def delete_datasets(spatial_datasets):
@@ -83,7 +88,8 @@ def delete_datasets(spatial_datasets):
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets:
-            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
             csv.write(row)
 
     print("Datasets to delete {0}".format(len(datasets)))
@@ -91,29 +97,31 @@ def delete_datasets(spatial_datasets):
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets:
-            for resource in dataset.get('resources', []):
-                try:
-                    logic.get_action('datastore_delete')(get_context(), dict(id=resource.get('id'), force=True))
-                    print('Successfully deleted datastore for {}'.format(resource.get('resource_id')))
-                except NotFound as ex:
-                    pass
-                    # log and ignore
-                    # print('datastore_delete: {}'.format(ex))
+            dataset_url = "{0}dataset/{1}".format(url, dataset.get('name'))
+            full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+            # for resource in dataset.get('resources', []):
+            #     try:
+            #         logic.get_action('datastore_delete')(get_context(), dict(id=resource.get('id'), force=True))
+            #         print('Successfully deleted datastore for {}'.format(resource.get('resource_id')))
+            #     except NotFound as ex:
+            #         pass
+            #         # log and ignore
+            #         # print('datastore_delete: {}'.format(ex))
 
-                try:
-                    logic.get_action('resource_view_delete')(get_context(), dict(id=resource.get('id'), force=True))
-                    print('Successful deleted resource_view for {}'.format(resource.get('resource_id')))
-                except NotFound as ex:
-                    pass
-                    # log and ignore
-                    # print('resource_view_delete: {}'.format(ex))
+            #     try:
+            #         logic.get_action('resource_view_delete')(get_context(), dict(id=resource.get('id'), force=True))
+            #         print('Successful deleted resource_view for {}'.format(resource.get('resource_id')))
+            #     except NotFound as ex:
+            #         pass
+            #         # log and ignore
+            #         # print('resource_view_delete: {}'.format(ex))
 
             try:
                 logic.get_action('package_delete')(get_context(), dict(id=dataset.get('id')))
                 logic.get_action('dataset_purge')(get_context(), dict(id=dataset.get('id')))
                 print('Successfully deleted {}'.format(dataset.get('name')))
 
-                row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+                row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url)
                 csv.write(row)
             except Exception as ex:
                 # log and ignore
@@ -125,14 +133,16 @@ def delete_datasets(spatial_datasets):
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets_failed:
-            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+            row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url)
             csv.write(row)
 
     with open('wms_datasets_errors.csv', 'w') as csv:
         header = "title,url,full_metadata_url\n"
         csv.write(header)
         for dataset in datasets_errors:
-            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+            row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url)
             csv.write(row)
 
 
