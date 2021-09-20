@@ -55,7 +55,15 @@ def get_datasets():
     print(len(spatial_datasets))
 
     delete_datasets(spatial_datasets)
-    
+    #print_datasets(spatial_datasets)
+
+def print_datasets(spatial_datasets):
+    with open('wms_datasets_after_deletion.csv', 'w') as csv:
+        header = "title,url,full_metadata_url\n"
+        csv.write(header)
+        for dataset in spatial_datasets:
+            row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+            csv.write(row)
 
 def delete_datasets(spatial_datasets):
     datasets = []
