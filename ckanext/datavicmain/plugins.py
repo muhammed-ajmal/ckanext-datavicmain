@@ -500,13 +500,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             extras_list = data.get(('extras',))
             if not extras_list:
                 extras_list = data[('extras',)] = []
-            # Note Append "record_modified_at" field as a non-input field
-            datestamp = time.strftime('%Y-%m-%d %T')
-            items = filter(lambda t: t['key'] == 'record_modified_at', extras_list)
-            if items:
-                items[0]['value'] = datestamp
-            else:
-                extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
 
             # DataVic: Append extra fields as dynamic (not registered under modify schema) field
             for field in custom_schema.DATASET_EXTRA_FIELDS:
@@ -622,13 +615,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         schema['tags']['__extras'].append(toolkit.get_converter('free_tags_only'))
 
         # Create a dictionary containing the extra fields..
-        dict_extra_fields = {
-            # Add our non-input field (created at after_validation_processor)
-            'record_modified_at': [
-                toolkit.get_converter('convert_from_extras'),
-            ],
-        }
-
+        dict_extra_fields = {}
         # Loop through our extra fields, adding them to the schema..
         # Applying the same validator to them for now..
         for field in custom_schema.DATASET_EXTRA_FIELDS:
