@@ -94,7 +94,7 @@ def delete_datasets(spatial_datasets):
 
     print("Datasets to delete {0}".format(len(datasets)))
     with open('wms_datasets_deleted.csv', 'w') as csv:
-        header = "title,url,full_metadata_url\n"
+        header = "title,url,full_metadata_url, format\n"
         csv.write(header)
         for dataset in datasets:
             dataset_url = "{0}dataset/{1}".format(url, dataset.get('name'))
@@ -120,8 +120,8 @@ def delete_datasets(spatial_datasets):
                 logic.get_action('package_delete')(get_context(), dict(id=dataset.get('id')))
                 logic.get_action('dataset_purge')(get_context(), dict(id=dataset.get('id')))
                 print('Successfully deleted {}'.format(dataset.get('name')))
-
-                row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url)
+                res_format = dataset.get('resources')[0].get('format')
+                row = "{0},{1},{2}, {3}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url, res_format)
                 csv.write(row)
             except Exception as ex:
                 # log and ignore
