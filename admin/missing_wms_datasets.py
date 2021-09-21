@@ -36,7 +36,6 @@ for i, item in enumerate(iar_datasets):
 
 for item in local_datasets:
     if not item['full_metadata_url'] in data_dict:
-        import pdb; pdb.set_trace()
         missing_datasets.append(item)
 
 

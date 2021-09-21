@@ -52,7 +52,6 @@ def collect_datasets():
     # while start < 3000:  # There should be less then 2000 so have this as backup to exit loop
 
     #result = ckan.action.package_search(fq='groups:spatial-data', start=start, rows=rows)
-    import pdb; pdb.set_trace()
 
     result = logic.get_action('package_list')(get_context(), {})
     results = get_sdm_datasets(result)
