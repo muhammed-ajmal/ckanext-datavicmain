@@ -6,7 +6,7 @@ import os
 
 
 from ckan.common import config
-import sqlalchemy
+from sqlalchemy import select, delete
 
 import ckan.logic as logic
 from ckan.lib.dictization.model_dictize import package_dictize
@@ -70,6 +70,17 @@ def print_datasets(spatial_datasets):
             row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
             csv.write(row)
 
+def delete_harvest_object(dataset):
+    from ckanext.harvest.model import harvest_object_table
+    harvest_object = select().where(harvest_object_table.c.package_id==dataset.get('id'))
+    pkg = harvest_object.execute().fetchall()
+    if pkg:
+        try:
+            delete(harvest_object_table).where(harvest_object_table.c.package_id==dataset.get('id')).execute()
+        except Exception as e:
+            datasets_errors.append(dataset)
+            print("Error deleting dataset {}".format(dataset.get('name')))
+
 def delete_datasets(spatial_datasets):
     datasets = []
 
@@ -77,7 +88,8 @@ def delete_datasets(spatial_datasets):
     for dataset in spatial_datasets:
 
         for resource in dataset.get('resources', []):
-            if resource.get('public_order_url', None)  or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', ''):
+            if resource.get('public_order_url', None) or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', '') or\
+                'services.land.vic.gov.au' in resource.get('url', ''):
                 datasets.append(dataset)
                 if dataset not in datasets:
                     with open('legacy-sdm-datasets/{}.json'.format(dataset.get('id')), "w") as f:
@@ -119,6 +131,7 @@ def delete_datasets(spatial_datasets):
             try:
                 logic.get_action('package_delete')(get_context(), dict(id=dataset.get('id')))
                 logic.get_action('dataset_purge')(get_context(), dict(id=dataset.get('id')))
+                delete_harvest_object(dataset)
                 print('Successfully deleted {}'.format(dataset.get('name')))
                 res_format = dataset.get('resources')[0].get('format')
                 row = "{0},{1},{2}, {3}\n".format(dataset.get('title').replace(',',''), dataset_url, full_metadata_url, res_format)
