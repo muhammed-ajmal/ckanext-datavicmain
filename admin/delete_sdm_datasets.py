@@ -88,8 +88,7 @@ def delete_datasets(spatial_datasets):
     for dataset in spatial_datasets:
 
         for resource in dataset.get('resources', []):
-            if resource.get('public_order_url', None) or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', '') or\
-                'services.land.vic.gov.au' in resource.get('url', ''):
+            if resource.get('public_order_url', None) or resource.get('wms_url') or 'order?email=:emailAddress' in resource.get('url', ''):
                 datasets.append(dataset)
                 if dataset not in datasets:
                     with open('legacy-sdm-datasets/{}.json'.format(dataset.get('id')), "w") as f:
