@@ -20,6 +20,12 @@ from ckanext.datavicmain import schema as custom_schema
 from ckanext.harvest.model import HarvestObject
 
 
+# Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
+if "workflow" in config.get('ckan.plugins', False):
+    from ckanext.workflow import helpers as workflow_helpers
+    workflow_enabled = True
+
+
 log = logging.getLogger(__name__)
 
 
