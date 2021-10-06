@@ -86,6 +86,11 @@ def convert_vicgislite_urls(url, dataset_name):
         'https://discover.data.vic.gov.au/dataset/' + dataset_name + '/order'
     )
 
+def get_full_metadata_url(extras):
+    for extra in extras:
+        if extra['key'] == 'full_metadata_url':
+            return extra['value']
+
 
 '''## http://services.land.vic.gov.au/catalogue/cxfservices/CatalogWebServiceV3?wsdl
 from pysimplesoap.client import SoapClient
@@ -114,17 +119,29 @@ used_slugs = []
 datasets_created = []
 datasets_updated = []
 datasets_errors = []
+datasets_skipped = []
+
+datasets_not_found = []
+
+dataset_all = []
 
 # @Todo: remove this limit
 limit = 0
 
 for catalogue in catalogues:
+    print(len(catalogues))
     groups = {"description": "", "name": "Spatial Data"}
     for layerGroup in catalogue.find('{http://model.catalogue.dialog.com}groupList'):
         groups[layerGroup.find('{http://model.catalogue.dialog.com}id').text] = \
             {"description": layerGroup.find('{http://model.catalogue.dialog.com}description').text,
              "name": layerGroup.find('{http://model.catalogue.dialog.com}name').text.replace("Environment",
                                                                                              "Environmental")}
+    catalogs = catalogue.find('{http://model.catalogue.dialog.com}layerList')
+    print("************************************************")
+    print("************************************************")
+    print(len(catalogs))
+    print("************************************************")
+    print("************************************************")
     for layerTag in catalogue.find('{http://model.catalogue.dialog.com}layerList'):
 
         # @Todo: remove this limit
@@ -144,13 +161,20 @@ for catalogue in catalogues:
         # print json.dumps(layer)
         # We only want to create/update datasets that have wmsURL https://digital-engagement.atlassian.net/browse/DATAVIC-308
         if not layer['details']['wmsUrl']:
+            
+            layer_title = layer['title'].strip()[:93] + ' - WMS'
+            pkg_name = munge_title_to_name(layer_title)
             print("Dataset {0} does not have wms resource so skipping".format(layer['title'].strip()))
+
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_skipped.append(pkg)
+            dataset_all.append(pkg)
             continue
 
         pkg_dict = {'groups': [], 'resources': [], 'extract': ''}
         update = False
         new = True
-
+     
         # @Todo: Remove this output
         # print '==============================================================='
         # print 'RAW LAYER DETAILS:'
@@ -165,6 +189,9 @@ for catalogue in catalogues:
         if delete_only:
             continue
 
+        pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+        dataset_all.append(pkg)
+
         try:
             pkg_dict = ckan.action.package_show(id=pkg_name)
             new = False
@@ -175,9 +202,13 @@ for catalogue in catalogues:
                 pkg_dict['state'] = 'active'
                 update = True
         except ckanapi.NotFound:
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_not_found.append(pkg)
             pass
             # print(pkg_name + " not found, must be new")
         except ckanapi.CKANAPIError, e:
+            pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+            datasets_errors.append(pkg)
             print("CKAN api has failed with the following error: " + str(e) + " skipping...")
             continue
 
@@ -332,8 +363,7 @@ for catalogue in catalogues:
         #         except ckanapi.CKANAPIError, e:
         #             print "CKAN api has failed with the following error: " + str(e) + " skipping..."
         #             continue
-
-        wms_dict = {'format': 'SHP'}
+        wms_dict = {'format': 'WMS'}
         new_res = True
         if len(pkg_dict['resources']) > 0:
             wms_dict = pkg_dict['resources'][0]
@@ -343,26 +373,28 @@ for catalogue in catalogues:
             update = True
             # print "wms name changed"
             wms_dict['name'] = layer_title
-        if wms_dict.get('url', '') != layer['details']['publicOrderUrl']:
-            update = True
-            # print "wms url changed"
-            wms_dict['url'] = layer['details']['publicOrderUrl']
         if layer['details']['wmsUrl']:
             wms_url = layer['details']['wmsUrl'].replace('httpproxy', 'publicproxy/guest') + "?layers=" + layer['name']
             wms_preview_url = layer['details']['publicPreviewUrl'].replace('httpproxy', 'publicproxy/guest')
-            if wms_dict.get('wms_api_url', '') != wms_url:
+
+            # if wms_dict.get('wms_api_url', '') != wms_url:
+            #     update = True
+            #     # print "wms url 2 changed"
+            #     wms_dict['format'] = 'wms'
+            #     # wms_dict['wms_url'] = wms_preview_url
+            #     wms_dict['wms_api_url'] = wms_url
+            #     wms_dict['wms_layer'] = layer['name']
+            #     wms_dict['visgis_preview'] = 'active'
+            
+            if wms_dict.get('url', '') != wms_preview_url:
                 update = True
-                # print "wms url 2 changed"
-                wms_dict['format'] = 'wms'
-                wms_dict['wms_url'] = wms_preview_url
-                wms_dict['wms_api_url'] = wms_url
-                wms_dict['wms_layer'] = layer['name']
-                wms_dict['visgis_preview'] = 'active'
+                # print "wms url changed"
+                wms_dict['url'] = wms_preview_url
         # Removed for https://digital-engagement.atlassian.net/browse/DATAVIC-308
-        # if wms_dict.get('public_order_url', '').strip() != layer['details']['publicOrderUrl'].strip():
+        # if wms_dict.get('public_order_url', '').strip() != layer['details']['wms_preview_url'].strip():
         #     update = True
         #     print "public_order_url changed"
-        #     wms_dict['public_order_url'] = layer['details']['publicOrderUrl'].strip()
+        #     wms_dict['public_order_url'] = layer['details']['wms_preview_url'].strip()
         if wms_dict.get('attribution', '') != layer['details']['attribution']:
             update = True
             # print "wms attribution changed"
@@ -425,7 +457,8 @@ for catalogue in catalogues:
                 # # @Todo remove this output
                 # pprint(pkg_dict)
             except ckanapi.errors.CKANAPIError, e:
-                datasets_errors.append(pkg_dict)
+                pkg = {'title': layer['title'], 'name': pkg_name, 'full_metadata_url': layer['details']['metadataUrl']}
+                datasets_errors.append(pkg)
                 print str(e)
                 continue
 
@@ -456,25 +489,51 @@ print '= = = = = = = = = = = = = = = = = = = = = ='
 print str(len(datasets_created)) + ' datasets created'
 print str(len(datasets_updated)) + ' datasets updated'
 print str(len(datasets_errors)) + ' datasets errors'
+print str(len(datasets_skipped)) + ' datasets  skipped'
+print str(len(datasets_not_found)) + ' datasets  not found'
+print str(len(dataset_all)) + ' datasets all'
 print '= = = = = = = = = = = = = = = = = = = = = ='
 url = sys.argv[1]
-with open('sdm_datasets_created.csv', 'w') as csv:
+with open('wms_datasets_created.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_created:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
         csv.write(row)
 
-with open('sdm_datasets_updated.csv', 'w') as csv:
+with open('wms_datasets_updated.csv', 'w') as csv:
     header = "title,url,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_updated:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        full_metadata_url = get_full_metadata_url(dataset.get('extras'))
+        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title').replace(',',''), url, dataset.get('name'), full_metadata_url)
         csv.write(row)
 
-with open('sdm_datasets_errors.csv', 'w') as csv:
-    header = "title,url,full_metadata_url\n"
+with open('wms_datasets_errors.csv', 'w') as csv:
+    header = "title,name,full_metadata_url\n"
     csv.write(header)
     for dataset in datasets_errors:
-        row = "{0},{1}/dataset/{2},{3}\n".format(dataset.get('title', '').replace(',',''), url, dataset.get('name'), dataset.get('full_metadata_url'))
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
+        csv.write(row)
+
+with open('wms_datasets_skipped.csv', 'w') as csv:
+    header = "title, name, full_metadata_url\n"
+    csv.write(header)
+    for dataset in datasets_skipped:
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
+        csv.write(row)
+
+with open('wms_datasets_not_found.csv', 'w') as csv:
+    header = "title, name, full_metadata_url\n"
+    csv.write(header)
+    for dataset in datasets_not_found:
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
+        csv.write(row)
+
+with open('wms_datasets_all.csv', 'w') as csv:
+    header = "title,name,full_metadata_url\n"
+    csv.write(header)
+    for dataset in dataset_all:
+        row = "{0},{1},{2}\n".format(dataset.get('title').replace(',',''), dataset.get('name'), dataset.get('full_metadata_url'))
         csv.write(row)

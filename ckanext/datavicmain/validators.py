@@ -1,16 +1,18 @@
 import ckan.plugins.toolkit as toolkit
-import ckan.lib.navl.dictization_functions as df
 import logging
 
 
 log = logging.getLogger(__name__)
 
 
+def datavic_tag_string(key, data, errors, context):
+    request = toolkit.request if hasattr(toolkit.request, 'params') else None
 
-def convert_extract(value):
-    print(value)
-    return value
+    if request:
+        end_point = toolkit.get_endpoint()
+        if end_point and end_point[0] == 'dataset' and end_point[1] in ['new', 'edit']:
+            toolkit.get_validator('not_empty')(key, data, errors, context)
+            return
 
-def category_convertor(value, context):
-    print(value)
-    return value
+    toolkit.get_validator('ignore_missing')(key, data, errors, context)
+

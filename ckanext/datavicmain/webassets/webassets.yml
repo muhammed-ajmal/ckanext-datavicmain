@@ -32,3 +32,8 @@ datavicmain-resource-list-css:
   output: ckanext-datavicmain/%(version)s_datavicmain-resource-list.css
   contents:
     - datavicmain-resource-list.css
+
+datavicmain-confirm-action:
+  output: ckanext-datavicmain/%(version)s_datavicmain-confirm-action.js
+  contents:
+    - datavicmain-confirm-action.js

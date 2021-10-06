@@ -139,8 +139,11 @@ def option_value_to_label(field, value):
                     return option['text']
 
 
-def group_list():
-    return toolkit.get_action('group_list')({}, {'all_fields': True})
+def group_list(self):
+    group_list = []
+    for group in model.Group.all('group'):
+        group_list.append({'value': group.id, 'label': group.title})
+    return group_list
 
 
 def workflow_status_options(current_workflow_status, owner_org):
