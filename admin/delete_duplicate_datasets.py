@@ -3,43 +3,52 @@ import csv
 
 
 # url = os.environ['LAGOON_ROUTE']
-odp = 'https://develop.discover.data.vic.gov.au'
-apikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
+# odp = 'https://discover.data.vic.gov.au/'
+odp = 'https://nginx.pr-126.datavic-ckan-odp.sdp2.sdp.vic.gov.au/'
+iar = 'https://ckan.pr-148.datavic-ckan.sdp2.sdp.vic.gov.au/'
+odpapikey = '0eabf140-439c-46a0-81bc-1c73320303b8'
+iarapikey = 'c8a89820-a159-4c84-947d-3cb55c5a6156'
 username = 'salsa'
-iar = 'https://develop.directory.data.vic.gov.au'
+# iar = 'https://directory.data.vic.gov.au/'
 
 # local = 'http://datavic-ckan.docker.amazee.io/'
-# iarCKAN = iarCKAN(username=username)
+iarCKAN = RemoteCKAN(iar, apikey=iarapikey)
+odpCKAN = RemoteCKAN(odp, apikey=odpapikey)
+
+purging_dataset = []
 
 purged_datasets = []
-
 error_datasets = []
 
 WHITELIST_DATASETS = ['popular-baby-names']
 
 
-def purge_dataset(dataset):
-    with RemoteCKAN(odp, apikey=apikey) as ckan:
-        for names in WHITELIST_DATASETS:
-            if names not in dataset.get('name'):
-                # print("Purging dataset {0}".format(dataset.get('name')))
-                purged_datasets.append(dataset)
-                ckan.call_action.purge_dataset(id=dataset.get('name'))
+def purge_dataset(datasets):
+    with RemoteCKAN(odp, apikey=odpapikey) as ckan:
+        for dataset in datasets:
+            for names in WHITELIST_DATASETS:
+                if names not in dataset.get('name'):
+                    print("Purging dataset {0}".format(dataset.get('name')))
+                    purged_datasets.append(dataset)
+                    try:
+                        ckan.action.dataset_purge(id=dataset.get('name'))
+                    except CKANAPIError:
+                        error_datasets.append(dataset)
+                        print("Error purging dataset {0}".format(dataset.get('name')))
 
 
 def get_datasets_from_odp():
     rows = 1000
     start = 0
     datasets = []
-    with RemoteCKAN(odp, apikey=apikey) as odpCKAN:
-        result = odpCKAN.action.package_search(fq='', start=start, rows=rows)
+    result = odpCKAN.action.package_search(fq='', start=start, rows=rows)
 
-        while result["count"] > start:
-            start += rows
-            results = result.get('results', [])
-            datasets.extend(results)
-            result = odpCKAN.action.package_search(fq='', start=start, rows=rows)
-        print("There are {0} datasets".format(len(datasets)))
+    while result["count"] > start:
+        start += rows
+        results = result.get('results', [])
+        datasets.extend(results)
+        result = odpCKAN.action.package_search(fq='', start=start, rows=rows)
+    print("There are {0} datasets".format(len(datasets)))
     return datasets
 
 
@@ -49,19 +58,24 @@ def main():
         # get dataset id and name
         dataset_id = dataset.get('id')
         dataset_name = dataset.get('name')
-        with RemoteCKAN(iar, apikey=apikey) as iarCKAN:
-            try:
-                iar_dataset = iarCKAN.action.package_show(id=dataset_id)
-                if iar_dataset.get('private'):
-                    purge_dataset(dataset)
-                    # purged_datasets.append(dataset)
-            except NotFound:
-                purge_dataset(dataset)
-                # purged_datasets.append(dataset)
-            except CKANAPIError as e:
-                error_datasets.append(dataset)
-                print("Error for dataset {0} with error {1}".format(dataset_name, e))
-    with open('odp_purged_datasets_uat.csv', 'w') as csvfile:
+        try:
+            with RemoteCKAN(iar, apikey=iarapikey) as iarCKAN:
+                # import pdb; pdb.set_trace()
+                result = iarCKAN.action.package_search(q='id:{0}'.format(dataset_id))
+                results = result.get('results', [])
+                # print("Processing dataset {}".format(dataset_name))
+                if len(results) == 0 or results[0].get('private'):
+                    print("Add for purge {0}".format(dataset_name))
+                    purging_dataset.append(dataset)
+        except NotFound:
+            purging_dataset.append(dataset)
+            # purged_datasets.append(dataset)
+        except CKANAPIError as e:
+            error_datasets.append(dataset)
+            print("Error for dataset {0} with error {1}".format(dataset_name, e.message))
+
+    purge_dataset(purging_dataset)
+    with open('odp_purged_datasets_prod.csv', 'w') as csvfile:
         write_to_csv(csvfile, purged_datasets)
     with open('error_datasets.csv', 'w') as csvfile:
         write_to_csv(csvfile, error_datasets)

@@ -213,9 +213,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IValidators
     def get_validators(self):
         return {
-            'workflow_status': helpers.workflow_status_options,
-            'convert_extract': validators.convert_extract,
-            'category_convertor': validators.category_convertor
+            'datavic_tag_string': validators.datavic_tag_string
         }
 
     # IAuthFunctions
@@ -464,14 +462,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             extras_list = data.get(('extras',))
             if not extras_list:
                 extras_list = data[('extras',)] = []
-            # Note Append "record_modified_at" field as a non-input field
-            # DATAVIC-245: this code removed
-            # datestamp = time.strftime('%Y-%m-%d %T')
-            # items = filter(lambda t: t['key'] == 'record_modified_at', extras_list)
-            # if items:
-            #     items[0]['value'] = datestamp
-            # else:
-            #     extras_list.append({ 'key': 'record_modified_at', 'value': datestamp })
 
             # DataVic: Append extra fields as dynamic (not registered under modify schema) field
             # DATAVIC-245: this code removed

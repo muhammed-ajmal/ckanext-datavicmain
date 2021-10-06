@@ -11,7 +11,7 @@ dataset_fields:
   preset: title
   form_placeholder: eg. A descriptive title
   display_group: General
-  validators: not_empty
+  validators: not_empty unicode
   required: true
 
 - field_name: name
@@ -31,7 +31,6 @@ dataset_fields:
   label: Abstract
   form_snippet: textarea.html
   display_group: General
-  output_validators: convert_extract
   required: true
 
 - field_name: tag_string
@@ -40,7 +39,7 @@ dataset_fields:
   form_placeholder: eg. economy, mental health, government
   display_group: General
   form_snippet: tags.html
-  validators: ignore_missing tag_string_convert
+  validators: datavic_tag_string tag_string_convert
   required: true
 
 - field_name: primary_purpose_of_collection
@@ -62,10 +61,11 @@ dataset_fields:
 
 - field_name: category
   label: Category
-  preset: dataset_category
+  preset: select
   display_group: General
-  validators: not_empty
+  choices_helper: group_list
   required: true
+  form_include_blank_choice: true
 
 - field_name: license_id
   label: License
@@ -92,7 +92,6 @@ dataset_fields:
   label: Created (Data Asset)
   display_group: General
   preset: date
-  validators: not_empty
   required: true
 
 - field_name: date_modified_data_asset
@@ -102,10 +101,10 @@ dataset_fields:
 
 - field_name: update_frequency
   label: Update Frequency
-  preset: datavic_select
+  preset: select
   display_group: General
-  validators: not_empty
   required: true
+  form_include_blank_choice: true
   choices:
     - value: continual
       label: Continual
@@ -144,8 +143,8 @@ dataset_fields:
   label: Personal Data (Privacy)
   preset: select
   display_group: Security
-  validators: not_empty
   required: true
+  form_include_blank_choice: true
   choices:
     - value: not_yet
       label: Not yet assessed
@@ -160,8 +159,8 @@ dataset_fields:
   label: Protective Marking
   preset: select
   display_group: Security
-  validators: not_empty
   required: true
+  form_include_blank_choice: true
   choices:
     - value: secret
       label: SECRET
@@ -181,7 +180,7 @@ dataset_fields:
   preset: select
   display_group: Security
   required: true
-  validators: not_empty
+  form_include_blank_choice: true
   choices:
     - value: 'yes'
       label: 'Yes'
@@ -293,10 +292,9 @@ dataset_fields:
 
 - field_name: organization_visibility
   label: Organisation Visibility
-  preset: datavic_select
+  preset: select
   display_group: Workflow
   required: true
-  validators: not_empty
   choices:
     - value: current
       label: Current
@@ -311,13 +309,14 @@ dataset_fields:
 
 - field_name: private
   label: Public release
-  preset: public_release  # custom select_workflow
+  validators: boolean_validator
+  form_snippet: public_release.html # custom select_workflow
   display_group: Workflow
 
 
 - field_name: workflow_status
   label: Workflow Status
-  preset: workflow_status  # custom select_workflow
+  form_snippet: workflow_status.html # custom select_workflow
   display_group: Workflow
   validators: not_empty
   required: true
@@ -359,7 +358,7 @@ resource_fields:
   label: Format
   preset: resource_format_autocomplete
   form_snippet: tags.html
-  validators: ignore_missing tag_string_convert
+  validators: if_empty_guess_format not_empty clean_format unicode
 
 - field_name: filesize
   label: Filesize
