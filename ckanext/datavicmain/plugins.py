@@ -213,9 +213,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IValidators
     def get_validators(self):
         return {
-            'workflow_status': helpers.workflow_status_options,
-            'convert_extract': validators.convert_extract,
-            'category_convertor': validators.category_convertor
+            'datavic_tag_string': validators.datavic_tag_string
         }
 
     # IAuthFunctions
