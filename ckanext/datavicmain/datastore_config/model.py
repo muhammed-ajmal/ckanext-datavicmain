@@ -2,7 +2,7 @@ from ckan.model.meta import metadata, mapper, Session, engine
 from ckan.model.domain_object import DomainObject
 from ckan.model.types import make_uuid
 from ckan.model.package import Package
-from sqlalchemy import types, Column, Table, ForeignKey, orm
+from sqlalchemy import types, Column, Table, ForeignKey, orm, text
 from sqlalchemy.orm import lazyload
 
 import datetime
@@ -25,7 +25,7 @@ refresh_dataset_datastore_table = Table(
         types.UnicodeText,
         nullable=False),
     Column('created_user_id',
-        types.UnicodeText,
+        types.UnicodeText, ForeignKey('user.id'),
         nullable=False),
     Column('created_at',
         types.DateTime,
@@ -62,6 +62,11 @@ class RefreshDatasetDatastore(DomainObject):
     @classmethod
     def get_all(cls):
         query = Session.query(cls, Package).join(Package).filter(Package.id == cls.dataset_id )
+        return query.all()
+
+    @classmethod
+    def get_by_frequency(cls, frequency):
+        query = Session.query(cls, Package).join(Package).filter(cls.frequency==frequency)
         return query.all()
 
 

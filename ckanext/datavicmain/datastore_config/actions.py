@@ -14,13 +14,13 @@ def refresh_datastore_dataset_create(context, data_dict):
         raise ValidationError()
 
     session = context['session']
-    user = context['user']
+    user = context['auth_user_obj']
 
     rdd = RefreshDatasetDatastore()
 
     rdd.dataset_id = data_dict.get('dataset_id')
     rdd.frequency = data_dict.get('frequency')
-    rdd.created_user_id = user
+    rdd.created_user_id = user.id
 
     rdd.save()
 
@@ -33,6 +33,20 @@ def refresh_datastore_dataset_create(context, data_dict):
 def refresh_dataset_datastore_list(context, data_dict=None):
 
     results = RefreshDatasetDatastore.get_all()
+    
+    res_dict = []
+    for res in results:
+        pkg = res._asdict()
+        res_dict.append(pkg)
+
+    return res_dict
+
+def refresh_dataset_datastore_by_frequency(context, data_dict):
+
+    results = RefreshDatasetDatastore.get_by_frequency(data_dict.get('frequency'))
+
+    if not results:
+        return []
 
     res_dict = []
     for res in results:
@@ -40,6 +54,7 @@ def refresh_dataset_datastore_list(context, data_dict=None):
         res_dict.append(pkg)
 
     return res_dict
+
 
 
 def refresh_dataset_datastore_delete(context, data_dict):

@@ -56,10 +56,9 @@ class DatastoreRefreshConfigView(MethodView):
             h.flash_error(toolkit._(f'Selected dataset {params.get("dataset")} does not exists'))
             return self.get()
 
-        frequency = helpers.get_datasore_refresh_config_option(params.get('frequency'))
         config_dict = {
             "dataset_id": dataset.get('id'),
-            "frequency": frequency.pop()
+            "frequency": params.get('frequency')
         }
         results = get_action('refresh_datastore_dataset_create')(context, config_dict)
         extra_vars = self._setup_extra_template_variables()

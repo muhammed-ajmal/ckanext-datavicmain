@@ -11,8 +11,8 @@ import datetime
 
 
 # revision identifiers, used by Alembic.
-revision = '49ea96a793f8'
-down_revision = '58c0a90936d6'
+revision = '2cda5f1bc8d4'
+down_revision = 'ccd38ad5fced'
 branch_labels = None
 depends_on = None
 
@@ -31,7 +31,7 @@ def upgrade():
             sa.UnicodeText,
             nullable=False),
         sa.Column('created_user_id',
-            sa.UnicodeText,
+            sa.UnicodeText, sa.ForeignKey('user.id'),
             nullable=False),
         sa.Column('created_at',
             sa.DateTime,

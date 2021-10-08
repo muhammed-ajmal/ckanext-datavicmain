@@ -50,7 +50,7 @@
               {% for refresh_config in datastore_refresh_configs %}
               <tr>
                 <td>  <a href="{{ h.url_for('dataset.read', id=refresh_config.Package.name) }}"> {{ refresh_config.Package.title }}</a> </td>
-                <td> {{ refresh_config.RefreshDatasetDatastore.frequency }} </td>
+                <td> {{ h.get_datasore_refresh_config_option(refresh_config.RefreshDatasetDatastore.frequency) }} </td>
                 <td> <button class="btn btn-danger" type="submit" name="delete_config" value="{{refresh_config.RefreshDatasetDatastore.id}}"> Delete</button> </td>
               {% endfor%}
             </tbody>

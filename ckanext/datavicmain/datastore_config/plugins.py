@@ -15,7 +15,8 @@ class RefreshDatasetDatastore(p.SingletonPlugin):
     def get_helpers(self):
         return {
             'get_frequency_options': helpers.get_frequency_options,
-            'get_datastore_refresh_configs': helpers.get_datastore_refresh_configs
+            'get_datastore_refresh_configs': helpers.get_datastore_refresh_configs,
+            'get_datasore_refresh_config_option': helpers.get_datasore_refresh_config_option,
         }
 
     # IActions
@@ -23,7 +24,8 @@ class RefreshDatasetDatastore(p.SingletonPlugin):
         return {
             'refresh_datastore_dataset_create': actions.refresh_datastore_dataset_create,
             'refresh_dataset_datastore_list': actions.refresh_dataset_datastore_list,
-            'refresh_dataset_datastore_delete': actions.refresh_dataset_datastore_delete
+            'refresh_dataset_datastore_delete': actions.refresh_dataset_datastore_delete,
+            'refresh_dataset_datastore_by_frequency': actions.refresh_dataset_datastore_by_frequency
         }
 
     # IConfigurer
