@@ -33,6 +33,8 @@ def call_cron_job(frequency):
     if not frequency:
         tk.error_shout("Please provide frequency")
     
+    site_user = tk.get_action(u'get_site_user')({u'ignore_auth': True}, {})
+    
     datasets = tk.get_action('refresh_dataset_datastore_by_frequency')({}, {"frequency": frequency})
     
     if not datasets:
@@ -42,7 +44,7 @@ def call_cron_job(frequency):
         resources = dataset.get('Package').resources
         #resources = data_dict.get('resource', [])
         for res in resources:
-            res = tk.get_action('xloader_submit')({}, {"resource_id": res.id })
+            res = tk.get_action('xloader_submit')({"user": site_user, "ignore_auth": True}, {"resource_id": res.id })
 
 def get_commands():
     return [datastore_config]
