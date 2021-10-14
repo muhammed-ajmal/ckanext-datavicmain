@@ -85,7 +85,7 @@ def datavic_user_update(context, data_dict=None):
 
 
 def datavic_package_update(context, data_dict):
-    if toolkit.g and toolkit.g.controller in ['dataset', 'package'] and toolkit.g.action in ['read', 'edit', 'resource_read', 'resource_edit']:
+    if toolkit.get_endpoint() in ['dataset', 'package'] and toolkit.g.action in ['read', 'edit', 'resource_read', 'resource_edit']:
         # Harvested dataset are not allowed to be updated, apart from sysadmins
         package_id = data_dict.get('id') if data_dict else toolkit.g.pkg_dict.get('id') if 'pkg_dict' in toolkit.g else None
         if package_id and helpers.is_dataset_harvested(package_id):
@@ -494,7 +494,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
-        if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
+        if toolkit.get_endpoint() in ['dataset', 'package']:
             # Add the package to the group ("category")
             pkg_group = pkg_dict.get('category', None)
             pkg_name = pkg_dict.get('name', None)
@@ -508,7 +508,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def after_update(self, context, pkg_dict):
         # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
-        if toolkit.g and toolkit.g.controller in ['dataset', 'package']:
+        if toolkit.get_endpoint() in ['dataset', 'package']:
             if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
                 helpers.add_package_to_group(pkg_dict, context)
                 # DATAVIC-251 - Create activity for private datasets
