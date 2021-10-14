@@ -1,25 +1,21 @@
 # Plugins for ckanext-datavicmain
-
-import json
 import time
 import calendar
-import copy
 import logging
 import ckan.authz as authz
 
 import ckan.model           as model
 import ckan.plugins         as p
 import ckan.plugins.toolkit as toolkit
-import ckan.logic           as logic
 
 from ckanext.datavicmain import actions
-from ckanext.datavicmain import schema as custom_schema
 from ckanext.datavicmain import helpers
 from ckanext.datavicmain import validators
 
-from ckan.common import config, request
-
 _t = toolkit._
+config = toolkit.config
+request = toolkit.request
+get_action = toolkit.get_action
 
 log1 = logging.getLogger(__name__)
 
@@ -255,7 +251,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             elif t is dict:
                 options['organizations'] = map(lambda org: org.get('name'), org_names)
 
-        return logic.get_action('organization_list') (context, options)
+        return get_action('organization_list') (context, options)
 
     @classmethod
     def organization_dict_objects(cls, org_names = []):
@@ -338,7 +334,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             additional_formats = [x.strip() for x in config.get('ckan.datavic.authorised_resource_formats', []).split(',')]
             q = request.GET.get('q', '')
             list_of_formats = [x.encode('utf-8') for x in
-                               logic.get_action('format_autocomplete')({}, {'q': q, 'limit': limit}) if x] + additional_formats
+                               get_action('format_autocomplete')({}, {'q': q, 'limit': limit}) if x] + additional_formats
             list_of_formats = sorted(list(set(list_of_formats)))
             dict_of_formats = []
             for item in list_of_formats:
@@ -370,8 +366,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             'organization_list_objects': self.organization_list_objects,
             'organization_dict_objects': self.organization_dict_objects,
-            'dataset_extra_fields': custom_schema.DATASET_EXTRA_FIELDS,
-            'resource_extra_fields': custom_schema.RESOURCE_EXTRA_FIELDS,
+            'dataset_extra_fields': helpers.dataset_fields,
+            'resource_extra_fields': helpers.resource_fields,
             'workflow_status_options': helpers.workflow_status_options,
             'is_admin': self.is_admin,
             'workflow_status_pretty': helpers.workflow_status_pretty,
@@ -382,7 +378,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_sysadmin': self.is_sysadmin,
             'repopulate_user_role': self.repopulate_user_role,
             'group_list': helpers.group_list,
-            'get_option_label': custom_schema.get_option_label,
             'autoselect_workflow_status_option': helpers.autoselect_workflow_status_option,
             'release_date': release_date,
             'is_dataset_harvested': helpers.is_dataset_harvested,

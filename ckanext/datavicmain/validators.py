@@ -6,7 +6,8 @@ log = logging.getLogger(__name__)
 
 
 def datavic_tag_string(key, data, errors, context):
-    request = toolkit.request if hasattr(toolkit.request, 'params') else None
+
+    request = toolkit.request if repr(toolkit.request) != '<LocalProxy unbound>' and hasattr(toolkit.request, 'params') else None
 
     if request:
         end_point = toolkit.get_endpoint()

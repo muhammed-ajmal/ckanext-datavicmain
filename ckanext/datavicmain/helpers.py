@@ -131,12 +131,23 @@ def _register_blueprints():
     return blueprints
 
 
-def option_value_to_label(field, value):
-    for extra in custom_schema.DATASET_EXTRA_FIELDS:
-        if extra[0] == field:
-            for option in extra[1]['options']:
-                if option['value'] == value:
-                    return option['text']
+def dataset_fields(dataset_type='dataset'):
+    schema = toolkit.h.scheming_get_dataset_schema(dataset_type)
+    return schema.get('dataset_fields', [])
+
+
+def resource_fields(dataset_type='dataset'):
+    schema = toolkit.h.scheming_get_dataset_schema(dataset_type)
+    return schema.get('resource_fields', [])
+
+
+def option_value_to_label(field_name, value):
+    field = toolkit.h.scheming_field_by_name(dataset_fields(), field_name)
+    label = toolkit.h.scheming_choices_label(
+        toolkit.h.scheming_field_choices(field),
+        value)
+
+    return label
 
 
 def group_list(self):
