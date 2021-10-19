@@ -1,35 +1,25 @@
 import os
 import pkgutil
 import inspect
-
-from flask import Blueprint, request
-
+import logging
 import ckan.model as model
 import ckan.authz as authz
-from ckan.common import config
-from urllib.parse import urlsplit
-
 import ckan.plugins.toolkit as toolkit
-import logging
-import ckan.lib.helpers as h
-import datetime
 import ckan.lib.mailer as mailer
 
-from ckan.lib.base import render_jinja2
-from ckanext.datavicmain import schema as custom_schema
+from flask import Blueprint
+from urllib.parse import urlsplit
 from ckanext.harvest.model import HarvestObject
 
+config = toolkit.config
+request = toolkit.request
+log = logging.getLogger(__name__)
+WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
 # Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
 if "workflow" in config.get('ckan.plugins', False):
     from ckanext.workflow import helpers as workflow_helpers
     workflow_enabled = True
-
-
-log = logging.getLogger(__name__)
-
-
-WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
 
 def add_package_to_group(pkg_dict, context):
