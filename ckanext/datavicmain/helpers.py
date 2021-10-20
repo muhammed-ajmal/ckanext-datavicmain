@@ -26,7 +26,7 @@ def add_package_to_group(pkg_dict, context):
     group_id = pkg_dict.get('category', None)
     if group_id:
         group = model.Group.get(group_id)
-        groups = context.get('package').get_groups('group')
+        groups = context.get('package').get_groups('group') if context.get('package') else []
         if group not in groups:
             group.add_package_by_name(pkg_dict.get('name'))
 
