@@ -241,6 +241,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'is_dataset_harvested': helpers.is_dataset_harvested,
             'is_user_account_pending_review': helpers.is_user_account_pending_review,
             'option_value_to_label': helpers.option_value_to_label,
+            'field_choices': helpers.field_choices,
             'user_org_can_upload': helpers.user_org_can_upload,
         }
 
@@ -271,7 +272,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
-        if toolkit.get_endpoint()[0] in ['dataset', 'package']:
+        if repr(toolkit.request) != '<LocalProxy unbound>' and toolkit.get_endpoint()[0] in ['dataset', 'package']:
             # Add the package to the group ("category")
             pkg_group = pkg_dict.get('category', None)
             pkg_name = pkg_dict.get('name', None)
@@ -285,7 +286,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
 
     def after_update(self, context, pkg_dict):
         # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
-        if toolkit.get_endpoint()[0] in ['dataset', 'package']:
+        if repr(toolkit.request) != '<LocalProxy unbound>' and toolkit.get_endpoint()[0] in ['dataset', 'package']:
             if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
                 helpers.add_package_to_group(pkg_dict, context)
                 # DATAVIC-251 - Create activity for private datasets

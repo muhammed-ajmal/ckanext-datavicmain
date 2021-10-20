@@ -131,10 +131,15 @@ def resource_fields(dataset_type='dataset'):
     return schema.get('resource_fields', [])
 
 
-def option_value_to_label(field_name, value):
+def field_choices(field_name):
     field = toolkit.h.scheming_field_by_name(dataset_fields(), field_name)
+    return toolkit.h.scheming_field_choices(field)
+
+
+def option_value_to_label(field_name, value):
+    choices = field_choices(field_name)
     label = toolkit.h.scheming_choices_label(
-        toolkit.h.scheming_field_choices(field),
+        choices,
         value)
 
     return label
