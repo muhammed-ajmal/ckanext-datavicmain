@@ -16,6 +16,8 @@ def datavic_user_update(context, data_dict=None):
         return {'success': True}
     elif 'save' in context and context['save']:
         if 'email' in toolkit.request.params:
+            import ipdb
+            ipdb.set_trace()
             schema = context.get('schema')
 
     return {'success': True}
