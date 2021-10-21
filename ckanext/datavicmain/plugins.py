@@ -51,6 +51,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     '''
     p.implements(p.ITemplateHelpers)
     p.implements(p.IConfigurer, inherit=True)
+    p.implements(p.IPackageController, inherit=True)
     p.implements(p.IRoutes, inherit=True)
     p.implements(p.IActions)
     p.implements(p.IAuthFunctions)
@@ -68,8 +69,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IValidators
     def get_validators(self):
         return {
-            'datavic_tag_string': validators.datavic_tag_string,
-            'datavic_category_add_package_to_group': validators.datavic_category_add_package_to_group
+            'datavic_tag_string': validators.datavic_tag_string
         }
 
     # IAuthFunctions
@@ -260,3 +260,28 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_resource('public', 'ckanext-datavicmain')
         p.toolkit.add_resource('webassets', 'ckanext-datavicmain')
+
+    # IPackageController
+
+    def after_create(self, context, pkg_dict):
+        # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
+        if repr(toolkit.request) != '<LocalProxy unbound>' and toolkit.get_endpoint()[0] in ['dataset', 'package']:
+            # Add the package to the group ("category")
+            pkg_group = pkg_dict.get('category', None)
+            pkg_name = pkg_dict.get('name', None)
+            pkg_type = pkg_dict.get('type', None)
+            if pkg_group and pkg_type in ['dataset', 'package']:
+                group = model.Group.get(pkg_group)
+                group.add_package_by_name(pkg_name)
+                # DATAVIC-251 - Create activity for private datasets
+                helpers.set_private_activity(pkg_dict, context, str('new'))
+        pass
+
+    def after_update(self, context, pkg_dict):
+        # Only add packages to groups when being updated via the CKAN UI (i.e. not during harvesting)
+        if repr(toolkit.request) != '<LocalProxy unbound>' and toolkit.get_endpoint()[0] in ['dataset', 'package']:
+            if 'type' in pkg_dict and pkg_dict['type'] in ['dataset', 'package']:
+                helpers.add_package_to_group(pkg_dict, context)
+                # DATAVIC-251 - Create activity for private datasets
+                helpers.set_private_activity(pkg_dict, context, str('changed'))
+        pass
