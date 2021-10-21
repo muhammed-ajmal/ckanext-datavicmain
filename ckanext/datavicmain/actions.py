@@ -1,31 +1,26 @@
-import ckan
-import ckan.logic as logic
-import ckan.lib.dictization.model_dictize as model_dictize
-import ckan.lib.dictization.model_save as model_save
 import ckan.plugins.toolkit as toolkit
 import ckanext.datavic_iar_theme.helpers as theme_helpers
 import logging
-from ckan.lib.navl.validators import not_empty
 
-from ckan import lib
-from ckan.common import c, request
+from ckan.model import State
+from ckan.lib.dictization import model_dictize, model_save, table_dictize
+from ckan.lib.navl.validators import not_empty
+from ckan.logic import schema as ckan_schema
 from ckanext.datavicmain import helpers
 from ckanext.datavicmain.model import RefreshDatasetDatastore
 
-_validate = ckan.lib.navl.dictization_functions.validate
-_check_access = logic.check_access
+_check_access = toolkit.check_access
 config = toolkit.config
-h = toolkit.h
-log1 = logging.getLogger(__name__)
+log = logging.getLogger(__name__)
 user_is_registering = helpers.user_is_registering
-ValidationError = logic.ValidationError
-_table_dictize = lib.dictization.table_dictize
-
+ValidationError = toolkit.ValidationError
+get_action = toolkit.get_action
+_validate = toolkit.navl_validate
 
 
 def datavic_user_create(context, data_dict):
     model = context['model']
-    schema = context.get('schema') or logic.schema.default_user_schema()
+    schema = context.get('schema') or ckan_schema.default_user_schema()
     # DATAVICIAR-42: Add unique email validation
     # unique email validation is their by default now in CKAN 2.9 email_is_unique
     # But they have removed not_empty so lets insert it back in
@@ -36,7 +31,7 @@ def datavic_user_create(context, data_dict):
 
     if user_is_registering():
         # DATAVIC-221: If the user registers set the state to PENDING where a sysadmin can activate them
-        data_dict['state'] = ckan.model.State.PENDING
+        data_dict['state'] = State.PENDING
 
     data, errors = _validate(data_dict, schema, context)
 
@@ -81,11 +76,11 @@ def datavic_user_create(context, data_dict):
         'object_id': user.id,
         'activity_type': 'new user',
     }
-    logic.get_action('activity_create')(activity_create_context, activity_dict)
+    get_action('activity_create')(activity_create_context, activity_dict)
 
     if user_is_registering() and create_org_member:
         # DATAVIC-221: Add the new (pending) user as a member of the organisation
-        logic.get_action('member_create')(activity_create_context, {
+        get_action('member_create')(activity_create_context, {
             'id': organisation_id,
             'object': user.id,
             'object_type': 'user',
@@ -124,7 +119,7 @@ def datavic_user_create(context, data_dict):
             }
         )
 
-    log1.debug('Created user {name}'.format(name=user.name))
+    log.debug('Created user {name}'.format(name=user.name))
     return user_dict
 
 
@@ -147,13 +142,13 @@ def refresh_dataset_datastore_create(context, data_dict):
     session.add(rdd)
     session.commit()
 
-    return _table_dictize(rdd, context)
+    return table_dictize(rdd, context)
 
 def refresh_dataset_datastore_list(context):
 
     results = RefreshDatasetDatastore.get_all()
 
-    return [_table_dictize(dataset, context) for dataset in results]
+    return [table_dictize(dataset, context) for dataset in results]
     
 
 def refresh_dataset_datastore_delete(context, data_dict):

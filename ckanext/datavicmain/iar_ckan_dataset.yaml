@@ -66,6 +66,7 @@ dataset_fields:
   choices_helper: group_list
   required: true
   form_include_blank_choice: true
+  validators: scheming_required scheming_choices datavic_category_add_package_to_group
 
 - field_name: license_id
   label: License

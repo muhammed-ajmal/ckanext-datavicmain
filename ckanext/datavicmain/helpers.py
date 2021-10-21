@@ -1,24 +1,20 @@
 import os
 import pkgutil
 import inspect
-
-from flask import Blueprint, request
-
+import logging
 import ckan.model as model
 import ckan.authz as authz
-from ckan.common import config
-from urllib.parse import urlsplit
-
 import ckan.plugins.toolkit as toolkit
-import logging
-import ckan.lib.helpers as h
-import datetime
 import ckan.lib.mailer as mailer
 
-from ckan.lib.base import render_jinja2
-from ckanext.datavicmain import schema as custom_schema
+from flask import Blueprint
+from urllib.parse import urlsplit
 from ckanext.harvest.model import HarvestObject
 
+config = toolkit.config
+request = toolkit.request
+log = logging.getLogger(__name__)
+WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
 
 # Conditionally import the the workflow extension helpers if workflow extension enabled in .ini
 if "workflow" in config.get('ckan.plugins', False):
@@ -26,17 +22,11 @@ if "workflow" in config.get('ckan.plugins', False):
     workflow_enabled = True
 
 
-log = logging.getLogger(__name__)
-
-
-WORKFLOW_STATUS_OPTIONS = ['draft', 'ready_for_approval', 'published', 'archived']
-
-
 def add_package_to_group(pkg_dict, context):
     group_id = pkg_dict.get('category', None)
     if group_id:
         group = model.Group.get(group_id)
-        groups = context.get('package').get_groups('group')
+        groups = context.get('package').get_groups('group') if context.get('package') else []
         if group not in groups:
             group.add_package_by_name(pkg_dict.get('name'))
 
@@ -131,12 +121,28 @@ def _register_blueprints():
     return blueprints
 
 
-def option_value_to_label(field, value):
-    for extra in custom_schema.DATASET_EXTRA_FIELDS:
-        if extra[0] == field:
-            for option in extra[1]['options']:
-                if option['value'] == value:
-                    return option['text']
+def dataset_fields(dataset_type='dataset'):
+    schema = toolkit.h.scheming_get_dataset_schema(dataset_type)
+    return schema.get('dataset_fields', [])
+
+
+def resource_fields(dataset_type='dataset'):
+    schema = toolkit.h.scheming_get_dataset_schema(dataset_type)
+    return schema.get('resource_fields', [])
+
+
+def field_choices(field_name):
+    field = toolkit.h.scheming_field_by_name(dataset_fields(), field_name)
+    return toolkit.h.scheming_field_choices(field)
+
+
+def option_value_to_label(field_name, value):
+    choices = field_choices(field_name)
+    label = toolkit.h.scheming_choices_label(
+        choices,
+        value)
+
+    return label
 
 
 def group_list(self):
