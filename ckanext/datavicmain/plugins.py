@@ -4,8 +4,8 @@ import calendar
 import logging
 import ckan.authz as authz
 
-import ckan.model           as model
-import ckan.plugins         as p
+import ckan.model as model
+import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
 
 from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware
@@ -59,7 +59,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IBlueprint)
     p.implements(p.IValidators)
 
-
     def make_middleware(self, app, config):
         return auth_middleware.AuthMiddleware(app, config)
 
@@ -88,12 +87,10 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'user_create': actions.datavic_user_create
         }
 
-
-    ## helper methods ## 
-
+    ## helper methods ##
 
     @classmethod
-    def organization_list_objects(cls, org_names = []):
+    def organization_list_objects(cls, org_names=[]):
         ''' Make a action-api call to fetch the a list of full dict objects (for each organization) '''
         context = {
             'model': model,
@@ -101,18 +98,18 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'user': toolkit.g.user,
         }
 
-        options = { 'all_fields': True }
+        options = {'all_fields': True}
         if org_names and len(org_names):
             t = type(org_names[0])
-            if   t is str:
+            if t is str:
                 options['organizations'] = org_names
             elif t is dict:
                 options['organizations'] = map(lambda org: org.get('name'), org_names)
 
-        return get_action('organization_list') (context, options)
+        return get_action('organization_list')(context, options)
 
     @classmethod
-    def organization_dict_objects(cls, org_names = []):
+    def organization_dict_objects(cls, org_names=[]):
         ''' Similar to organization_list_objects but returns a dict keyed to the organization name. '''
         results = {}
         for org in cls.organization_list_objects(org_names):
@@ -134,7 +131,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         user = toolkit.g.user
         if authz.is_sysadmin(user):
             return True
-
 
     def historical_resources_list(self, resource_list):
         sorted_resource_list = {}
@@ -213,8 +209,6 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         else:
             return 'member'
 
-
-
     ## ITemplateHelpers interface ##
 
     def get_helpers(self):
@@ -267,8 +261,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         p.toolkit.add_resource('public', 'ckanext-datavicmain')
         p.toolkit.add_resource('webassets', 'ckanext-datavicmain')
 
-
-    # IPackageController  
+    # IPackageController
 
     def after_create(self, context, pkg_dict):
         # Only add packages to groups when being created via the CKAN UI (i.e. not during harvesting)
@@ -280,7 +273,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             if pkg_group and pkg_type in ['dataset', 'package']:
                 group = model.Group.get(pkg_group)
                 group.add_package_by_name(pkg_name)
-                 # DATAVIC-251 - Create activity for private datasets
+                # DATAVIC-251 - Create activity for private datasets
                 helpers.set_private_activity(pkg_dict, context, str('new'))
         pass
 
