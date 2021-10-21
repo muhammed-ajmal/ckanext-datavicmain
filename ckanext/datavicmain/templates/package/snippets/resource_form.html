@@ -35,7 +35,7 @@
   {% endblock %}
 
 {% block metadata_fields %}
-
+  <!-- TODO: Do we need -->
   {% for field_id, field_attributes in h.resource_extra_fields %}
     {% if field_attributes['field_type'] and field_attributes['field_type'] == 'date' %}
       {{ form.input(field_id,
@@ -67,9 +67,8 @@
 
 {{ super() }}
 
-  {% resource 'ckanext-datavicmain/jquery-ui.js' %}
-  {% resource 'ckanext-datavicmain/datavicmain.js' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.css' %}
-  {% resource 'ckanext-datavicmain/jquery-ui.structure.css' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-js' %}
+  {% asset 'ckanext-datavicmain/jquery-ui-css' %}
+  {% asset 'ckanext-datavicmain/datavicmain-js' %}
 
 {% endblock %}

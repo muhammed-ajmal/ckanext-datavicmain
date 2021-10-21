@@ -1,0 +1,70 @@
+{% extends "admin/base.html" %}
+{% import 'macros/form.html' as form %}
+
+{% block primary_content_inner %}
+
+
+<div id="datavic_reporting">
+  <form action="" method="post" class="form-horizontal">
+    <h3> Configure  dataset datastore refresh </h3>
+
+    {{ errors }}
+
+    {{ form.select(
+      name='dataset',
+      id='dataset',
+      label=_('Select dataset'),
+      options=[
+        {}
+      ],
+      selected='general',
+      error=errors if errors else None
+    ) }}
+
+    {{ form.select(
+      'frequency',
+      id='frequency',
+      label=_('Frequency'),
+      selected= '10 minutes',
+      error=errors if errors else None
+    ) }}
+
+    <button class="btn btn-primary">Add</button>
+
+  </form>
+</div>
+<div>
+    <small>
+    <table class="table table-bordered table-striped table-condensed">
+      <thead>
+        <tr>
+          <th>Dataset</th>
+          <th>Frequency</th>
+          <th>Delete</th>
+        </tr>
+      </thead>
+      <tbody>
+        
+      </tbody>
+    </table>
+      </small>
+</div>
+{% endblock %}
+
+{% block secondary_content %}
+  <div class="module module-narrow module-shallow">
+    <h2 class="module-heading">
+      <i class="fa fa-info-circle"></i>
+      {{ _('Administer CKAN') }}
+    </h2>
+    <div class="module-content">
+
+      {% set docs_url = "http://docs.ckan.org/en/{0}/sysadmin-guide.html".format(g.ckan_doc_version) %}
+      {% trans %}
+        <p>As a sysadmin user you have full control over this CKAN instance. Proceed with care!</p>
+        <p>For guidance on using sysadmin features, see the CKAN  <a href="{{ docs_url }}" target="_blank">sysadmin guide</a></p>
+      {% endtrans %}
+    </div>
+  </div>
+
+{% endblock %}
