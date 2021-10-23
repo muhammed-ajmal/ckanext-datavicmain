@@ -1,7 +1,7 @@
 {% ckan_extends %}
 
 {% block form %}
-
+  <!-- TODO: Do we need -->
   {% for field_id, field_attributes in h.resource_extra_fields %}
       {{ form.input(field_id, 
             label=_(field_attributes['label']), id='field-' + field_id, 

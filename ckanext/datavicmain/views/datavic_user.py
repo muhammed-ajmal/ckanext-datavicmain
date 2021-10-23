@@ -1,36 +1,35 @@
 import logging
-import json
-from operator import itemgetter
 import six
-
-from flask import Blueprint
-from flask.views import MethodView
-
-import ckan.lib.helpers as h
 import ckan.lib.mailer as mailer
 import ckan.plugins.toolkit as toolkit
 import ckan.logic as logic
 import ckan.model as model
-from ckan.common import _, g, config, request
 import ckan.lib.authenticator as authenticator
-from ckan import authz
 import ckan.lib.captcha as captcha
 import ckan.views.user as user
-
-from ckanext.datavicmain.plugins import datavic_user_reset
+import ckan.lib.navl.dictization_functions as dictization_functions
 
 import ckanext.datavicmain.helpers as helpers
-import ckan.lib.navl.dictization_functions as dictization_functions
+
+
+from flask import Blueprint
+from flask.views import MethodView
+from ckan.common import _, g, config, request
+from ckan import authz
 
 
 NotFound = toolkit.ObjectNotFound
 NotAuthorized = toolkit.NotAuthorized
 ValidationError = toolkit.ValidationError
-DataError = dictization_functions.DataError
-
 check_access = toolkit.check_access
 get_action = toolkit.get_action
 asbool = toolkit.asbool
+h = toolkit.h
+render = toolkit.render
+abort = toolkit.abort
+
+DataError = dictization_functions.DataError
+unflatten = dictization_functions.unflatten
 
 tuplize_dict = logic.tuplize_dict
 parse_params = logic.parse_params
@@ -42,9 +41,6 @@ edit_user_form = user.edit_user_form
 set_repoze_user = user.set_repoze_user
 _new_form_to_db_schema = user._new_form_to_db_schema
 _new_user_form = user.new_user_form
-
-render = toolkit.render
-abort = toolkit.abort
 
 log = logging.getLogger(__name__)
 
@@ -210,14 +206,14 @@ class DataVicUserEditView(user.EditView):
 
         try:
             data_dict = clean_dict(
-                dictization_functions.unflatten(
+                unflatten(
                     tuplize_dict(parse_params(request.form))))
             data_dict.update(clean_dict(
-                dictization_functions.unflatten(
+                unflatten(
                     tuplize_dict(parse_params(request.files))))
             )
 
-        except dictization_functions.DataError:
+        except DataError:
             abort(400, _(u'Integrity Error'))
         data_dict.setdefault(u'activity_streams_email_notifications', False)
 
@@ -263,16 +259,16 @@ class DataVicUserEditView(user.EditView):
         context, id = self._prepare(id)
         data_dict = {u'id': id}
         try:
-            old_data = logic.get_action(u'user_show')(context, data_dict)
+            old_data = get_action(u'user_show')(context, data_dict)
 
             g.display_name = old_data.get(u'display_name')
             g.user_name = old_data.get(u'name')
 
             data = data or old_data
 
-        except logic.NotAuthorized:
+        except NotAuthorized:
             abort(403, _(u'Unauthorized to edit user %s') % u'')
-        except logic.NotFound:
+        except NotFound:
             abort(404, _(u'User not found'))
         user_obj = context.get(u'user_obj')
 
@@ -404,23 +400,23 @@ class RegisterView(MethodView):
             u'save': u'save' in request.form
         }
         try:
-            logic.check_access(u'user_create', context)
-        except logic.NotAuthorized:
+            check_access(u'user_create', context)
+        except NotAuthorized:
             toolkit.abort(403, _(u'Unauthorized to register as a user.'))
         return context
 
     def post(self):
         context = self._prepare()
         try:
-            data_dict = logic.clean_dict(
-                dictization_functions.unflatten(
-                    logic.tuplize_dict(logic.parse_params(request.form))))
-            data_dict.update(logic.clean_dict(
-                dictization_functions.unflatten(
-                    logic.tuplize_dict(logic.parse_params(request.files)))
+            data_dict = clean_dict(
+                unflatten(
+                    tuplize_dict(parse_params(request.form))))
+            data_dict.update(clean_dict(
+                unflatten(
+                    tuplize_dict(parse_params(request.files)))
             ))
 
-        except dictization_functions.DataError:
+        except DataError:
             toolkit.abort(400, _(u'Integrity Error'))
 
         context[u'message'] = data_dict.get(u'log_message', u'')
@@ -432,12 +428,12 @@ class RegisterView(MethodView):
             return self.get(data_dict)
 
         try:
-            logic.get_action(u'user_create')(context, data_dict)
-        except logic.NotAuthorized:
+            get_action(u'user_create')(context, data_dict)
+        except NotAuthorized:
             toolkit.abort(403, _(u'Unauthorized to create user %s') % u'')
-        except logic.NotFound:
+        except NotFound:
             toolkit.abort(404, _(u'User not found'))
-        except logic.ValidationError as e:
+        except ValidationError as e:
             errors = e.error_dict
             error_summary = e.error_summary
             return self.get(data_dict, errors, error_summary)
@@ -462,7 +458,7 @@ class RegisterView(MethodView):
             h.flash_success(toolkit._('Your requested account has been submitted for review'))
             resp = h.redirect_to(controller='home', action='index')
         else:
-            # log the user in programatically
+            # log the user in programmatically
             resp = h.redirect_to(u'user.me')
             set_repoze_user(data_dict[u'name'], resp)
         return resp

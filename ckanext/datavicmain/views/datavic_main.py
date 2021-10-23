@@ -1,39 +1,29 @@
 import logging
-from operator import itemgetter
-
-from flask import Blueprint
-from flask.views import MethodView
-
-import ckan.lib.helpers as h
+import ckan.views.dataset as dataset
 import ckan.model as model
-from ckan.common import _,  g
 import ckan.plugins.toolkit as toolkit
 
-import ckan.views.dataset as dataset
-
+from flask import Blueprint
 
 NotFound = toolkit.ObjectNotFound
 NotAuthorized = toolkit.NotAuthorized
-ValidationError = toolkit.ValidationError
 check_access = toolkit.check_access
 get_action = toolkit.get_action
-
-
+_ = toolkit._
+g = toolkit.g
 render = toolkit.render
 abort = toolkit.abort
-
 log = logging.getLogger(__name__)
-
 datavicmain = Blueprint('datavicmain', __name__)
 
 
 def historical(id):
-    package_type = dataset._get_package_type(id.split('@')[0]) #check for new function if necessary
+    package_type = dataset._get_package_type(id.split('@')[0])  # check for new function if necessary
 
     context = {'model': model, 'session': model.Session,
-                'user': g.user or g.author, 'for_view': True,
-                'auth_user_obj': g.userobj}
-    
+               'user': g.user or g.author, 'for_view': True,
+               'auth_user_obj': g.userobj}
+
     data_dict = {'id': id}
     # check if package exists
     try:
@@ -62,6 +52,7 @@ def historical(id):
 
     assert False, "We should never get here"
 
+
 def purge(id):
     try:
         # Only sysadmins can purge
@@ -78,5 +69,6 @@ def purge(id):
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)
     blueprint.add_url_rule('/dataset/purge/<id>', view_func=purge)
+
 
 register_datavicmain_plugin_rules(datavicmain)
