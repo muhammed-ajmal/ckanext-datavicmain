@@ -120,8 +120,6 @@ def datavic_user_create(context, data_dict):
 
     log.debug('Created user {name}'.format(name=user.name))
     return user_dict
-<<<<<<< HEAD
-=======
 
 
 def refresh_dataset_datastore_create(context, data_dict):
@@ -163,4 +161,3 @@ def refresh_dataset_datastore_delete(context, data_dict):
     else:
         raise ValidationError("Not found")
 
->>>>>>> develop
