@@ -10,6 +10,7 @@ log = logging.getLogger(__name__)
 
 #   The code in this class was copied (& adjusted) from the CKAN 2.2 repository
 
+
 class AuthMiddleware(object):
     def __init__(self, app, app_conf):
         self.app = app
@@ -35,6 +36,7 @@ class AuthMiddleware(object):
                 or environ['PATH_INFO'] == '/user/logged_in'
                 or environ['PATH_INFO'] == '/user/logged_out_redirect'
                 or environ['PATH_INFO'] == '/user/register'
+                or environ['PATH_INFO'] == '/favicon.ico'
                 or environ['PATH_INFO'].startswith('/api')
                 or environ['PATH_INFO'].startswith('/base')
                 or environ['PATH_INFO'].startswith('/webassets')
