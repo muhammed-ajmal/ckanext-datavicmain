@@ -26,6 +26,7 @@ def upgrade():
         sa.Column('dataset_id',
             sa.UnicodeText, sa.ForeignKey('package.id'),
             nullable=False,
+            unique=True,
             index=True),
         sa.Column('frequency',
             sa.UnicodeText,

@@ -20,6 +20,7 @@ refresh_dataset_datastore_table = Table(
     Column('dataset_id',
         types.UnicodeText, ForeignKey('package.id'),
         nullable=False,
+        unique=True,
         index=True),
     Column('frequency',
         types.UnicodeText,

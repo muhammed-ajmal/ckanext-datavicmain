@@ -2,11 +2,14 @@ import ckan.plugins.toolkit as toolkit
 import logging
 
 from ckan.lib.dictization import table_dictize
+
+from sqlalchemy.exc import IntegrityError
 from ckanext.datavicmain.datastore_config.model import RefreshDatasetDatastore
 
 _check_access = toolkit.check_access
 log = logging.getLogger(__name__)
 ValidationError = toolkit.ValidationError
+
 
 
 def refresh_datastore_dataset_create(context, data_dict):
@@ -22,7 +25,12 @@ def refresh_datastore_dataset_create(context, data_dict):
     rdd.frequency = data_dict.get('frequency')
     rdd.created_user_id = user.id
 
-    rdd.save()
+    try:
+        rdd.save()
+    except IntegrityError:
+        raise ValidationError('Dataset already set for execution')
+    finally:
+        session.rollback()
 
     session.add(rdd)
     session.commit()

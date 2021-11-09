@@ -60,7 +60,11 @@ class DatastoreRefreshConfigView(MethodView):
             "dataset_id": dataset.get('id'),
             "frequency": params.get('frequency')
         }
-        results = get_action('refresh_datastore_dataset_create')(context, config_dict)
+        try:
+            results = get_action('refresh_datastore_dataset_create')(context, config_dict)
+        except Exception as e:
+            h.flash_error(toolkit._(f'Selected dataset {params.get("dataset")} already refreshed'))
+            return self.get()
         extra_vars = self._setup_extra_template_variables()
         extra_vars["data"] = results
         return render('admin/datastore_refresh.html', extra_vars=extra_vars)
