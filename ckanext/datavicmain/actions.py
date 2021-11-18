@@ -7,7 +7,6 @@ from ckan.lib.dictization import model_dictize, model_save, table_dictize
 from ckan.lib.navl.validators import not_empty
 from ckan.logic import schema as ckan_schema
 from ckanext.datavicmain import helpers
-from ckanext.datavicmain.model import RefreshDatasetDatastore
 
 _check_access = toolkit.check_access
 config = toolkit.config
@@ -121,44 +120,3 @@ def datavic_user_create(context, data_dict):
 
     log.debug('Created user {name}'.format(name=user.name))
     return user_dict
-
-
-def refresh_dataset_datastore_create(context, data_dict):
-    
-    if data_dict:
-        raise ValidationError()
-
-    session = context['session']
-    user = context['user']
-
-    rdd = RefreshDatasetDatastore()
-
-    rdd.dataset_id = data_dict.dataset_id
-    rdd.frequency = data_dict.frequency
-    rdd.created_user_id = user
-
-    rdd.save()
-
-    session.add(rdd)
-    session.commit()
-
-    return table_dictize(rdd, context)
-
-def refresh_dataset_datastore_list(context):
-
-    results = RefreshDatasetDatastore.get_all()
-
-    return [table_dictize(dataset, context) for dataset in results]
-    
-
-def refresh_dataset_datastore_delete(context, data_dict):
-
-    rdd_id = data_dict['id']
-
-    rdd = RefreshDatasetDatastore.get(rdd_id)
-
-    if rdd:
-        RefreshDatasetDatastore.delete(rdd_id)
-    else:
-        raise ValidationError("Not found")
-
