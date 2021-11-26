@@ -49,8 +49,8 @@ datavicuser = Blueprint('datavicuser', __name__)
 
 class DataVicRequestResetView(user.RequestResetView):
 
-    def _prepare(self, id):
-        return super()._prepare(id)
+    def _prepare(self):
+        return super()._prepare()
 
     def get(self):
         self._prepare()
@@ -60,7 +60,8 @@ class DataVicRequestResetView(user.RequestResetView):
         '''
         POST method datavic user
         '''
-        id = request.params.get('user')
+        self._prepare()
+        id = request.form.get('user')
         if id in (None, u''):
             h.flash_error(_(u'Email is required'))
             return h.redirect_to(u'/user/reset')
