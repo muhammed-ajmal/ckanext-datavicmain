@@ -1,5 +1,5 @@
 import ckan.plugins.toolkit as toolkit
-import ckanext.qdes.jobs as jobs
+import ckan.lib.jobs as jobs
 import click
 import logging
 
