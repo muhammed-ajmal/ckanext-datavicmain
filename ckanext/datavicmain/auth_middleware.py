@@ -16,13 +16,6 @@ class AuthMiddleware(object):
         self.app = app
 
     def __call__(self, environ, start_response):
-        # DATAVIC-160 Changes site URL from directory.iar.vic.gov.au to directory.data.vic.gov.au
-        if environ['HTTP_HOST'] and environ['HTTP_HOST'] == 'directory.iar.vic.gov.au':
-            headers = [('Location', 'https://directory.data.vic.gov.au' + environ['PATH_INFO'])]
-            status = "301 Moved Permanently"
-            start_response(status, headers)
-            return ['']
-
         # if logged in via browser cookies or API key, all pages accessible
         if 'repoze.who.identity' in environ or self._get_user_for_apikey(environ) or not self._is_iar():
             return self.app(environ, start_response)
