@@ -1,8 +1,8 @@
 import ckan.plugins.toolkit as toolkit
-import ckan.lib.jobs as jobs
+
 import click
 import logging
-
+import ckanext.datavicmain.jobs as jobs
 
 log = logging.getLogger(__name__)
 
