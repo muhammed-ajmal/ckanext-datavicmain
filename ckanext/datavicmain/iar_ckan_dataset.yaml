@@ -340,7 +340,6 @@ dataset_fields:
 - field_name: maintainer_email
   label: Email
   form_placeholder: data.vic@salsadigital.com.au
-  display_email_name_field: author
   display_group: Custodian
 
 
