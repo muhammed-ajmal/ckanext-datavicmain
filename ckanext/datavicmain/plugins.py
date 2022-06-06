@@ -261,6 +261,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_resource('public', 'ckanext-datavicmain')
         p.toolkit.add_resource('webassets', 'ckanext-datavicmain')
+        p.toolkit.add_ckan_admin_tab(
+            p.toolkit.config,
+            'datavicmain.admin_report',
+            'Admin Report',
+            icon='user-o'
+        )
 
     # IPackageController
 
