@@ -1,9 +1,12 @@
 import logging
+import csv
+from io import StringIO
+
 import ckan.views.dataset as dataset
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
 
-from flask import Blueprint
+from flask import Blueprint, make_response
 
 NotFound = toolkit.ObjectNotFound
 NotAuthorized = toolkit.NotAuthorized
@@ -66,9 +69,73 @@ def purge(id):
     return toolkit.h.redirect_to('/ckan-admin/trash')
 
 
+def admin_report():
+    context = {
+        "model": model,
+        "user": toolkit.c.user,
+        "auth_user_obj": toolkit.c.userobj,
+    }
+    try:
+        toolkit.check_access("sysadmin", context, {})
+    except toolkit.NotAuthorized:
+        return toolkit.abort(
+            401, toolkit._(
+                "Need to be system administrator to generate reports")
+        )
+    
+    report_type = toolkit.request.args.get("report_type")
+    if report_type and report_type == 'user-email-data':
+        users = model.Session.query(
+            model.User.email,
+            model.User.id,
+            model.User.name)
+
+        packages = model.Session.query(
+            model.Package.id,
+            model.Package.maintainer_email,
+            model.Package.name)\
+            .filter(model.Package.maintainer_email.isnot(None))
+        
+        report = StringIO()
+        fd = csv.writer(report)
+        fd.writerow(
+            [
+                "Entity type",
+                "Email",
+                "URL"
+            ]
+        )
+        for user in users.all():
+            fd.writerow(
+                [
+                    'user',
+                    user[0],
+                    h.url_for('user.read', id=user[2], qualified=True)
+                ]
+            )
+            
+        for package in packages.all():
+            fd.writerow(
+                [
+                    'dataset',
+                    package[1],
+                    h.url_for('dataset.read', id=package[2], qualified=True)
+                ]
+            )
+            
+        response = make_response(report.getvalue())
+        response.headers["Content-type"] = "text/csv"
+        response.headers[
+            "Content-disposition"
+        ] = 'attachement; filename="user_report.csv"'
+        return response
+    return render('admin/admin_report.html', extra_vars={})
+
+
 def register_datavicmain_plugin_rules(blueprint):
     blueprint.add_url_rule('/dataset/<id>/historical', view_func=historical)
     blueprint.add_url_rule('/dataset/purge/<id>', view_func=purge)
+    blueprint.add_url_rule('/ckan-admin/admin-report', view_func=admin_report)
 
 
 register_datavicmain_plugin_rules(datavicmain)
