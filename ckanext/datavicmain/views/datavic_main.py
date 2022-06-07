@@ -5,6 +5,7 @@ from io import StringIO
 import ckan.views.dataset as dataset
 import ckan.model as model
 import ckan.plugins.toolkit as toolkit
+import ckan.lib.helpers as h
 
 from flask import Blueprint, make_response
 
