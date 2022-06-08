@@ -95,7 +95,7 @@ def admin_report():
             model.Package.id,
             model.Package.maintainer_email,
             model.Package.name)\
-            .filter(model.Package.maintainer_email.isnot(None))
+            .filter(model.Package.maintainer_email != '')
         
         report = StringIO()
         fd = csv.writer(report)
@@ -128,7 +128,7 @@ def admin_report():
         response.headers["Content-type"] = "text/csv"
         response.headers[
             "Content-disposition"
-        ] = 'attachement; filename="user_report.csv"'
+        ] = 'attachement; filename="email_report.csv"'
         return response
     return render('admin/admin_report.html', extra_vars={})
 
