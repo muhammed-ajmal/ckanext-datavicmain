@@ -8,7 +8,7 @@ import ckan.model as model
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
 
-from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware
+from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware, cli
 from six import text_type
 
 config = toolkit.config
@@ -58,6 +58,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IMiddleware, inherit=True)
     p.implements(p.IBlueprint)
     p.implements(p.IValidators)
+    p.implements(p.IClick)
 
     def make_middleware(self, app, config):
         return auth_middleware.AuthMiddleware(app, config)
@@ -260,6 +261,12 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         p.toolkit.add_template_directory(config, 'templates')
         p.toolkit.add_resource('public', 'ckanext-datavicmain')
         p.toolkit.add_resource('webassets', 'ckanext-datavicmain')
+        p.toolkit.add_ckan_admin_tab(
+            p.toolkit.config,
+            'datavicmain.admin_report',
+            'Admin Report',
+            icon='user-o'
+        )
 
     # IPackageController
 
@@ -285,3 +292,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 # DATAVIC-251 - Create activity for private datasets
                 helpers.set_private_activity(pkg_dict, context, str('changed'))
         pass
+
+    # IClick
+    def get_commands(self):
+        return cli.get_commands()

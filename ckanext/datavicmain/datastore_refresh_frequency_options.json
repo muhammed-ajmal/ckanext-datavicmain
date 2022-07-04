@@ -1,0 +1,16 @@
+{
+    "frequency_options": [
+        {
+            "value": "10",
+            "text": "10 minutes"
+        },
+        {
+            "value": "120",
+            "text": "2 hours"
+        },
+        {
+            "value": "1440",
+            "text": "Daily"
+        }
+    ]
+}
