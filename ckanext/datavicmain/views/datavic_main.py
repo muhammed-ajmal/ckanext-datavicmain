@@ -95,7 +95,8 @@ def admin_report():
             model.Package.id,
             model.Package.maintainer_email,
             model.Package.name)\
-            .filter(model.Package.maintainer_email != '')
+            .filter(model.Package.maintainer_email != '')\
+            .filter(model.Package.state != 'deleted')
         
         report = StringIO()
         fd = csv.writer(report)
