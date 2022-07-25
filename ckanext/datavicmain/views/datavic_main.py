@@ -89,7 +89,8 @@ def admin_report():
         users = model.Session.query(
             model.User.email,
             model.User.id,
-            model.User.name)
+            model.User.name)\
+            .filter(model.User.state != 'deleted')
 
         packages = model.Session.query(
             model.Package.id,
