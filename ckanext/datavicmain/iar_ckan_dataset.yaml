@@ -357,6 +357,10 @@ dataset_fields:
   form_placeholder: Email
   display_group: Custodian
 
+- field_name: syndicate
+  display_snippet: null
+  form_snippet: vic_hidden.html
+  validators: default(true)
 
 resource_fields:
 
