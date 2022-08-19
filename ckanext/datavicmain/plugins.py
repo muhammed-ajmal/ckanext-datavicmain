@@ -2,14 +2,18 @@
 import time
 import calendar
 import logging
+from six import text_type
 import ckan.authz as authz
 
 import ckan.model as model
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
 
+from ckanext.syndicate.interfaces import ISyndicate
 from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware, cli
-from six import text_type
+from ckanext.datavicmain.syndication.odp import prepare_package_for_odp
+from ckanext.datavicmain.syndication import listeners
+
 
 config = toolkit.config
 request = toolkit.request
@@ -59,6 +63,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IBlueprint)
     p.implements(p.IValidators)
     p.implements(p.IClick)
+    p.implements(ISyndicate, inherit=True)
 
     def make_middleware(self, app, config):
         return auth_middleware.AuthMiddleware(app, config)
@@ -296,3 +301,9 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     # IClick
     def get_commands(self):
         return cli.get_commands()
+    
+    # ISyndicate
+    def prepare_package_for_syndication(self, package_id, data_dict, profile):
+        if profile.id == "odp":
+            data_dict = prepare_package_for_odp(package_id, data_dict)
+        return data_dict

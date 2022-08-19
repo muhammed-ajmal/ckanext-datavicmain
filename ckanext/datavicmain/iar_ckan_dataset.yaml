@@ -342,6 +342,10 @@ dataset_fields:
   form_placeholder: data.vic@salsadigital.com.au
   display_group: Custodian
 
+- field_name: syndicate
+  display_snippet: null
+  form_snippet: vic_hidden.html
+  validators: default(true)
 
 resource_fields:
 
