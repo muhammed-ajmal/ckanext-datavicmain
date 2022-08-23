@@ -208,3 +208,12 @@ def user_org_can_upload(pkg_id):
         if org.name in allowed_organisations and org.name == org_name:
             return True
     return False
+
+
+def is_ready_for_publish(pkg):
+    workflow_publish = pkg.get('workflow_status')
+    is_private = pkg.get('private')
+
+    if not is_private and workflow_publish == 'published':
+        return True
+    return False

@@ -13,6 +13,7 @@ from ckanext.syndicate.interfaces import ISyndicate
 from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware, cli
 from ckanext.datavicmain.syndication.odp import prepare_package_for_odp
 from ckanext.datavicmain.syndication import listeners
+import ckanext.datavicmain.utils as utils
 
 
 config = toolkit.config
@@ -243,6 +244,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'option_value_to_label': helpers.option_value_to_label,
             'field_choices': helpers.field_choices,
             'user_org_can_upload': helpers.user_org_can_upload,
+            'is_ready_for_publish': helpers.is_ready_for_publish,
         }
 
     ## IConfigurer interface ##
@@ -296,6 +298,13 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 helpers.add_package_to_group(pkg_dict, context)
                 # DATAVIC-251 - Create activity for private datasets
                 helpers.set_private_activity(pkg_dict, context, str('changed'))
+
+
+        is_ready_for_syndication = toolkit.h.is_ready_for_publish(pkg_dict)
+        utils.update_syndication_flag(pkg_dict, is_ready_for_syndication)
+        
+        if is_ready_for_syndication and toolkit.asbool(pkg_dict.get('syndicate')):
+            toolkit.h.flash_success("Dataset '{0}' is being syndicated to ODP.".format(pkg_dict['title']))
         pass
 
     # IClick
