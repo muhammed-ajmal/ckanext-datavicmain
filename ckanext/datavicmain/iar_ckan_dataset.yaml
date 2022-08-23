@@ -345,7 +345,7 @@ dataset_fields:
 - field_name: syndicate
   display_snippet: null
   form_snippet: vic_hidden.html
-  validators: default(true)
+  validators: default(false)
 
 resource_fields:
 
