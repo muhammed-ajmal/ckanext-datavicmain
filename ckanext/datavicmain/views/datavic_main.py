@@ -89,13 +89,15 @@ def admin_report():
         users = model.Session.query(
             model.User.email,
             model.User.id,
-            model.User.name)
+            model.User.name)\
+            .filter(model.User.state != 'deleted')
 
         packages = model.Session.query(
             model.Package.id,
             model.Package.maintainer_email,
             model.Package.name)\
-            .filter(model.Package.maintainer_email != '')
+            .filter(model.Package.maintainer_email != '')\
+            .filter(model.Package.state != 'deleted')
         
         report = StringIO()
         fd = csv.writer(report)
