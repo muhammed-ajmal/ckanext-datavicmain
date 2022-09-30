@@ -108,3 +108,9 @@ label:hover .custom-check {
     background-position: -62px 0;
     opacity: 0.5;
 }
+
+@media (max-width: 767px) {
+    .resource-list .resource-item {
+      display: inline; 
+    }
+}
