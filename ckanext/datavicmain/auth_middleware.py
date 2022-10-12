@@ -8,6 +8,7 @@ config = toolkit.config
 request = toolkit.request
 log = logging.getLogger(__name__)
 
+CONFIG_EXTRA_ALLOWED = "ckanext.datavicmain.extra_allowed_routes"
 #   The code in this class was copied (& adjusted) from the CKAN 2.2 repository
 
 
@@ -40,7 +41,9 @@ class AuthMiddleware(object):
                 or environ['PATH_INFO'].startswith('/uploads')
                 or environ['PATH_INFO'].startswith('/fonts')
                 or environ['PATH_INFO'].startswith('/assets')
-                    or environ['PATH_INFO'].endswith('svg')):
+                or environ['PATH_INFO'].endswith('svg')
+                or environ['PATH_INFO'] in toolkit.aslist(config.get(CONFIG_EXTRA_ALLOWED))):
+
                 return self.app(environ, start_response)
             else:
                 log.debug(f"Unauthorized page accessed: {environ['PATH_INFO']}")
