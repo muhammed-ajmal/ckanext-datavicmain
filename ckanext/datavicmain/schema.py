@@ -7,6 +7,8 @@ RESOURCE_EXTRA_FIELDS = [
     ('period_end', {'label': 'Temporal Coverage End', 'field_type': 'date'}),
     ('data_quality', {'label': 'Data Quality Statement', 'field_type': 'textarea'}),
     ('attribution', {'label': 'Attribution Statement', 'field_type': 'textarea'}),
+    ('featured', {'label': 'Featured Resource ?', 'field_type': 'select'}),
+
 ]
 
 # Format (tuple): ( 'field_id', { 'field_attribute': 'value' } )
