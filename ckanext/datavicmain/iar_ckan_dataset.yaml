@@ -391,4 +391,13 @@ resource_fields:
   label: Attribution Statement
   form_snippet: textarea.html
 
-
+- field_name: featured
+  label: Featured Resource ?
+  preset: select
+  choices:
+    - value: false
+      label: "No"
+    - value: true
+      label: "Yes"
+  validators: scheming_required boolean_validator
+  output_validators: boolean_validator
