@@ -2,11 +2,9 @@ import ckan.plugins.toolkit as toolkit
 import ckanext.datavic_iar_theme.helpers as theme_helpers
 import logging
 
-import ckan.plugins as plugins
 from ckan.model import State
 from ckan.lib.dictization import model_dictize, model_save, table_dictize
 from ckan.lib.navl.validators import not_empty
-import ckan.lib.uploader as uploader
 from ckan.logic import schema as ckan_schema
 from ckanext.datavicmain import helpers
 
@@ -14,7 +12,6 @@ _check_access = toolkit.check_access
 config = toolkit.config
 log = logging.getLogger(__name__)
 user_is_registering = helpers.user_is_registering
-NotFound = toolkit.NotFound
 ValidationError = toolkit.ValidationError
 get_action = toolkit.get_action
 _validate = toolkit.navl_validate

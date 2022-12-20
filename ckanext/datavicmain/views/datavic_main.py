@@ -135,23 +135,14 @@ def admin_report():
     return render('admin/admin_report.html', extra_vars={})
 
 def nominate_view(package_id,view_id):
-    try:
-        toolkit.get_action('nominate_resource_view')({}, {'package_id': package_id, 'view_id':view_id})
-        toolkit.h.flash_success('Successfully nominated view: %s' % view_id)
-    except Exception as e:
-        print(str(e))
-        toolkit.h.flash_error('Exception')
+    toolkit.get_action('nominate_resource_view')({}, {'package_id': package_id, 'view_id':view_id})
+    toolkit.h.flash_success('Successfully nominated view: %s' % view_id)
 
     return toolkit.h.redirect_to(f'/dataset/{package_id}')
 
 def denominate_view(package_id,view_id):
-    try:
-        toolkit.get_action('nominate_resource_view')({}, {'package_id': package_id, 'view_id':''})
-        toolkit.h.flash_success('Successfully denominated view: %s' % view_id)
-    except Exception as e:
-        print(str(e))
-        toolkit.h.flash_error('Exception')
-
+    toolkit.get_action('nominate_resource_view')({}, {'package_id': package_id, 'view_id':''})
+    toolkit.h.flash_success('Successfully denominated view: %s' % view_id)
     return toolkit.h.redirect_to(f'/dataset/{package_id}')
 
 def register_datavicmain_plugin_rules(blueprint):
