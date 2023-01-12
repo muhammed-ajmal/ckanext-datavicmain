@@ -122,7 +122,7 @@ def datavic_user_create(context, data_dict):
     log.debug('Created user {name}'.format(name=user.name))
     return user_dict
 
-def nominate_resource_view(context, data_dict):
+def datavic_nominate_resource_view(context, data_dict):
     package_id = _get_or_bust(data_dict, 'package_id')
     view_id = _get_or_bust(data_dict, 'view_id')
     pkg_dict = get_action('package_show')(
