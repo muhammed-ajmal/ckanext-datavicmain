@@ -125,9 +125,7 @@ def datavic_user_create(context, data_dict):
 def datavic_nominate_resource_view(context, data_dict):
     package_id = _get_or_bust(data_dict, 'package_id')
     view_id = _get_or_bust(data_dict, 'view_id')
-    pkg_dict = get_action('package_show')(
-        dict(context, return_type='dict'),
-        {'id': package_id})
+    pkg_dict = get_action('package_show')(context, {'id': package_id})
 
     pkg_dict['nominated_view_id'] = view_id
     get_action('package_update')(context, pkg_dict)
