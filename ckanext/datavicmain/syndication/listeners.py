@@ -15,10 +15,12 @@ log = logging.getLogger(__name__)
 
 @signals.after_syndication.connect
 def after_syndication_listener(package_id, **kwargs):
+    log.debug("Synchronizing uploaded files of %s", package_id)
     profile = kwargs["profile"]
     remote = kwargs["remote"]
 
     if "id" not in remote:
+        log.debug("Cannot detect remote ID. Skip")
         return
 
     ckan = get_target(profile.ckan_url, profile.api_key)
@@ -28,20 +30,31 @@ def after_syndication_listener(package_id, **kwargs):
     original_resources = pkg.resources
 
     for res in resources:
+        log.debug("Checking resource %s", res["id"])
         if profile.ckan_url not in res.get('url', ''):
+            log.debug("External resource. Skip")
             continue
 
         check_res = requests.head(res['url'])
 
+        # TODO: consider checking modification date/size because content can be
+        # different even if file exists
         if check_res.ok:
+            log.debug("File already exists on remote portal. Skip")
             continue
 
-        log.debug("File is not exists for {0} resource, copying it.".format(
-            res['id']
-        ))
         org_res = [r for r in original_resources if r.id == res['id']]
         if not org_res:
+            log.debug(
+                "Cannot locate resource with ID %s locally. Skip",
+                res["id"]
+            )
             continue
+
+        log.debug(
+            "File does not exist for %s resource, copying it.",
+            res['id']
+        )
 
         uploader = get_resource_uploader(org_res[0].as_dict())
         file_path = uploader.get_path(org_res[0].id)
