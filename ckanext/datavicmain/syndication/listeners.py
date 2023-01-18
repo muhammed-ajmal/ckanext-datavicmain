@@ -1,3 +1,4 @@
+import os
 import logging
 from werkzeug.datastructures import FileStorage as FlaskFileStorage
 import requests
@@ -48,7 +49,7 @@ def after_syndication_listener(package_id, **kwargs):
             with open(file_path, 'rb') as file_data:
                 ckan.action.resource_update(
                     id=res['id'],
-                    upload=FlaskFileStorage(file_data),
+                    upload=FlaskFileStorage(file_data, os.path.basename(org_res[0].url)),
                     url=org_res[0].url
                 )
         except Exception:
