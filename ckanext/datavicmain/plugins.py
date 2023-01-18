@@ -13,7 +13,6 @@ from ckanext.syndicate.interfaces import ISyndicate, Profile
 
 from ckanext.datavicmain import actions, helpers, validators, auth, auth_middleware, cli
 from ckanext.datavicmain.syndication.odp import prepare_package_for_odp
-from ckanext.datavicmain.syndication import listeners
 import ckanext.datavicmain.utils as utils
 
 
