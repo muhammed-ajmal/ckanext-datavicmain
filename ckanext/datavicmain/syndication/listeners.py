@@ -67,9 +67,10 @@ def after_syndication_listener(package_id, **kwargs):
         file_path = uploader.get_path(org_res[0].id)
         try:
             with open(file_path, 'rb') as file_data:
+                name = os.path.basename(org_res[0].url)
                 ckan.action.resource_update(
                     id=res['id'],
-                    upload=FlaskFileStorage(file_data, os.path.basename(org_res[0].url)),
+                    upload=FlaskFileStorage(file_data, name, name),
                     url=org_res[0].url
                 )
         except Exception:
