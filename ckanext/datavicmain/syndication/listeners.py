@@ -11,6 +11,9 @@ import ckanapi
 import ckanext.syndicate.signals as signals
 from ckanext.syndicate.utils import get_target
 
+CONFIG_INTERNAL_HOSTS = "ckan.datavic.syndication.internal_hosts"
+DEFAULT_INTERNAL_HOSTS = []
+
 log = logging.getLogger(__name__)
 
 @signals.after_syndication.connect
@@ -29,10 +32,14 @@ def after_syndication_listener(package_id, **kwargs):
     pkg = model.Package.get(package_id)
     original_resources = pkg.resources
 
+    hosts = tk.aslist(tk.config.get(CONFIG_INTERNAL_HOSTS, DEFAULT_INTERNAL_HOSTS))
+    hosts.append(profile.ckan_url)
+
     for res in resources:
         log.debug("Checking resource %s", res["id"])
-        if profile.ckan_url not in res.get('url', ''):
-            log.debug("External resource. Skip")
+
+        if not any(host in res["url"] for host in hosts):
+            log.debug("External resource with a url %s. Skip", res["url"])
             continue
 
         check_res = requests.head(res['url'])
