@@ -22,6 +22,7 @@ setup(
 	install_requires=[
 		# -*- Extra requirements: -*-
         "jsonpickle",
+        "cryptography!=39.0.0", # this version doesn't work with urllib3 required by CKAN core
 	],
 	entry_points=\
 	"""

@@ -2,14 +2,20 @@
 import time
 import calendar
 import logging
+from six import text_type
 import ckan.authz as authz
 
 import ckan.model as model
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
 
+from ckanext.syndicate.interfaces import ISyndicate, Profile
+
 from ckanext.datavicmain import actions, helpers, validators, auth, cli
-from six import text_type
+from ckanext.datavicmain.syndication.odp import prepare_package_for_odp
+from ckanext.datavicmain.syndication import listeners
+import ckanext.datavicmain.utils as utils
+
 
 config = toolkit.config
 request = toolkit.request
@@ -61,6 +67,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     p.implements(p.IValidators)
     p.implements(p.IClick)
     p.implements(p.IAuthenticator, inherit=True)
+    p.implements(ISyndicate, inherit=True)
 
     # IAuthenticator
     def identify(self):
@@ -290,6 +297,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
             'option_value_to_label': helpers.option_value_to_label,
             'field_choices': helpers.field_choices,
             'user_org_can_upload': helpers.user_org_can_upload,
+            'is_ready_for_publish': helpers.is_ready_for_publish,
         }
 
     ## IConfigurer interface ##
@@ -343,8 +351,46 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
                 helpers.add_package_to_group(pkg_dict, context)
                 # DATAVIC-251 - Create activity for private datasets
                 helpers.set_private_activity(pkg_dict, context, str('changed'))
-        pass
 
     # IClick
     def get_commands(self):
         return cli.get_commands()
+
+    # ISyndicate
+    def _requires_public_removal(self, pkg: model.Package, profile: Profile) -> bool:
+        """Decide, whether the package must be deleted from Discover.
+        """
+        is_syndicated = bool(pkg.extras.get(profile.field_id))
+        is_deleted = pkg.state == "deleted"
+        is_archived = pkg.extras.get("workflow_status") == "archived"
+        return is_syndicated and (is_deleted or is_archived)
+
+
+    def prepare_package_for_syndication(self, package_id, data_dict, profile):
+        if profile.id == "odp":
+            data_dict = prepare_package_for_odp(package_id, data_dict)
+
+        pkg = model.Package.get(package_id)
+        assert pkg, f"Cannot syndicate non-existing package {package_id}"
+
+        if self._requires_public_removal(pkg, profile):
+            data_dict["state"] = "deleted"
+
+        return data_dict
+
+    def skip_syndication(
+        self, package: model.Package, profile: Profile
+    ) -> bool:
+        if self._requires_public_removal(package, profile):
+            log.debug("Syndicate %s because it requires removal", package.id)
+            return False
+
+        if package.private:
+            log.debug("Do not syndicate %s because it is private", package.id)
+            return True
+
+        if  'published' != package.extras.get("workflow_status"):
+            log.debug("Do not syndicate %s because it is not published", package.id)
+            return True
+
+        return False
