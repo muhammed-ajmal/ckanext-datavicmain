@@ -9,22 +9,26 @@ def prepare_package_for_odp(package_id,data_dict):
     )
 
     resources = pkg_dict.get("resources", [])
+
     resources[:] = [
-        res for res in resources if not tk.asbool(res.get("private"))
+        # don't synchronize hash, because it will prevent resource's ingestion
+        # into datastore
+        dict(res, hash="")
+        for res in resources if not tk.asbool(res.get("private"))
     ]
-    
+
     ## Update resources
     for res in resources:
         res["package_id"] = data_dict["name"]
     data_dict.pop('resources')
     data_dict['resources'] = resources
-    
+
     ## Update groups
     groups = data_dict.pop('groups')
     data_dict['groups'] = []
     for group in groups:
         group.pop('id')
-        data_dict['groups'].append(group) 
+        data_dict['groups'].append(group)
 
     return data_dict
 
