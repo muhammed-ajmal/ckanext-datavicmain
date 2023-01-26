@@ -303,8 +303,7 @@ def logged_in():
     if g.user:
         return me()
     else:
-        err = _(u'Login failed. Bad username or password.')
-        h.flash_error(err)
+        log.info('Login failed. Bad username or password.')
         return user.login()
 
 
@@ -387,7 +386,7 @@ def deny(id):
 class RegisterView(MethodView):
     '''
     This is copied from ckan_core views/user
-    There is only 1 small change at the end which is to not login in registering users 
+    There is only 1 small change at the end which is to not login in registering users
     and redirect the user to the home page
     '''
 
