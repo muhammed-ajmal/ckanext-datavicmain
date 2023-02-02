@@ -1,5 +1,7 @@
 import logging
 import csv
+import json
+import base64
 from io import StringIO
 
 import ckan.views.dataset as dataset
@@ -151,9 +153,12 @@ def denominate_view(package_id,view_id):
     toolkit.h.flash_success('Successfully denominated view: %s' % view_id)
     return toolkit.h.redirect_to(f'/dataset/{package_id}')
 
-def dtv_config():
-    embedded = toolkit.asbool(toolkit.request.args.get("embedded"))
-    ids: list[str] = toolkit.request.args.getlist("resource_id")
+def dtv_config(encoded: str, embedded: bool):
+    try:
+        ids: list[str] = json.loads(base64.urlsafe_b64decode(encoded))
+    except ValueError:
+        return toolkit.abort(409)
+
     base_url: str = (
         toolkit.config.get("ckanext.datavicmain.odp.public_url")
         or toolkit.config["ckan.site_url"]
@@ -187,33 +192,30 @@ def dtv_config():
         })
 
     return jsonify({
-        "version": "8.0.0",
-        "initSources": [{
-            "baseMaps": {
-                "defaultBaseMapId": toolkit.config.get(
-                    CONFIG_BASE_MAP, DEFAULT_BASE_MAP
-                )
+        "baseMaps": {
+            "defaultBaseMapId": toolkit.config.get(
+                CONFIG_BASE_MAP, DEFAULT_BASE_MAP
+            )
+        },
+        "catalog": catalog,
+        "workbench": [item["id"] for item in catalog],
+        "elements": {
+            "map-navigation": {
+                "disabled": embedded
             },
-            "catalog": catalog,
-            "workbench": [item["id"] for item in catalog],
-            "elements": {
-                "map-navigation": {
-                    "disabled": embedded
-                },
-                "menu-bar": {
-                    "disabled": embedded
-                },
-                "bottom-dock": {
-                    "disabled": embedded
-                },
-                "map-data-count": {
-                    "disabled": embedded
-                },
-                "show-workbench": {
-                    "disabled": embedded
-                }
+            "menu-bar": {
+                "disabled": embedded
+            },
+            "bottom-dock": {
+                "disabled": embedded
+            },
+            "map-data-count": {
+                "disabled": embedded
+            },
+            "show-workbench": {
+                "disabled": embedded
             }
-        }]
+        }
     })
 
 
@@ -228,6 +230,8 @@ def register_datavicmain_plugin_rules(blueprint):
         '/dataset/<package_id>/denominate_view/<view_id>',
         view_func=denominate_view, methods=['POST'])
     blueprint.add_url_rule('/dtv_config', view_func=dtv_config)
+    blueprint.add_url_rule('/dtv_config/<encoded>/config.json', view_func=dtv_config, defaults={"embedded": False})
+    blueprint.add_url_rule('/dtv_config/<encoded>/embedded/config.json', view_func=dtv_config, defaults={"embedded": True})
 
 
 register_datavicmain_plugin_rules(datavicmain)

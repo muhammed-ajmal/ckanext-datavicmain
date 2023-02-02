@@ -4,6 +4,8 @@ import os
 import pkgutil
 import inspect
 import logging
+import json
+import base64
 from typing import Any
 
 from urllib.parse import urlsplit, urljoin
@@ -296,7 +298,8 @@ def url_for_dtv_config(ids: list[str], embedded: bool = True) -> str:
         or toolkit.config["ckan.site_url"]
     )
 
+    encoded = base64.urlsafe_b64encode(bytes(json.dumps(ids), "utf8"))
     return urljoin(
         base_url,
-        toolkit.url_for("datavicmain.dtv_config", resource_id=ids, embedded=embedded)
+        toolkit.url_for("datavicmain.dtv_config", encoded=encoded, embedded=embedded)
     )
