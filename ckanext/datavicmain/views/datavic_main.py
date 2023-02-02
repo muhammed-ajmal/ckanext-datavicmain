@@ -23,7 +23,7 @@ log = logging.getLogger(__name__)
 datavicmain = Blueprint('datavicmain', __name__)
 
 CONFIG_BASE_MAP = "ckanext.datavicmain.dtv.base_map_id"
-DEFAULT_BASE_MAP = "vic-topographic"
+DEFAULT_BASE_MAP = "vic-cartographic"
 
 
 def historical(id):
