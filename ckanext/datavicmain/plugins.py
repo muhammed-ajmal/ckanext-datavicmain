@@ -143,7 +143,8 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
     def get_actions(self):
         return {
             # DATAVICIAR-42: Override CKAN's core `user_create` method
-            'user_create': actions.datavic_user_create
+            'user_create': actions.datavic_user_create,
+            'organization_update': actions.organization_update,
         }
 
     ## helper methods ##
