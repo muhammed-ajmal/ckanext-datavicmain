@@ -148,11 +148,11 @@ def organization_update(next_, context, data_dict):
     model = context["model"]
 
     old = model.Group.get(data_dict.get("id"))
-    old_name = old.name
+    old_name = old.name if old else None
 
     result = next_(context, data_dict)
 
-    if not old and old.name == result["name"]:
+    if old_name == result["name"]:
         return result
 
     for profile in utils.get_profiles():
