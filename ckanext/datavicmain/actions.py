@@ -8,7 +8,7 @@ from ckan.model import State
 from ckan.lib.dictization import model_dictize, model_save, table_dictize
 from ckan.lib.navl.validators import not_empty
 from ckan.logic import schema as ckan_schema
-from ckanext.datavicmain import helpers
+from ckanext.datavicmain import helpers, jobs
 
 _check_access = toolkit.check_access
 config = toolkit.config
@@ -151,6 +151,7 @@ def organization_update(next_, context, data_dict):
     old_name = old.name if old else None
 
     result = next_(context, data_dict)
+    toolkit.enqueue_job(jobs.reindex_organization, [result["id"]])
 
     if old_name == result["name"]:
         return result
