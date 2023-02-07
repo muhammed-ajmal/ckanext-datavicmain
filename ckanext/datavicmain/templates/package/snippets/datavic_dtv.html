@@ -7,10 +7,11 @@
             <iframe frameborder="0"
                     src="https://vic.digitaltwin.terria.io/#{{ h.url_for_dtv_config(dtv_resources) }}&hideWorkbench=1"
                     height="600px" width="100%"></iframe>
+            <a href="https://vic.digitaltwin.terria.io/#{{ h.url_for_dtv_config(dtv_resources, false) }}" target="_blank" class="btn btn-primary dtv-external-link">
+                {{ _("See this dataset in the Digital Twin Victoria") }}
+            </a>
+
         </div>
-        <a href="https://vic.digitaltwin.terria.io/#{{ h.url_for_dtv_config(dtv_resources, false) }}" target="_blank">
-            {{ _("See this dataset in the Digital Twin Victoria") }}
-        </a>
 
     </section>
 
