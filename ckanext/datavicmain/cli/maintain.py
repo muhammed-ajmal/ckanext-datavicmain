@@ -31,7 +31,7 @@ def ckan_iar_resource_date_cleanup():
         package_list = tk.get_action("current_package_list_with_resources")(
             {"user": user["name"]}, {"limit": limit, "offset": offset}
         )
-        if len(packages_found) == 0:
+        if len(package_list) == 0:
             packages_found = False
         offset += 1
 
