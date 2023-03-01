@@ -23,7 +23,7 @@ def ckan_iar_resource_date_cleanup():
     """Fix resources with invalid date range. One-time task."""
     user = tk.get_action("get_site_user")({"ignore_auth": True}, {})
 
-    limit = 1
+    limit = 100
     offset = 0
     packages_found = True
 
