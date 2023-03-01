@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import click
 import datetime
 import logging
-from typing import Union
+from typing import Any
 
-import ckan.model as model
+import click
+
 import ckan.plugins.toolkit as tk
 
 
@@ -21,10 +21,6 @@ def maintain():
 @maintain.command("ckan-resources-date-cleanup")
 def ckan_iar_resource_date_cleanup():
     """Fix resources with invalid date range. One-time task."""
-    resource_query = model.Session.query(model.Resource)
-    query = resource_query.filter((model.Resource.state == model.core.State.ACTIVE))
-
-    patch = tk.get_action("package_patch")
     user = tk.get_action("get_site_user")({"ignore_auth": True}, {})
 
     package_list = tk.get_action("current_package_list_with_resources")(
@@ -42,9 +38,9 @@ def ckan_iar_resource_date_cleanup():
         if not fix_available:
             continue
         try:
-            patch(
+            tk.get_action("package_patch")(
                 {"user": user["name"]},
-                {"id": package["id"], "resources": package.get("resources")},
+                {"id": package["id"], "resources": package["resources"]},
             )
             click.secho(
                 f"Fixed date issues for resources in {package['name']}", fg="green"
@@ -53,11 +49,16 @@ def ckan_iar_resource_date_cleanup():
             click.secho(f"Failed to fix  resources {package['name']}: {e}", fg="red")
 
 
-def _fix_improper_date_values(resource: dict[str, Union[int, bool, str]]):
+def _fix_improper_date_values(resource: dict[str, Any]) -> bool:
     """Make the invalid date field value to None.
 
-    :param resource: resource dict
-    :returns: if updated the resource then returns True, else None
+
+    Args:
+        resource (dict) : resource data.
+
+
+    Returns:
+        bool: True if date values updated.
     """
     date_fields = ["period_end", "period_start", "release_date"]
 
@@ -66,26 +67,30 @@ def _fix_improper_date_values(resource: dict[str, Union[int, bool, str]]):
     for field in date_fields:
         if not resource.get(field):
             continue
-        if not _valid_date(resource.get(field)):
+        if not _valid_date(resource[field]):
             click.secho(
-                f"Found invalid date for {field} in {resource['name']}: {resource.get(field)}",
+                f"Found invalid date for {field} in {resource['name']}: {resource[field]}",
                 fg="red",
             )
             resource[field] = None
 
-    if old_resource != resource:
-        return True
+    return old_resource != resource
 
 
 def _valid_date(date: str) -> bool:
     """Validates given date.
 
-    :param date: input date
-    :returns: True or False based on validation
+
+    Args:
+        date (str): date in YY-MM-DD format.
+
+
+    Returns:
+        bool: True if date is valid.
     """
     date_format = "%Y-%m-%d"
     try:
-        dateObject = datetime.datetime.strptime(date, date_format)
+        datetime.datetime.strptime(date, date_format)
     except ValueError:
         return False
 

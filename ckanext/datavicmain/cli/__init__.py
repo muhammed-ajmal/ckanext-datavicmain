@@ -1,5 +1,6 @@
-import click
 import logging
+
+import click
 
 from ckan.plugins.toolkit import enqueue_job
 from ckanext.datavicmain import jobs
