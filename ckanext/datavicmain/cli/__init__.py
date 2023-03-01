@@ -10,12 +10,12 @@ log = logging.getLogger(__name__)
 
 
 @click.group()
-def dcmain():
+def datavic_main():
     """ckanext-datavicmain management commands."""
     pass
 
 
-@dcmain.command(u"ckan-job-worker-monitor")
+@datavic_main.command(u"ckan-job-worker-monitor")
 def ckan_worker_job_monitor():
     try:
         enqueue_job(jobs.ckan_worker_job_monitor, title="CKAN job worker monitor")
@@ -24,8 +24,8 @@ def ckan_worker_job_monitor():
         log.error(e)
 
 
-dcmain.add_command(maintain.maintain)
+datavic_main.add_command(maintain.maintain)
 
 
 def get_commands():
-    return [dcmain]
+    return [datavic_main]
