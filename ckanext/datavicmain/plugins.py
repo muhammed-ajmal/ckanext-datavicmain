@@ -144,7 +144,7 @@ class DatasetForm(p.SingletonPlugin, toolkit.DefaultDatasetForm):
         return {
             # DATAVICIAR-42: Override CKAN's core `user_create` method
             'user_create': actions.datavic_user_create,
-
+            'organization_update': actions.organization_update,
             # SXDEDPCXZIC-85: Nominate a resource view  as data preview
             'datavic_nominate_resource_view':actions.datavic_nominate_resource_view
         }
