@@ -17,6 +17,7 @@ user_is_registering = helpers.user_is_registering
 ValidationError = toolkit.ValidationError
 get_action = toolkit.get_action
 _validate = toolkit.navl_validate
+_get_or_bust = toolkit.get_or_bust
 
 CONFIG_SYNCHRONIZED_ORGANIZATION_FIELDS = "ckanext.datavicmain.synchronized_organization_fields"
 DEFAULT_SYNCHRONIZED_ORGANIZATION_FIELDS = ["name", "title", "description"]
@@ -159,3 +160,16 @@ def organization_update(next_, context, data_dict):
         ckan.action.organization_patch(id=remote["id"], **patch)
 
     return result
+
+
+def datavic_nominate_resource_view(context, data_dict):
+    package_id = _get_or_bust(data_dict, 'package_id')
+    view_id = _get_or_bust(data_dict, 'view_id')
+    resource_id = _get_or_bust(data_dict,'resource_id')
+    pkg_dict = get_action('package_show')(context, {'id': package_id})
+
+    pkg_dict['nominated_view_id'] = view_id
+    pkg_dict['nominated_view_resource'] = resource_id
+    get_action('package_update')(context, pkg_dict)
+
+    return pkg_dict
